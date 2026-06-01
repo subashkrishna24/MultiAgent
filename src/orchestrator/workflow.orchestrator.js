@@ -1,0 +1,196 @@
+import {
+  getMcpClient
+} from "../services/mcp.service.js";
+
+import {
+  getllmModel
+} from "../services/llm.service.js";
+
+import {
+  detectIntent
+} from "../agents/intent/intent.agent.js";
+
+import {
+  filterToolsByModule
+} from "../services/tool-filter.service.js";
+
+import {
+  executeReportingAgent
+} from "../agents/reporting/reporting.agent.js";
+
+import {
+  executeMailCampaignAgent
+} from "../agents/mailcampaign/mailcampaign.agent.js";
+
+import {
+  executeCaptureFormAgent
+} from "../agents/captureform/captureform.agent.js";
+
+export async function executeWorkflow(
+  payload
+) {
+
+  const {
+    history,
+    accountid,
+    apikey,
+    model,
+    p5apikey
+  } = payload;
+
+  const llmModel =
+    getllmModel(model, apikey);
+
+  const lastMessage =
+    history[history.length - 1]
+      .content;
+
+  // STEP 1
+   const intent =
+     await detectIntent(
+       llmModel,
+       lastMessage
+     );
+
+ 
+    
+
+  // STEP 2
+  const mcpClient =
+    getMcpClient(
+      accountid,
+      p5apikey
+    );
+
+  const allTools =
+    await mcpClient.getTools();
+
+  // STEP 3
+  const filteredTools =
+    filterToolsByModule(
+      allTools,
+      intent.module
+    );
+
+  let response;
+  let report_response;
+
+  // STEP 4
+    if (
+    intent.module ===
+    "reporting"
+  ) {
+
+    response =
+      await executeReportingAgent({
+
+        model: llmModel,
+
+        tools: filteredTools,
+
+        history,
+
+        accountId: accountid
+      });
+
+       const toolMessages  =
+  response.messages.filter(
+    x =>
+      x._getType?.() ===
+      "tool"
+  );
+
+  if(toolMessages.length == 0){
+      const sql = response.messages[
+        response.messages.length - 1
+      ].content;
+
+      const reportTool =
+    allTools.find(
+      x =>
+        x.name ===
+        "GetReport"
+    );
+
+      report_response =
+  await reportTool.invoke({
+    getquery:sql
+  });
+
+  //console.log(report_response);
+}
+else{
+  report_response=toolMessages[0].content;
+}
+  }
+
+  if (
+    intent.module ===
+    "contact"
+  ) {
+
+    response =
+      await executeMailCampaignAgent({
+
+        model: llmModel,
+
+        tools: filteredTools,
+
+        history,
+
+        accountId: accountid
+      });
+  }
+
+  if (
+    intent.module ===
+    "mailcampaign"
+  ) {
+
+    response =
+      await executeMailCampaignAgent({
+
+        model: llmModel,
+
+        tools: filteredTools,
+
+        history,
+
+        accountId: accountid
+      });
+  }
+
+  if (
+    intent.module ===
+    "captureform"
+  ) {
+
+    response =
+      await executeCaptureFormAgent({
+
+        model: llmModel,
+
+        tools: filteredTools,
+
+        history,
+
+        accountId: accountid
+      });
+  }
+
+   console.log(response);
+  await mcpClient.close();
+
+  return {
+
+    module:
+      intent.module,
+
+    message:
+      response.messages[
+        response.messages.length - 1
+      ].content
+
+       ,toolmessage:report_response
+  };
+}

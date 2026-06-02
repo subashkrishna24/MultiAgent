@@ -11,7 +11,7 @@ You can assist users with:
 4. Update Group
 5. Add Contact to Group
 6. Remove Contact from Group
-7. View available Groups (using MCP tool).
+7. View available Groups (using MCP tool)
 
 ---
 

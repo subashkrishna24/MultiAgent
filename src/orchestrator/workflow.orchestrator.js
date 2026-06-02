@@ -28,6 +28,10 @@ import {
 import {
   executeMailTemplateAgent
 } from "../agents/mailtemplate/mailtemplate.agent.js";
+import { buildIntentContext }
+  from "../utils/context-builder.js";
+
+
 export async function executeWorkflow(
   payload
 ) {
@@ -48,14 +52,14 @@ export async function executeWorkflow(
       .content;
 
   // STEP 1
-   const intent =
-     await detectIntent(
-       llmModel,
-       lastMessage
-     );
+  const intentContext =
+  buildIntentContext(history);
 
- 
-    
+const intent =
+  await detectIntent(
+     llmModel,
+     intentContext
+  );
 
   // STEP 2
   const mcpClient =

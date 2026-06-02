@@ -10,5 +10,7 @@ export const MODULES = {
     "mailcampaign",
 
   CAPTUREFORM:
-    "captureform"
+    "captureform",
+     MAILTEMPLATE:
+    "mailtemplate"
 };

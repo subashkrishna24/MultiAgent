@@ -25,7 +25,9 @@ import {
 import {
   executeCaptureFormAgent
 } from "../agents/captureform/captureform.agent.js";
-
+import {
+  executeMailTemplateAgent
+} from "../agents/mailtemplate/mailtemplate.agent.js";
 export async function executeWorkflow(
   payload
 ) {
@@ -193,4 +195,34 @@ else{
 
        ,toolmessage:report_response
   };
+  if (
+    intent.module ===
+    "mailtemplate"
+  ) {
+
+    response =
+      await executeMailTemplateAgent({
+
+        model: llmModel,
+
+        tools: filteredTools,
+
+        history,
+
+        accountId: accountid
+      });
+  }
+  await mcpClient.close();
+
+  return {
+
+    module:
+      intent.module,
+
+    message:
+      response.messages[
+        response.messages.length - 1
+      ].content
+  };
+
 }

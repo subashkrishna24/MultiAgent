@@ -7,6 +7,8 @@ the user request belongs to.
 Available modules:
 - reporting
 - contact
+- group
+- mailtemplate
 - mailcampaign
 - captureform
 
@@ -27,10 +29,16 @@ Output:
 User: Create or update the group
 Output:
 {
-  "module":"contact"
+  "module":"group"
 }
 
-User: Create or update the mail campaign or mail template
+User: Create or update the mail template
+Output:
+{
+  "module":"mailtemplate"
+}
+
+User: Create or update the mail campaign
 Output:
 {
   "module":"mailcampaign"

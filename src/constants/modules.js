@@ -11,6 +11,7 @@ export const MODULES = {
 
   CAPTUREFORM:
     "captureform",
-     MAILTEMPLATE:
+ 
+  MAILTEMPLATE:
     "mailtemplate"
 };

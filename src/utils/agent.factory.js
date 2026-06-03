@@ -7,6 +7,7 @@ import { CONTACT_PROMPT } from "../prompts/contact.prompt.js";
 import { MAILCAMPAIGN_PROMPT } from "../prompts/mailcampaign.prompt.js";
 
 import { CAPTUREFORM_PROMPT } from "../prompts/captureform.prompt.js";
+
 import { MAILTEMPLATE_PROMPT } from "../prompts/mailtemplate.prompt.js";
 function getPrompt(module) {
   const prompts = {
@@ -17,7 +18,7 @@ function getPrompt(module) {
     mailcampaign: MAILCAMPAIGN_PROMPT,
 
     captureform: CAPTUREFORM_PROMPT,
-    
+
     mailtemplate: MAILTEMPLATE_PROMPT,
   };
 

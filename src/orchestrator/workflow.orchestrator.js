@@ -38,6 +38,7 @@ export async function executeWorkflow(payload) {
 
   let response;
   let report_response;
+  const recentHistory = history.slice(-6);
 
   // STEP 4
   if (intent.module === "reporting") {
@@ -46,7 +47,7 @@ export async function executeWorkflow(payload) {
 
       tools: filteredTools,
 
-      history,
+      recentHistory,
 
       accountId: accountid,
     });
@@ -76,7 +77,7 @@ export async function executeWorkflow(payload) {
 
       tools: filteredTools,
 
-      history,
+      recentHistory,
 
       accountId: accountid,
     });
@@ -88,7 +89,7 @@ export async function executeWorkflow(payload) {
 
       tools: filteredTools,
 
-      history,
+      recentHistory,
 
       accountId: accountid,
     });
@@ -100,7 +101,7 @@ export async function executeWorkflow(payload) {
 
       tools: filteredTools,
 
-      history,
+      recentHistory,
 
       accountId: accountid,
     });
@@ -112,7 +113,7 @@ export async function executeWorkflow(payload) {
 
       tools: filteredTools,
 
-      history,
+      recentHistory,
 
       accountId: accountid,
     });

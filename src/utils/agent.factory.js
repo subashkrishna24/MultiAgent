@@ -17,6 +17,7 @@ function getPrompt(module) {
     mailcampaign: MAILCAMPAIGN_PROMPT,
 
     captureform: CAPTUREFORM_PROMPT,
+    
     mailtemplate: MAILTEMPLATE_PROMPT,
   };
 

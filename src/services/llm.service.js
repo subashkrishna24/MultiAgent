@@ -3,7 +3,6 @@ import { ChatAnthropic } from "@langchain/anthropic";
 
 export function getllmModel(model, apikey) {
   const provider = detectProvider(apikey);
-
   console.log(`[LLM Factory] Provider: ${provider} | Model: ${model}`);
 
   // Anthropic
@@ -11,7 +10,7 @@ export function getllmModel(model, apikey) {
     return new ChatAnthropic({
       modelName: model,
       anthropicApiKey: apikey,
-      temperature: 0,
+      temperature: 0.7,
       maxTokens: 1000,
     });
   }
@@ -21,7 +20,7 @@ export function getllmModel(model, apikey) {
     return new ChatOpenAI({
       modelName: model,
       apiKey: apikey,
-      temperature: 0,
+      temperature: 0.7,
       maxTokens: 1000,
       configuration: {
         baseURL: "https://router.huggingface.co/v1",
@@ -46,7 +45,7 @@ export function getllmModel(model, apikey) {
   const config = {
     modelName: model,
     apiKey: apikey,
-    temperature: 0,
+    temperature: 0.7,
     maxTokens: 1000,
     configuration: {
       baseURL,
@@ -54,7 +53,6 @@ export function getllmModel(model, apikey) {
     },
   };
 
-  // OpenRouter optional headers
   if (provider === "openrouter") {
     config.configuration.defaultHeaders = {
       "HTTP-Referer": "http://localhost:3000",

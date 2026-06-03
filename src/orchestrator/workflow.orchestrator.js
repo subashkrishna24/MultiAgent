@@ -77,7 +77,7 @@ export async function executeWorkflow(payload) {
 
       tools: filteredTools,
 
-      recentHistory,
+      history: recentHistory,
 
       accountId: accountid,
     });
@@ -89,7 +89,7 @@ export async function executeWorkflow(payload) {
 
       tools: filteredTools,
 
-      recentHistory,
+      history: recentHistory,
 
       accountId: accountid,
     });
@@ -101,7 +101,7 @@ export async function executeWorkflow(payload) {
 
       tools: filteredTools,
 
-      recentHistory,
+      history: recentHistory,
 
       accountId: accountid,
     });
@@ -113,7 +113,7 @@ export async function executeWorkflow(payload) {
 
       tools: filteredTools,
 
-      recentHistory,
+      history: recentHistory,
 
       accountId: accountid,
     });

@@ -26,6 +26,14 @@ import {
   executeCaptureFormAgent
 } from "../agents/captureform/captureform.agent.js";
 
+import {
+  executeMailTemplateAgent
+} from "../agents/mailtemplate/mailtemplate.agent.js";
+
+import { buildIntentContext }
+  from "../utils/context-builder.js";
+
+
 export async function executeWorkflow(
   payload
 ) {
@@ -46,14 +54,14 @@ export async function executeWorkflow(
       .content;
 
   // STEP 1
-   const intent =
-     await detectIntent(
-       llmModel,
-       lastMessage
-     );
+  const intentContext =
+  buildIntentContext(history);
 
- 
-    
+const intent =
+  await detectIntent(
+     llmModel,
+     intentContext
+  );
 
   // STEP 2
   const mcpClient =
@@ -76,10 +84,7 @@ export async function executeWorkflow(
   let report_response;
 
   // STEP 4
-    if (
-    intent.module ===
-    "reporting"
-  ) {
+    if (intent.module ==="reporting") {
 
     response =
       await executeReportingAgent({
@@ -124,10 +129,7 @@ else{
 }
   }
 
-  if (
-    intent.module ===
-    "contact"
-  ) {
+  if (intent.module ==="contact") {
 
     response =
       await executeMailCampaignAgent({
@@ -142,10 +144,22 @@ else{
       });
   }
 
-  if (
-    intent.module ===
-    "mailcampaign"
-  ) {
+  if (intent.module ==="mailtemplate") {
+
+    response =
+      await executeMailTemplateAgent({
+
+        model: llmModel,
+
+        tools: filteredTools,
+
+        history,
+
+        accountId: accountid
+      });
+  }
+
+  if (intent.module ==="mailcampaign") {
 
     response =
       await executeMailCampaignAgent({
@@ -160,10 +174,7 @@ else{
       });
   }
 
-  if (
-    intent.module ===
-    "captureform"
-  ) {
+  if (intent.module ==="captureform") {
 
     response =
       await executeCaptureFormAgent({
@@ -193,4 +204,5 @@ else{
 
        ,toolmessage:report_response
   };
+  
 }

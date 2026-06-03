@@ -1,26 +1,22 @@
-import {
-  createAgent
-} from "../../utils/agent.factory.js";
+import { createAgent } from "../../utils/agent.factory.js";
 
 export async function executeMailCampaignAgent({
   model,
   tools,
   history,
-  accountId
+  accountId,
 }) {
-
   const agent = createAgent({
-
     module: "contact",
 
     model,
 
     tools,
 
-    accountId
+    accountId,
   });
 
   return await agent.invoke({
-    messages: history
+    messages: history,
   });
 }

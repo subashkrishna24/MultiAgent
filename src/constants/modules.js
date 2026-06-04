@@ -5,6 +5,8 @@ export const MODULES = {
   REPORTING: "reporting",
 
   CONTACT: "contact",
+
+  GROUP: "group",
     
   MAILCAMPAIGN: "mailcampaign",
 

@@ -18,14 +18,18 @@ Return ONLY JSON.
 Rules:
 
 1. Route to KNOWLEDGE when the user is:
-   - asking questions
-   - seeking explanations
-   - requesting documentation
-   - asking how-to instructions
-   - asking best practices
-   - asking feature information
-   - asking troubleshooting questions
-
+  - asking questions
+  - seeking explanations
+  - requesting documentation
+  - asking how-to instructions
+  - asking best practices
+  - asking feature information
+  - asking troubleshooting questions
+  - asks whether a capability exists
+  - asks "Do you have X?"
+  - asks "Do you support X?"
+  - asks setup/configuration questions
+  
    Example:
     {
       "module": "knowledge"

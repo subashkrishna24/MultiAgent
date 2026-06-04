@@ -1,6 +1,6 @@
 import { createAgent } from "../../utils/agent.factory.js";
 
-export async function executeMailCampaignAgent({
+export async function executeContactAgent({
   model,
   tools,
   history,

@@ -10,11 +10,15 @@ import { executeKnowledgeAgent } from "../agents/knowledge/knowledge.agent.js";
 
 import { executeReportingAgent } from "../agents/reporting/reporting.agent.js";
 
+import { executeContactAgent } from "../agents/contact/contact.agent.js";
+
+import { executeGroupAgent } from "../agents/group/group.agent.js";
+
 import { executeMailCampaignAgent } from "../agents/mailcampaign/mailcampaign.agent.js";
 
-import { executeCaptureFormAgent } from "../agents/captureform/captureform.agent.js";
-
 import { executeMailTemplateAgent } from "../agents/mailtemplate/mailtemplate.agent.js";
+
+import { executeCaptureFormAgent } from "../agents/captureform/captureform.agent.js";
 
 import { buildIntentContext } from "../utils/context-builder.js";
 
@@ -86,7 +90,7 @@ export async function executeWorkflow(payload) {
   }
 
   if (intent.module === "contact") {
-    response = await executeMailCampaignAgent({
+    response = await executeContactAgent({
       model: llmModel,
 
       tools: filteredTools,
@@ -97,8 +101,8 @@ export async function executeWorkflow(payload) {
     });
   }
 
-  if (intent.module === "mailtemplate") {
-    response = await executeMailTemplateAgent({
+  if (intent.module === "group") {
+    response = await executeGroupAgent({
       model: llmModel,
 
       tools: filteredTools,
@@ -121,6 +125,18 @@ export async function executeWorkflow(payload) {
     });
   }
 
+  if (intent.module === "mailtemplate") {
+    response = await executeMailTemplateAgent({
+      model: llmModel,
+
+      tools: filteredTools,
+
+      history: recentHistory,
+
+      accountId: accountid,
+    });
+  }
+  
   if (intent.module === "captureform") {
     response = await executeCaptureFormAgent({
       model: llmModel,

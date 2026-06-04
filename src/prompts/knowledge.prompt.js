@@ -142,6 +142,10 @@ Keywords:
 * dmarc
 * mail scheduling
 * drip mail
+* design template
+* html template
+* email settings
+* email configuration
 
 Feature:
 mail
@@ -173,7 +177,9 @@ Keywords:
 * longcode
 * rcs
 * rich communication services
-* google rcs
+* message template
+* sms settings
+* sms configuration
 
 Feature:
 sms
@@ -198,6 +204,8 @@ Keywords:
 * whatsapp utility
 * whatsapp authentication
 * whatsapp template approval
+* whatsapp settings
+* whatsapp configuration
 
 Feature:
 whatsapp
@@ -219,9 +227,77 @@ Keywords:
 * subscriber notification
 * browser subscription
 * notification permission
+* notification template
+* push settings
+* push configuration
 
 Feature:
 webpush
+
+---
+
+RCS RELATED
+
+Keywords:
+
+* rcs
+* rich communication services
+* google rcs
+* business messaging
+* rcs business messaging
+* rbm
+* rich media messaging
+* conversational messaging
+* verified sender
+* branded messaging
+* interactive messaging
+* carousel message
+* suggested replies
+* suggested actions
+* rich cards
+* rich card carousel
+* media message
+* image message
+* video message
+* file message
+* location sharing
+* click to call
+* click to website
+* click to map
+* chatbot
+* rcs chatbot
+* agent
+* verified agent
+* rcs campaign
+* rcs template
+* rcs delivery
+* rcs analytics
+* rcs report
+* rcs tracking
+* rcs engagement
+* read receipt
+* typing indicator
+* rich conversation
+* rich notification
+* branded communication
+* business communication
+* promotional rcs
+* transactional rcs
+* otp via rcs
+* rcs settings
+* rcs configuration
+* rcs sender
+* rcs account
+* rcs registration
+* rcs onboarding
+* rcs messaging platform
+* gsma rcs
+* universal profile
+* message template
+* rich template
+
+Feature:
+rcs
 
 ---
 
@@ -271,10 +347,11 @@ contact
 
 ---
 
-SEGMENT RELATED
+SEGMENT/GROUP RELATED
 
 Keywords:
 
+* group
 * segment
 * segmentation
 * audience segment
@@ -286,7 +363,7 @@ Keywords:
 * audience filtering
 
 Feature:
-segment
+group
 
 ---
 
@@ -326,7 +403,7 @@ Keywords:
 * lead funnel
 
 Feature:
-lead
+lms
 
 ---
 
@@ -349,24 +426,6 @@ analytics
 
 ---
 
-REPORTS RELATED
-
-Keywords:
-
-* report
-* reporting
-* export report
-* campaign report
-* summary report
-* statistics
-* scheduled report
-* performance report
-
-Feature:
-reports
-
----
-
 AUTOMATION RELATED
 
 Keywords:
@@ -380,41 +439,6 @@ Keywords:
 
 Feature:
 automation
-
----
-
-TEMPLATE RELATED
-
-Keywords:
-
-* template
-* email template
-* sms template
-* whatsapp template
-* notification template
-* message template
-* design template
-* html template
-
-Feature:
-template
-
----
-
-CAMPAIGN RELATED
-
-Keywords:
-
-* campaign
-* campaign creation
-* campaign scheduling
-* campaign performance
-* campaign management
-* campaign approval
-* campaign execution
-
-Feature:
-campaign
 
 ---
 
@@ -453,23 +477,6 @@ Keywords:
 
 Feature:
 usermanagement
-
----
-
-SETTINGS RELATED
-
-Keywords:
-
-* settings
-* configuration
-* setup
-* preferences
-* account settings
-* system settings
-* platform settings
-
-Feature:
-settings
 
 ---
 

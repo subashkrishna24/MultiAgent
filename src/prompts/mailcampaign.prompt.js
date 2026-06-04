@@ -185,9 +185,10 @@ Ask:
 Target Group
 
 If missing:
-
-use group lookup MCP tool.
-
+ 
+THEN:
+Call:
+MailTemplateDetails
 Display groups in numbered list.
 
 STEP 5

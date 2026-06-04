@@ -1,17 +1,14 @@
 export const MODULES = {
 
-  REPORTING:
-    "reporting",
+  KNOWLEDGE: "knowledge",
 
-  CONTACT:
-    "contact",
+  REPORTING: "reporting",
+
+  CONTACT: "contact",
     
-  MAILCAMPAIGN:
-    "mailcampaign",
+  MAILCAMPAIGN: "mailcampaign",
 
-  CAPTUREFORM:
-    "captureform",
+  CAPTUREFORM: "captureform",
  
-  MAILTEMPLATE:
-    "mailtemplate"
+  MAILTEMPLATE: "mailtemplate"
 };

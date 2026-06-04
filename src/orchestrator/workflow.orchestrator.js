@@ -6,6 +6,8 @@ import { detectIntent } from "../agents/intent/intent.agent.js";
 
 import { filterToolsByModule } from "../services/tool-filter.service.js";
 
+import { executeKnowledgeAgent } from "../agents/knowledge/knowledge.agent.js";
+
 import { executeReportingAgent } from "../agents/reporting/reporting.agent.js";
 
 import { executeMailCampaignAgent } from "../agents/mailcampaign/mailcampaign.agent.js";
@@ -41,6 +43,18 @@ export async function executeWorkflow(payload) {
   const recentHistory = history.slice(-6);
 
   // STEP 4
+   if (intent.module === "knowledge") {
+    response = await executeKnowledgeAgent({
+      model: llmModel,
+
+      tools: filteredTools,
+
+      history: recentHistory,
+
+      accountId: accountid,
+    });
+  }
+
   if (intent.module === "reporting") {
     response = await executeReportingAgent({
       model: llmModel,

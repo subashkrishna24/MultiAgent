@@ -212,7 +212,7 @@ If user replies with:
 THEN:
 
 Call:
-IdentifiersDetails
+Get list of campaign Identifiers MCP tool
 
 ---
 

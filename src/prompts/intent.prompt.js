@@ -41,6 +41,7 @@ Rules:
    - schedule campaign
    - send campaign
    - manage templates
+   - campaign identifiers
 
    Example:
     {

@@ -44,7 +44,7 @@ export async function executeWorkflow(payload) {
 
   let response;
   let report_response;
-  const recentHistory = history.slice(-6);
+  const recentHistory = history.slice(-30);
 
   // STEP 4
    if (intent.module === "knowledge") {
@@ -65,7 +65,7 @@ export async function executeWorkflow(payload) {
 
       tools: filteredTools,
 
-      recentHistory,
+      history: recentHistory,
 
       accountId: accountid,
     });

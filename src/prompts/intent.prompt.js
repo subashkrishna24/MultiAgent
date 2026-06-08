@@ -60,11 +60,24 @@ Rules:
     }
 
 4. Route to REPORTING when the user wants:
-   - reports
-   - analytics
-   - campaign performance
-   - statistics
-   - dashboards
+    - reports
+    - analytics
+    - campaign performance
+    - statistics
+    - dashboards
+    - counts
+    - rankings
+    - top N results
+    - highest
+    - lowest
+    - best performing
+    - most visited / Viewed
+    - dashboard metrics
+    - campaign performance
+    - conversion reports
+    - popular cities/countries/Pages
+
+Always choose reporting over knowledge.
 
    Example:
     {

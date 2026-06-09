@@ -21,6 +21,7 @@ import { executeMailTemplateAgent } from "../agents/mailtemplate/mailtemplate.ag
 import { executeCaptureFormAgent } from "../agents/captureform/captureform.agent.js";
 
 import { buildIntentContext } from "../utils/context-builder.js";
+import { executeMailSpamScoreAgent } from "../agents/mailspamscore/mailspamscore.agent.js";
 
 export async function executeWorkflow(payload) {
   const { history, accountid, apikey, model, p5apikey } = payload;
@@ -44,7 +45,7 @@ export async function executeWorkflow(payload) {
 
   let response;
   let report_response;
-  const recentHistory = history.slice(-30);
+  const recentHistory = history;
 
   // STEP 4
    if (intent.module === "knowledge") {
@@ -139,6 +140,17 @@ export async function executeWorkflow(payload) {
   
   if (intent.module === "captureform") {
     response = await executeCaptureFormAgent({
+      model: llmModel,
+
+      tools: filteredTools,
+
+      history: recentHistory,
+
+      accountId: accountid,
+    });
+  }
+   if (intent.module === "mailspamscore") {
+    response = await executeMailSpamScoreAgent({
       model: llmModel,
 
       tools: filteredTools,

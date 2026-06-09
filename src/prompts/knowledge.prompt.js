@@ -146,6 +146,7 @@ Keywords:
 * html template
 * email settings
 * email configuration
+* spam score
 
 Feature:
 mail

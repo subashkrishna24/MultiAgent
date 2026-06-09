@@ -12,5 +12,6 @@ export const MODULES = {
 
   CAPTUREFORM: "captureform",
  
-  MAILTEMPLATE: "mailtemplate"
+  MAILTEMPLATE: "mailtemplate",
+  MAILSPAMSCORE: "mailspamscore"
 };

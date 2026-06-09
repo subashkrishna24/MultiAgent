@@ -12,6 +12,7 @@ Available modules:
 - mailtemplate
 - mailcampaign
 - captureform
+- mailspamscore
 
 Return ONLY JSON.
 
@@ -122,5 +123,57 @@ Rules:
    {
      "module": "mailtemplate"
    }
+8. Route to MAILSPAMSCORE when the user wants:
 
+* check spam score
+* spam score
+* mail spam score
+* email spam score
+* check mail template spam score
+* analyze spam score
+* spam analysis
+* spam testing
+* email deliverability check
+* mail template spam score
+
+Examples:
+
+User: check spam score
+{
+"module": "mailspamscore"
+}
+
+User: spam score
+{
+"module": "mailspamscore"
+}
+
+User: check mail template spam score
+{
+"module": "mailspamscore"
+}
+
+User: analyze spam score
+{
+"module": "mailspamscore"
+}
+
+IMPORTANT:
+
+Any request containing the words "spam score" MUST be routed to:
+
+{
+"module": "mailspamscore"
+}
+
+Never route spam score requests to:
+
+* knowledge
+* mailtemplate
+
+
+
+   Never route spam score requests to:
+   - knowledge
+   - mailtemplate
 `;

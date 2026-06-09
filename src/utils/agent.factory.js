@@ -11,6 +11,8 @@ import { MAILCAMPAIGN_PROMPT } from "../prompts/mailcampaign.prompt.js";
 import { CAPTUREFORM_PROMPT } from "../prompts/captureform.prompt.js";
 
 import { MAILTEMPLATE_PROMPT } from "../prompts/mailtemplate.prompt.js";
+
+import { MAILSPAMSCORE_PROMPT } from "../prompts/mailspamscore.prompt.js";
 function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
@@ -24,6 +26,8 @@ function getPrompt(module) {
     captureform: CAPTUREFORM_PROMPT,
 
     mailtemplate: MAILTEMPLATE_PROMPT,
+
+    mailspamscore: MAILSPAMSCORE_PROMPT
   };
 
   return prompts[module];

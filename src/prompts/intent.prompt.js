@@ -155,5 +155,34 @@ Examples:
 {
 "module": "mailspamscore"
 }
+Route to MAILTEST when the user says:
+
+* send test mail
+* send test email
+* test mail
+* test email
+* show configurations
+* show available configurations
+* configuration list
+* available configurations
+* show sender emails
+* sender email list
+* show available sender email addresses
+* select configuration
+* select sender email
+* choose configuration
+* choose sender email
+
+IMPORTANT:
+
+If the current conversation is already about sending a test mail,
+all follow-up messages must remain in:
+
+{
+  "module": "mailtest"
+}
+
+Never route these follow-up workflow messages to knowledge.
+  
 
 `;

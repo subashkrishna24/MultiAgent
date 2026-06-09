@@ -13,6 +13,7 @@ Available modules:
 - mailcampaign
 - captureform
 - mailspamscore
+- mailtest
 
 Return ONLY JSON.
 
@@ -178,6 +179,56 @@ Any request containing the words "spam score" MUST be routed to:
 {
 "module": "mailspamscore"
 }
+ 9. Route to MAILTEST when the user wants:
+
+* send test mail
+* send test email
+* test email
+* test mail
+* send mail template test
+* test a mail template
+* test a template
+* send test campaign email
+* email preview test
+* email template test
+* mail template test
+* send sample email
+* send trial email
+
+Examples:
+
+User: send test mail
+
+{
+"module": "mailtest"
+}
+
+User: test email template
+
+{
+"module": "mailtest"
+}
+
+User: send sample email
+
+{
+"module": "mailtest"
+}
+
+IMPORTANT:
+
+Any request related to sending a test email MUST be routed to:
+
+{
+"module": "mailtest"
+}
+
+Never route mail test requests to:
+
+* knowledge
+* mailtemplate
+* mailcampaign
+
 
 Never route spam score requests to:
 

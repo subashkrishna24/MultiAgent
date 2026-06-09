@@ -148,45 +148,11 @@ Always choose reporting over knowledge.
 * spam testing
 * email deliverability check
 * mail template spam score
+* list of email sender emailids or from email ids.
 
 Examples:
-
-User: check spam score
 {
 "module": "mailspamscore"
 }
 
-User: spam score
-{
-"module": "mailspamscore"
-}
-
-User: check mail template spam score
-{
-"module": "mailspamscore"
-}
-
-User: analyze spam score
-{
-"module": "mailspamscore"
-}
-
-IMPORTANT:
-
-Any request containing the words "spam score" MUST be routed to:
-
-{
-"module": "mailspamscore"
-}
-
-Never route spam score requests to:
-
-* knowledge
-* mailtemplate
-
-
-
-   Never route spam score requests to:
-   - knowledge
-   - mailtemplate
 `;

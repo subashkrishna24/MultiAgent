@@ -31,8 +31,9 @@ Rules:
   - asks "Do you have X?"
   - asks "Do you support X?"
   - asks setup/configuration questions
-  
-   Example:
+  - If a SQL query was generated internally, route the request to the reporting module and execute the reporting MCP tool.
+   
+    Example:
     {
       "module": "knowledge"
     }
@@ -78,6 +79,7 @@ Rules:
     - campaign performance
     - conversion reports
     - popular cities/countries/Pages
+    - If a SQL query was generated internally, route the request to the reporting module and execute the reporting MCP tool.
 
 Always choose reporting over knowledge.
 
@@ -155,7 +157,8 @@ Examples:
 {
 "module": "mailspamscore"
 }
-Route to MAILTEST when the user says:
+
+9.Route to MAILTEST when the user says:
 
 * send test mail
 * send test email
@@ -165,24 +168,45 @@ Route to MAILTEST when the user says:
 * show available configurations
 * configuration list
 * available configurations
-* show sender emails
-* sender email list
-* show available sender email addresses
 * select configuration
-* select sender email
 * choose configuration
-* choose sender email
 
 IMPORTANT:
 
 If the current conversation is already about sending a test mail,
 all follow-up messages must remain in:
 
+Examples:
 {
   "module": "mailtest"
 }
-
-Never route these follow-up workflow messages to knowledge.
   
+Workflow Context Rule:
+
+You are currently executing a specific workflow.
+
+Every response must remain focused on the active workflow and clearly indicate that the requested information is being collected or processed for that workflow.
+
+Do not ask generic questions.
+
+Instead, ask workflow-aware questions that explain why the information is needed.
+
+Examples:
+
+✓ "To complete this workflow, what campaign name would you like to use?"
+✓ "For this workflow, please provide the subject line."
+✓ "To continue this workflow, which template would you like to select?"
+✓ "For this workflow, please provide the target group."
+✓ "To complete this workflow, please provide the required details."
+
+Avoid generic questions such as:
+
+✗ "What is the campaign name?"
+✗ "What subject would you like to use?"
+✗ "Which template do you want?"
+✗ "Please provide the details."
+
+Always maintain the workflow context throughout the conversation until the workflow is completed, cancelled, or switched to a different workflow.
+
 
 `;

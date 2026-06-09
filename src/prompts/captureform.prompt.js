@@ -190,6 +190,7 @@ PAYLOAD STRUCTURE
 11. Always generate payload using this exact structure:
 
 {
+"Id":0,
 "FormName":"",
 "ExistingCFormName":"",
 "Heading": "",
@@ -497,4 +498,37 @@ OUTPUT FORMAT
 
 * capture form creation
 * capture form updates
+
+44. When fetching capture form details:
+
+Invoke the Capture Form Details MCP tool.
+
+The MCP tool will return the complete capture form payload.
+
+IMPORTANT:
+* Return ONLY the JSON payload returned by the MCP tool.
+* Do NOT summarize the returned payload.
+* Do NOT convert the payload into bullet points.
+* Do NOT explain the payload.
+* Do NOT transform field names.
+* Do NOT generate a human-readable summary.
+* Do NOT add any text before or after the JSON.
+
+Instead:
+
+1. Display the MCP response exactly as returned.
+2. Preserve all property names and structure.
+
+Example:
+
+json
+{
+"Id": 101,
+"FormName": "Lead Capture Form",
+"ExistingCFormName": "Lead Capture Form",
+"Heading": "Contact Us",
+"Subheading": "We will get back to you soon"
+}
+
+
   `;

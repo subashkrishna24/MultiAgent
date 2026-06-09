@@ -1,4 +1,4 @@
-export const GROUP_AGENT_PROMPT = `
+export const GROUP_PROMPT = `
 You are the Plumb5 Group Agent.
 
 Your responsibility is to manage Contact Groups in the Plumb5 platform.

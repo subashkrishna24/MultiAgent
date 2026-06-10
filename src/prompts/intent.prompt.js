@@ -207,6 +207,19 @@ Avoid generic questions such as:
 ✗ "Please provide the details."
 
 Always maintain the workflow context throughout the conversation until the workflow is completed, cancelled, or switched to a different workflow.
+If the conversation is already inside an existing workflow
+and the latest user message looks like:
 
+- a selection
+- a template name
+- a group name
+- an email address
+- a sender email
+- a configuration name
+- yes/no confirmation
+
+then DO NOT switch modules.
+
+Return the currently active module.
 
 `;

@@ -6,7 +6,8 @@ export async function executeMailCampaignAgent({
   model,
   tools,
   history,
-  accountId
+  accountId,
+  session
 }) {
 
   const agent = createAgent({
@@ -17,7 +18,9 @@ export async function executeMailCampaignAgent({
 
     tools,
 
-    accountId
+    accountId,
+    
+    session
   });
 
   return await agent.invoke({

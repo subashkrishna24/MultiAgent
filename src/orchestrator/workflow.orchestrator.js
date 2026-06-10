@@ -26,8 +26,13 @@ import { executeMailSpamScoreAgent } from "../agents/mail/mailspamscore.agent.js
 
 import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
 
+import { getPagingSession } from "../store/paging.store.js";
+
 export async function executeWorkflow(payload) {
   const { history, accountid, apikey, model, p5apikey } = payload;
+
+   // Session
+  const session = getPagingSession(accountid);
 
   const llmModel = getllmModel(model, apikey);
 
@@ -126,6 +131,8 @@ export async function executeWorkflow(payload) {
       history: recentHistory,
 
       accountId: accountid,
+
+      session 
     });
   }
 
@@ -138,6 +145,7 @@ export async function executeWorkflow(payload) {
       history: recentHistory,
 
       accountId: accountid,
+      session
     });
   }
   
@@ -175,7 +183,9 @@ export async function executeWorkflow(payload) {
     });
   }
 
+  console.log("Current Session:",JSON.stringify(session,null,2));
   console.log("Final response from agent:", response);
+
   await mcpClient.close();
 
   return {

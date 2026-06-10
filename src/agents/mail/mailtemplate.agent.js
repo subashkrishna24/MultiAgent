@@ -6,7 +6,8 @@ export async function executeMailTemplateAgent({
   model,
   tools,
   history,
-  accountId
+  accountId,
+  session
 }) {
 
   const agent = createAgent({
@@ -17,9 +18,49 @@ export async function executeMailTemplateAgent({
 
     tools,
 
-    accountId
+    accountId,
+    session
   });
 
+  const lastMessage =
+    history[
+      history.length - 1
+    ].content
+      .toLowerCase()
+      .trim();
+
+  // Next Page
+  if (
+  /(next|more)/i.test(lastMessage) &&
+  /template/i.test(lastMessage)
+) {
+
+    session.templateOffset +=
+      session.templateFetchNext;
+
+    console.log(
+      "Template Offset:",
+      session.templateOffset
+    );
+  }
+
+  // Previous Page
+  if (
+  /(previous|back)/i.test(lastMessage) &&
+  /template/i.test(lastMessage)
+){
+
+    session.templateOffset -=
+      session.templateFetchNext;
+
+    if (
+      session.templateOffset < 0
+    ) {
+
+      session.templateOffset = 0;
+    }
+  }
+  
   return await agent.invoke({
     messages: history
   });

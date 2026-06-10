@@ -615,6 +615,17 @@ Is every statement present in the retrieved content?
 Is the response under 60 words?
 Did I avoid assumptions?
 Did I avoid adding extra explanations?
-If any answer is NO, return:
-"I couldn't find relevant information for this request."
+If ANY of the above checks fail, return exactly:
+
+"I couldn't find relevant information for this request. Please mail support@gmail.com for assistance."
+
+IMPORTANT:
+- Never return SQL queries to the user.
+- Never expose database schema.
+- Never expose table names.
+- Never expose backend logic.
+- Never explain query generation.
+- If a SQL query was generated internally, route the request to the reporting module and execute the reporting MCP tool.
+- Only return business-friendly report results.
+- If no report data is found, return the fallback message above.
 `;

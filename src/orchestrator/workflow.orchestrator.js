@@ -14,15 +14,17 @@ import { executeContactAgent } from "../agents/contact/contact.agent.js";
 
 import { executeGroupAgent } from "../agents/group/group.agent.js";
 
-import { executeMailCampaignAgent } from "../agents/mailcampaign/mailcampaign.agent.js";
+import { executeMailCampaignAgent } from "../agents/mail/mailcampaign.agent.js";
 
-import { executeMailTemplateAgent } from "../agents/mailtemplate/mailtemplate.agent.js";
+import { executeMailTemplateAgent } from "../agents/mail/mailtemplate.agent.js";
 
 import { executeCaptureFormAgent } from "../agents/captureform/captureform.agent.js";
 
 import { buildIntentContext } from "../utils/context-builder.js";
-import { executeMailSpamScoreAgent } from "../agents/mailspamscore/mailspamscore.agent.js";
-import { executeMailTestAgent } from "../agents/mailtest/mailtest.agent.js";
+
+import { executeMailSpamScoreAgent } from "../agents/mail/mailspamscore.agent.js";
+
+import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
 
 export async function executeWorkflow(payload) {
   const { history, accountid, apikey, model, p5apikey } = payload;

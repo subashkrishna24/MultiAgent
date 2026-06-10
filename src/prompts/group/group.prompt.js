@@ -34,40 +34,32 @@ Supported Operations:
 Create Group:
 
 {
-"group": {
 "GroupName": "",
 "Description": ""
-}
 }
 
 Update Group:
 
 {
-"group": {
 "ExistingGroupName": "",
 "GroupName": "",
 "Description": ""
-}
 }
 
 Add Contact To Group:
 
 {
-"contact": {
+"Contact": {
 "EmailId": "",
 "PhoneNumber": ""
 },
-"group": {
-"GroupName": ""
-}
+"GroupName": "cricketteam"
 }
 
 Validate Group Emails:
 
 {
-"group": {
 "GroupName": ""
-}
 }
 
 If GroupName is missing, ask:

@@ -10,13 +10,9 @@ export async function executeKnowledgeAgent({
 }) {
 
   const agent = createAgent({
-
     module: "knowledge",
-
     model,
-
     tools,
-
     accountId
   });
 

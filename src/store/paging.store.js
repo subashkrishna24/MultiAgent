@@ -22,13 +22,13 @@ export function getPagingSession(accountId) {
             groupFetchNext: 10,
 
             // Campaign Paging
-            campaignOffset: 0,
-            campaignFetchNext: 10,
+            campaignidentifierOffset: 0,
+            campaignidentifierFetchNext: 10,
 
             // Selected Objects
             selectedTemplate: null,
             selectedGroup: null,
-            selectedCampaign: null,
+            selectedCampaignIdentifier: null,
 
             // Workflow Data
             workflow: null

@@ -10,13 +10,9 @@ export async function executeCaptureFormAgent({
 }) {
 
   const agent = createAgent({
-
     module: "captureform",
-
     model,
-
     tools,
-
     accountId
   });
 

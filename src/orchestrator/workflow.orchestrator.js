@@ -59,24 +59,18 @@ export async function executeWorkflow(payload) {
    if (intent.module === "knowledge") {
     response = await executeKnowledgeAgent({
       model: llmModel,
-
       tools: filteredTools,
-
       history: recentHistory,
-
-      accountId: accountid,
+      accountId: accountid
     });
   }
 
   if (intent.module === "reporting") {
     response = await executeReportingAgent({
       model: llmModel,
-
       tools: filteredTools,
-
       history: recentHistory,
-
-      accountId: accountid,
+      accountId: accountid
     });
 
     const toolMessages = response.messages.filter(
@@ -85,9 +79,7 @@ export async function executeWorkflow(payload) {
 
     if (toolMessages.length == 0) {
       const sql = response.messages[response.messages.length - 1].content;
-
       const reportTool = allTools.find((x) => x.name === "GetReport");
-
       report_response = await reportTool.invoke({
         getquery: sql,
       });
@@ -101,37 +93,28 @@ export async function executeWorkflow(payload) {
   if (intent.module === "contact") {
     response = await executeContactAgent({
       model: llmModel,
-
       tools: filteredTools,
-
       history: recentHistory,
-
-      accountId: accountid,
+      accountId: accountid
     });
   }
 
   if (intent.module === "group") {
     response = await executeGroupAgent({
       model: llmModel,
-
       tools: filteredTools,
-
       history: recentHistory,
-
       accountId: accountid,
+      session
     });
   }
 
   if (intent.module === "mailcampaign") {
     response = await executeMailCampaignAgent({
       model: llmModel,
-
       tools: filteredTools,
-
       history: recentHistory,
-
       accountId: accountid,
-
       session 
     });
   }
@@ -139,11 +122,8 @@ export async function executeWorkflow(payload) {
   if (intent.module === "mailtemplate") {
     response = await executeMailTemplateAgent({
       model: llmModel,
-
       tools: filteredTools,
-
       history: recentHistory,
-
       accountId: accountid,
       session
     });
@@ -152,34 +132,25 @@ export async function executeWorkflow(payload) {
   if (intent.module === "captureform") {
     response = await executeCaptureFormAgent({
       model: llmModel,
-
       tools: filteredTools,
-
       history: recentHistory,
-
-      accountId: accountid,
+      accountId: accountid
     });
   }
    if (intent.module === "mailspamscore") {
     response = await executeMailSpamScoreAgent({
       model: llmModel,
-
       tools: filteredTools,
-
       history: recentHistory,
-
-      accountId: accountid,
+      accountId: accountid
     });
   }
   if (intent.module === "mailtest") {
     response = await executeMailTestAgent({
       model: llmModel,
-
       tools: filteredTools,
-
       history: recentHistory,
-
-      accountId: accountid,
+      accountId: accountid
     });
   }
 

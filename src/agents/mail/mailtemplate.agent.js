@@ -13,52 +13,21 @@ export async function executeMailTemplateAgent({
   const agent = createAgent({
 
     module: "mailtemplate",
-
     model,
-
     tools,
-
     accountId,
     session
   });
 
-  const lastMessage =
-    history[
-      history.length - 1
-    ].content
-      .toLowerCase()
-      .trim();
-
+  const lastMessage =history[history.length - 1].content.toLowerCase().trim();
   // Next Page
-  if (
-  /(next|more)/i.test(lastMessage) &&
-  /template/i.test(lastMessage)
-) {
-
-    session.templateOffset +=
-      session.templateFetchNext;
-
-    console.log(
-      "Template Offset:",
-      session.templateOffset
-    );
+  if (/(next|more)/i.test(lastMessage) &&  /template/i.test(lastMessage)) {
+    session.templateOffset +=session.templateFetchNext;
   }
-
   // Previous Page
-  if (
-  /(previous|back)/i.test(lastMessage) &&
-  /template/i.test(lastMessage)
-){
-
-    session.templateOffset -=
-      session.templateFetchNext;
-
-    if (
-      session.templateOffset < 0
-    ) {
-
-      session.templateOffset = 0;
-    }
+  if (/(previous|back)/i.test(lastMessage) &&  /template/i.test(lastMessage)){
+    session.templateOffset -=session.templateFetchNext;
+    if (session.templateOffset < 0) {session.templateOffset = 0;}
   }
   
   return await agent.invoke({

@@ -6,7 +6,8 @@ export async function executeGroupAgent({
   model,
   tools,
   history,
-  accountId
+  accountId,
+  session
 }) {
 
   const agent = createAgent({

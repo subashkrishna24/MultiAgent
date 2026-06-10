@@ -16,6 +16,8 @@ import { MAILSPAMSCORE_PROMPT } from "../prompts/mail/mailspamscore.prompt.js";
 
 import { MAILTEST_PROMPT } from "../prompts/mail/mailtest.prompt.js";
 
+import { SHARED_PROMPT } from "../prompts/shared/shared.prompt.js";
+
 function getPrompt(module) {
 
   const prompts = {
@@ -48,8 +50,9 @@ export function createAgent({
   session
 }) {
 
-  const prompt = `
-${getPrompt(module)}
+const prompt = `${getPrompt(module)}
+
+${SHARED_PROMPT}
 
 ACCOUNT:
 ${accountId}

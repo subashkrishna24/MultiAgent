@@ -11,7 +11,6 @@ export async function executeMailTemplateAgent({
 }) {
 
   const agent = createAgent({
-
     module: "mailtemplate",
     model,
     tools,

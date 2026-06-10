@@ -1,4 +1,4 @@
-export const REPORTING_PROMPT = `PAGINATION RULES
+export const SHARED_PROMPT = `PAGINATION RULES
 
 The SESSION may contain:
 

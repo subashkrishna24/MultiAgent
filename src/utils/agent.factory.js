@@ -18,6 +18,8 @@ import { MAILSPAMSCORE_PROMPT } from "../prompts/mail/mailspamscore.prompt.js";
 
 import { MAILTEST_PROMPT } from "../prompts/mail/mailtest.prompt.js";
 
+import { PAGINATION_PROMPT } from "../prompts/Pagination/Pagination.prompt.js";
+
 function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
@@ -30,15 +32,28 @@ function getPrompt(module) {
 
     group: GROUP_PROMPT,
 
-    mailcampaign: MAILCAMPAIGN_PROMPT,  
+    mailcampaign: MAILCAMPAIGN_PROMPT,
 
     mailtemplate: MAILTEMPLATE_PROMPT,
 
-    mailspamscore: MAILSPAMSCORE_PROMPT ,
+    mailspamscore: MAILSPAMSCORE_PROMPT,
 
-    mailtest: MAILTEST_PROMPT};
+    mailtest: MAILTEST_PROMPT,
+  };
 
-  return prompts[module];
+  const paginationModules = [
+    "contact",
+    "captureform",
+    "group",
+    "mailcampaign",
+    "mailtemplate",
+  ];
+
+  const prompt = prompts[module];
+
+  return paginationModules.includes(module)
+    ? `${prompt}\n\n${PAGINATION_PROMPT}`
+    : prompt;
 }
 
 export function createAgent({ module, model, tools, accountId }) {

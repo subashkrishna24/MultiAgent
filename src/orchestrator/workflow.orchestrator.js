@@ -155,7 +155,7 @@ export async function executeWorkflow(payload) {
       accountId: accountid
     });
   }
- if (intent.module === "mailabtestcampaign") {
+ if (intent.module === "mailcampaign_abtest") {
     response = await executeMailAbTestCampaignAgent({
       model: llmModel,
       tools: filteredTools,

@@ -76,6 +76,42 @@ include them inside:
 
 Rules[].Conditions[]
 
+JSON VALIDATION RULES
+=====================
+
+Before returning any payload:
+
+Validate that the JSON is complete and valid.
+
+Never return:
+
+- Partial JSON
+- Truncated JSON
+- Half-created arrays
+- Half-created objects
+- Incomplete Rules
+- Incomplete Fields
+
+If any required value is missing:
+
+Ask for the missing information.
+
+Do not generate a payload until all required properties for that section are available.
+
+The final response must always be valid parseable JSON.
+
+Rules are optional.
+
+If the user does not provide a complete rule:
+
+"Rules": []
+
+Do not create placeholder rules.
+
+Do not infer rule values.
+
+Do not create partial rule objects.
+
 =========================================================
 FIELD STRUCTURE
 ===============
@@ -90,35 +126,35 @@ Example:
 
 {
 "Label": "Country",
-"Type": "4",
+"Type": "8",
 "Value": ["India", "USA", "UK"]
 }
 
 8. Field Type Mapping Rules
 
 Name / Full Name / Username
-→ Type = 1
+→ Type = "1"
 
 Email / EmailId
-→ Type = 2
+→ Type = "2"
 
 Phone / Mobile / MobileNumber
-→ Type = 3
-
-Dropdown / Select
-→ Type = 4
-
-Textarea / Message / Comments
-→ Type = 5
-
-Checkbox
-→ Type = 6
-
-Radio Button
-→ Type = 7
+→ Type = "3"
 
 Date / Calendar
-→ Type = 8
+→ Type = "4"
+
+Textarea / Message / Comments
+→ Type = "7"
+
+Dropdown / Select
+→ Type = "8"
+
+Radio Button
+→ Type = "9"
+
+Checkbox
+→ Type = "10"
 
 9. Value Rules
 
@@ -139,7 +175,7 @@ Dropdown:
 
 {
 "Label": "Country",
-"Type": "4",
+"Type": "8",
 "Value": ["India", "USA", "UK"]
 }
 
@@ -147,7 +183,7 @@ Radio Button:
 
 {
 "Label": "Gender",
-"Type": "7",
+"Type": "9",
 "Value": ["Male", "Female", "Other"]
 }
 
@@ -155,7 +191,7 @@ Checkbox:
 
 {
 "Label": "Services",
-"Type": "6",
+"Type": "10",
 "Value": ["SEO", "Email Marketing", "WhatsApp Marketing"]
 }
 
@@ -387,7 +423,28 @@ CREATE FLOW
     collect missing information conversationally.
 
 23. Once all required information is collected:
-    generate complete payload.
+
+Generate a complete valid payload.
+
+Before generating:
+
+Validate:
+
+- FormName exists
+- form_type exists
+- Fields are complete
+- Every Rule contains:
+  - Field
+  - Operator
+  - Value
+- notification_settings is complete
+- Responses is complete
+
+If any item is incomplete:
+
+Ask for the missing information.
+
+Do not generate partial payloads.
 
 24. Before creation:
     show final summary and ask for confirmation.

@@ -14,6 +14,7 @@ Available modules:
 - captureform
 - mailspamscore
 - mailtest
+- mailcampaign_abtest
 
 Return ONLY JSON.
 
@@ -221,5 +222,82 @@ and the latest user message looks like:
 then DO NOT switch modules.
 
 Return the currently active module.
+AB TEST CAMPAIGN PRIORITY RULE (VERY HIGH PRIORITY)
+
+Route to MAILCAMPAIGN_ABTEST when the user wants:
+
+create ab test campaign
+create a/b test campaign
+ab testing
+a/b testing
+split testing
+split test campaign
+email ab test
+mail ab test
+campaign with variation a and variation b
+compare two email templates
+test two templates
+ab mail campaign
+ab campaign
+create campaign with two templates
+winner selection campaign
+open rate winner campaign
+click rate winner campaign
+
+Examples:
+
+{
+"module": "mailcampaign_abtest"
+}
+
+CONTINUATION RULE
+
+If a conversation has already started as an A/B Test Campaign workflow and the user message contains any of the following:
+
+campaign name
+template name
+variation a template
+variation b template
+subject
+group selection
+schedule date
+sender name
+sender email
+distribution value
+winning metric
+test duration
+draw case
+yes
+no
+confirm
+proceed
+continue
+
+Then ALWAYS return:
+
+{
+"module": "mailcampaign_abtest"
+}
+IMPORTANT PRIORITY
+
+If the request contains any reference to:
+
+ab testing
+a/b testing
+split testing
+variation a
+variation b
+compare templates
+winner metric
+test duration
+distribution percentage
+
+ALWAYS return:
+
+{
+"module": "mailcampaign_abtest"
+}
+
+Never route these requests to mailcampaign.
 
 `;

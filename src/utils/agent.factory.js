@@ -19,7 +19,7 @@ import { MAILSPAMSCORE_PROMPT } from "../prompts/mail/mailspamscore.prompt.js";
 import { MAILTEST_PROMPT } from "../prompts/mail/mailtest.prompt.js";
 
 import { PAGINATION_PROMPT } from "../prompts/Pagination/Pagination.prompt.js";
-
+import { MAILCAMPAIGN_ABTEST_PROMPT } from "../prompts/mail/mailabtestcamapign.prompt.js";
 function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
@@ -39,6 +39,8 @@ function getPrompt(module) {
     mailspamscore: MAILSPAMSCORE_PROMPT,
 
     mailtest: MAILTEST_PROMPT,
+
+    mailabtestcampaign: MAILCAMPAIGN_ABTEST_PROMPT,
   };
 
   const paginationModules = [

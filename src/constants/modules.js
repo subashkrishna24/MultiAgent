@@ -16,5 +16,6 @@ export const MODULES = {
 
   MAILSPAMSCORE: "mailspamscore",
   
-  MAILTEST: "mailtest"
+  MAILTEST: "mailtest",
+  MAILCAMPAIGN_ABTEST: "mailcampaign_abtest"
 };

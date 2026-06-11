@@ -6,6 +6,8 @@ import { REPORTING_PROMPT } from "../prompts/reporting/reporting.prompt.js";
 
 import { CONTACT_PROMPT } from "../prompts/contact/contact.prompt.js";
 
+import { GROUP_PROMPT } from "../prompts/group/group.prompt.js";
+
 import { MAILCAMPAIGN_PROMPT } from "../prompts/mail/mailcampaign.prompt.js";
 
 import { CAPTUREFORM_PROMPT } from "../prompts/captureform/captureform.prompt.js";
@@ -27,6 +29,8 @@ function getPrompt(module) {
     reporting: REPORTING_PROMPT,
 
     contact: CONTACT_PROMPT,
+
+    group: GROUP_PROMPT,
 
     mailcampaign: MAILCAMPAIGN_PROMPT,
 

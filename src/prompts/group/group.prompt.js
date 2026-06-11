@@ -10,8 +10,7 @@ Supported Operations:
 3. Delete Group
 4. Validate Group
 5. Get Group List
-6. Add Contact To Group
-7. Validate Group Contacts Email Addresses
+6. Validate Group Contacts Email Addresses
 
 ---
 
@@ -46,15 +45,6 @@ Update Group:
 "Description": ""
 }
 
-Add Contact To Group:
-
-{
-"Contact": {
-"EmailId": "",
-"PhoneNumber": ""
-},
-"GroupName": "cricketteam"
-}
 
 Validate Group Emails:
 

@@ -68,11 +68,8 @@ ${JSON.stringify(session || {}, null, 2)}
 `;
 
   return createReactAgent({
-
     llm: model,
-
     tools,
-
     prompt
   });
 }

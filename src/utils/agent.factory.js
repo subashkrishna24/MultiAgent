@@ -20,6 +20,8 @@ import { MAILTEST_PROMPT } from "../prompts/mail/mailtest.prompt.js";
 
 import { MAILCAMPAIGN_ABTEST_PROMPT } from "../prompts/mail/mailabtestcamapign.prompt.js";
 
+import { SHARED_PROMPT } from "../prompts/shared/shared.prompt.js";
+
 function getPrompt(module) {
 
   const prompts = {

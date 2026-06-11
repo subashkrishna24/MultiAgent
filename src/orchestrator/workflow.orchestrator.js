@@ -25,6 +25,7 @@ import { buildIntentContext } from "../utils/context-builder.js";
 import { executeMailSpamScoreAgent } from "../agents/mail/mailspamscore.agent.js";
 
 import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
+import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js";
 
 export async function executeWorkflow(payload) {
   const { history, accountid, apikey, model, p5apikey } = payload;
@@ -151,7 +152,14 @@ export async function executeWorkflow(payload) {
       accountId: accountid
     });
   }
-
+ if (intent.module === "mailabtestcampaign") {
+    response = await executeMailAbTestCampaignAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid
+    });
+  }
   console.log("Final response from agent:", response);
 
   await mcpClient.close();

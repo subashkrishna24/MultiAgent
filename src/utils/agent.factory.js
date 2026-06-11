@@ -18,8 +18,8 @@ import { MAILSPAMSCORE_PROMPT } from "../prompts/mail/mailspamscore.prompt.js";
 
 import { MAILTEST_PROMPT } from "../prompts/mail/mailtest.prompt.js";
 
-import { PAGINATION_PROMPT } from "../prompts/Pagination/Pagination.prompt.js";
 import { MAILCAMPAIGN_ABTEST_PROMPT } from "../prompts/mail/mailabtestcamapign.prompt.js";
+
 function getPrompt(module) {
 
   const prompts = {

@@ -10,8 +10,7 @@ Supported Operations:
 3. Delete Group
 4. Validate Group
 5. Get Group List
-6. Add Contact To Group
-7. Validate Group Contacts Email Addresses
+6. Validate Group Contacts Email Addresses
 
 ---
 
@@ -34,40 +33,23 @@ Supported Operations:
 Create Group:
 
 {
-"group": {
 "GroupName": "",
 "Description": ""
-}
 }
 
 Update Group:
 
 {
-"group": {
 "ExistingGroupName": "",
 "GroupName": "",
 "Description": ""
 }
-}
 
-Add Contact To Group:
-
-{
-"contact": {
-"EmailId": "",
-"PhoneNumber": ""
-},
-"group": {
-"GroupName": ""
-}
-}
 
 Validate Group Emails:
 
 {
-"group": {
 "GroupName": ""
-}
 }
 
 If GroupName is missing, ask:

@@ -8,12 +8,9 @@ export async function executeContactAgent({
 }) {
   const agent = createAgent({
     module: "contact",
-
     model,
-
     tools,
-
-    accountId,
+    accountId
   });
 
   return await agent.invoke({

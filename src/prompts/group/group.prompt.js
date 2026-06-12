@@ -237,6 +237,97 @@ Example:
 
 ---
 
+## UPDATE GROUP INTENT RECOGNITION
+
+Treat the following user requests as Update Group operations:
+
+### Rename Group Examples
+
+* Rename group <OldGroupName> to <NewGroupName>
+* Change group name from <OldGroupName> to <NewGroupName>
+* Rename <OldGroupName> to <NewGroupName>
+* Update group name from <OldGroupName> to <NewGroupName>
+* Modify group name from <OldGroupName> to <NewGroupName>
+* Change the name of group <OldGroupName> to <NewGroupName>
+* Give group <OldGroupName> a new name <NewGroupName>
+* Replace group name <OldGroupName> with <NewGroupName>
+
+### Update Description Examples
+
+* Update description of group <GroupName>
+* Change group description
+* Modify group description
+* Edit group description
+* Update details of group <GroupName>
+* Change details of group <GroupName>
+
+### General Update Examples
+
+* Update group <GroupName>
+* Modify group <GroupName>
+* Edit group <GroupName>
+* Change group <GroupName>
+* Update details for group <GroupName>
+* Change information for group <GroupName>
+* Update the group settings
+* Edit group information
+
+### Combined Update Examples
+
+* Rename group <OldGroupName> to <NewGroupName> and update description
+* Change group name and description
+* Modify group details
+* Update group information
+
+For rename operations:
+
+{
+"ExistingGroupName": "<OldGroupName>",
+"GroupName": "<NewGroupName>"
+}
+
+For description updates:
+
+{
+"ExistingGroupName": "<GroupName>",
+"Description": "<NewDescription>"
+}
+
+For combined updates:
+
+{
+"ExistingGroupName": "<OldGroupName>",
+"GroupName": "<NewGroupName>",
+"Description": "<NewDescription>"
+}
+
+---
+
+## UPDATE GROUP VALIDATION
+
+If ExistingGroupName does not exist:
+
+* Call Get Group List MCP tool.
+* Display available groups.
+* Ask the user to select a valid group.
+
+If GroupName is provided and is the same as ExistingGroupName:
+
+* Inform the user that the new group name must be different from the current group name.
+
+If GroupName already exists:
+
+* Inform the user that the target group name already exists.
+* Ask for a different group name.
+
+Before execution:
+
+* Show the current values and proposed changes.
+* Ask for confirmation.
+
+
+---
+
 ## DELETE GROUP FLOW
 
 Required:

@@ -167,9 +167,9 @@ Groups that do not satisfy the above conditions are considered Unverified.
 
 ##CAMPAIGN REPORT RULES
 
-if they ask onl;y campaign details for mail,sms,webpush,whatsapp,rcs:
--
- 
+- if they ask like :
+how many campaign are done from last month or this month or april month or april 1 to april 30 or like that then take from sendingsetting table only and apply date filter on scheduleddate column:
+
 - for all campaign in where condition add scheduledstatus =0;
 
 A. MAIL CAMPAIGN

@@ -1,5 +1,4 @@
-
-export const REPORTING_PROMPT =`You are a PostgreSQL query generator.
+export const REPORTING_PROMPT = `You are a PostgreSQL query generator.
 Your task is to generate ONLY a raw PostgreSQL query based on the user s request.
 
 ##CORE RULES (MANDATORY)
@@ -106,25 +105,24 @@ Mandatory Join:
 - LEFT JOIN groupmember gm
   ON g.id = gm.groupid
 
-Derived Field Rule:
-- totalemailverfied is a derived field.
-- It must ALWAYS be calculated using:
-
-  CASE
-    WHEN CAST(COUNT(gm.contactid) AS INTEGER) >= totalemailverfied
-    THEN totalemailverfied
-    ELSE 0
-  END
-
-- Never use:
-    SUM(g.totalemailverfied)
-    or direct aggregation on g.totalemailverfied.
 
 Filtering Rules:
 
-1. Verified / validated groups:
-   Apply condition on derived totalemailverfied:
-   > 0
+1. if they ask how many validated groups ,Verified groups:
+   SELECT
+    g.id,
+    g.name,
+    COUNT(gm.contactid)::INT AS total,
+    MAX(g.totalemailverfied) AS verified
+FROM groups g
+LEFT JOIN groupmember gm
+    ON g.id = gm.groupid
+WHERE g.displayinunscubscribe = FALSE
+GROUP BY g.id, g.name
+HAVING COUNT(gm.contactid) >= MAX(g.totalemailverfied)
+   AND MAX(g.totalemailverfied) > 0
+   AND (MAX(g.totalemailverfied) * 100.0 / NULLIF(COUNT(gm.contactid), 0)) >= 1
+ORDER BY g.id DESC;
 
 2. Unverified / not validated groups:
    Apply condition on derived totalemailverfied:
@@ -134,9 +132,6 @@ Filtering Rules:
 
 4. Add joins and GROUP BY dynamically.
 
-5. Keep SQL generation dynamic.
-- Do not hardcode full queries.
-- Build query from rules.
 
 ##CAMPAIGN REPORT RULES
 
@@ -166,38 +161,38 @@ DATE(mailsendingsetting.scheduleddate)
 B. SMS CAMPAIGN
 
 Tables:
-sms_p5_campaign,
+smssendingsetting,
 smssent
 
 JOIN:
-sms_p5_campaign.id = smssent.sms_p5_campaignid
+smssendingsetting.id = smssent.smssendingsettingid
 
 REQUIRED FIELDS:
 
-sms_p5_campaign.name AS "campaign name",
-DATE(sms_p5_campaign.scheduleddate) AS scheduled_date,
+smssendingsetting.name AS "campaign name",
+DATE(smssendingsetting.scheduleddate) AS scheduled_date,
 COUNT(*) AS total_sent,
 SUM(smssent.isdelivered) AS total_delivered,
 SUM(smssent.isclicked) AS total_clicked
 
 GROUP BY:
 
-sms_p5_campaign.name,
-DATE(sms_p5_campaign.scheduleddate)
+smssendingsetting.name,
+DATE(smssendingsetting.scheduleddate)
 
 C. WHATSAPP CAMPAIGN
 
 Tables:
-whatsapp_p5_campaign,
+whatsappsendingsetting,
 whatsappsent
 
 JOIN:
-whatsapp_p5_campaign.id = whatsappsent.whatsapp_p5_campaignid
+whatsappsendingsetting.id = whatsappsent.whatsappsendingsettingid
 
 REQUIRED FIELDS:
 
-whatsapp_p5_campaign.name AS "campaign name",
-DATE(whatsapp_p5_campaign.scheduleddate) AS scheduled_date,
+whatsappsendingsetting.name AS "campaign name",
+DATE(whatsappsendingsetting.scheduleddate) AS scheduled_date,
 COUNT(*) AS total_sent,
 SUM(whatsappsent.isdelivered) AS total_delivered,
 SUM(whatsappsent.isread) AS total_opened,
@@ -205,30 +200,30 @@ SUM(whatsappsent.isclicked) AS total_clicked
 
 GROUP BY:
 
-whatsapp_p5_campaign.name,
-DATE(whatsapp_p5_campaign.scheduleddate)
+whatsappsendingsetting.name,
+DATE(whatsappsendingsetting.scheduleddate)
 
 D. WEB PUSH CAMPAIGN
 
 Tables:
-webpush_p5_campaign,
+webpushsendingsetting,
 webpushsent
 
 JOIN:
-webpush_p5_campaign.id = webpushsent.webpush_p5_campaignid
+webpushsendingsetting.id = webpushsent.webpushsendingsettingid
 
 REQUIRED FIELDS:
 
-webpush_p5_campaign.name AS "campaign name",
-DATE(webpush_p5_campaign.scheduleddate) AS scheduled_date,
+webpushsendingsetting.name AS "campaign name",
+DATE(webpushsendingsetting.scheduleddate) AS scheduled_date,
 COUNT(*) AS total_sent,
 SUM(webpushsent.isviewed) AS total_opened,
 SUM(webpushsent.isclicked) AS total_clicked
 
 GROUP BY:
 
-webpush_p5_campaign.name,
-DATE(webpush_p5_campaign.scheduleddate)
+webpushsendingsetting.name,
+DATE(webpushsendingsetting.scheduleddate)
 
 E. OVERALL CAMPAIGN REPORT RULES
 
@@ -573,13 +568,13 @@ CREATE TABLE smstemplate(
   messagecontent varchar(600), createddate datetime, PRIMARY KEY(id)
 );
 
-CREATE TABLE sms_p5_campaign(
+CREATE TABLE smssendingsetting(
   id int, name varchar(100), groupid int,
   smstemplateid int, scheduleddate datetime, PRIMARY KEY(id)
 );
 
 CREATE TABLE smssent(
-  smstemplateid int, sms_p5_campaignid int, groupid int,
+  smstemplateid int, smssendingsettingid int, groupid int,
   contactid int, phonenumber varchar(300), isdelivered int,
   isclicked int, deliverytime datetime, clickdate datetime
 );
@@ -588,13 +583,13 @@ CREATE TABLE whatsapptemplates(
   id int, name varchar(100), templatestatus int, createddate datetime, PRIMARY KEY(id)
 );
 
-CREATE TABLE whatsapp_p5_campaign(
+CREATE TABLE whatsappsendingsetting(
   id int, name varchar(100), groupid int,
   whatsapptemplateid int, scheduleddate datetime, PRIMARY KEY(id)
 );
 
 CREATE TABLE whatsappsent(
-  whatsapptemplateid int, whatsapp_p5_campaignid int, groupid int,
+  whatsapptemplateid int, whatsappsendingsettingid int, groupid int,
   contactid int, phonenumber varchar(300), issent int, isdelivered int,
   isread int, isclicked int, sentdate datetime, readdate datetime, clickdate datetime
 );
@@ -606,13 +601,13 @@ CREATE TABLE webpushtemplate(
   createddate datetime, PRIMARY KEY(id)
 );
 
-CREATE TABLE webpush_p5_campaign(
+CREATE TABLE webpushsendingsetting(
   id int, name varchar(100), groupid int,
   webpushtemplateid int, scheduleddate datetime, PRIMARY KEY(id)
 );
 
 CREATE TABLE webpushsent(
-  webpushtemplateid int, webpush_p5_campaignid int,
+  webpushtemplateid int, webpushsendingsettingid int,
   sessionid varchar(300), machineid varchar(300), issent int,
   isviewed int, isclicked int, isclosed int, sentdate datetime,
   viewdate datetime, clickdate datetime, closedate datetime
@@ -863,4 +858,4 @@ DO NOT include explanations under any condition.
 OUTPUT RULES:
 
 - Generate PostgreSQL query
-- Call one time GetReport MCP tool for each PostgreSQL query;`
+- Call one time GetReport MCP tool for each PostgreSQL query;`;

@@ -22,6 +22,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "install": "^0.13.0",
-    "langchain": "^1.4.1"
+    "langchain": "^1.4.1",
+    "sarvamai": "^1.1.7"
   }
 }

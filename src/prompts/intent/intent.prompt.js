@@ -40,17 +40,81 @@ Rules:
     }
 
 2. Route to MAILCAMPAIGN when the user wants:
-   - create campaign
-   - update campaign
-   - schedule campaign
-   - send campaign
-   - manage templates
-   - campaign identifiers
 
-   Example:
-    {
-      "module": "mailcampaign"
-    }
+- create campaign
+- create mail campaign
+- create email campaign
+- new campaign
+- update campaign
+- duplicate campaign
+- delete campaign
+- schedule campaign
+- send campaign
+- manage campaign
+- campaign identifiers
+
+IMPORTANT
+
+Return MAILCAMPAIGN unless the user explicitly mentions:
+
+- ab test
+- a/b test
+- split test
+- split testing
+- variation a
+- variation b
+- ab campaign
+- a/b campaign
+
+Examples:
+
+User:
+create campaign
+
+{
+  "module": "mailcampaign"
+}
+
+User:
+create mail campaign
+
+{
+  "module": "mailcampaign"
+}
+
+User:
+schedule campaign
+
+{
+  "module": "mailcampaign"
+}
+
+==================================================
+
+WORKFLOW CONTINUATION RULE
+
+If the active workflow is MAILCAMPAIGN:
+
+Always return:
+
+{
+  "module": "mailcampaign"
+}
+
+until the workflow is:
+
+- completed
+- cancelled
+- explicitly changed by the user
+
+While MAILCAMPAIGN is active:
+
+- Treat every user message as input to the current Mail Campaign step.
+- Do not perform intent re-detection.
+- Do not switch to MAILCAMPAIGN_ABTEST.
+- Do not switch modules based on field values, template names, group names, email addresses, dates, times, selections, or confirmations.
+
+Only switch modules if the user explicitly starts a different workflow.
 
 3. Route to CAPTUREFORM when the user wants:
    - create capture form
@@ -183,7 +247,9 @@ Examples:
 }
   
 
-10.Route to MAILCAMPAIGN_ABTEST when the user wants:
+10.Route to MAILCAMPAIGN_ABTEST only when the user explicitly requests an A/B testing workflow.
+
+Examples:
 
 * create ab test campaign
 * create a/b test campaign
@@ -193,29 +259,38 @@ Examples:
 * split test campaign
 * email ab test
 * mail ab test
+* ab campaign
+* a/b campaign
+* create campaign with two templates
 * campaign with variation a and variation b
 * compare two email templates
 * test two templates
-* ab mail campaign
-* ab campaign
-* create campaign with two templates
 * winner selection campaign
 * open rate winner campaign
 * click rate winner campaign
-* ab testing
-* a/b testing
-* split testing
-* variation a
-* variation b
-* compare templates
-* winner metric
-* test duration
-* distribution percentage
 
-Examples:
+Return:
 
 {
 "module": "mailcampaign_abtest"
 }
+
+WORKFLOW CONTINUITY
+
+If the active workflow is already mailcampaign_abtest:
+
+Always return:
+
+{
+"module": "mailcampaign_abtest"
+}
+
+until the workflow is:
+
+* completed
+* cancelled
+* explicitly switched by the user
+
+Do NOT switch modules while an A/B Test workflow is in progress.
 
 `;

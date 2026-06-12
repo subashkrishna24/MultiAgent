@@ -1,6 +1,6 @@
 import {
   INTENT_PROMPT
-} from "../../prompts/intent.prompt.js";
+} from "../../prompts/intent/intent.prompt.js";
 import { extractJSON } from "../../utils/json.utils.js";
 
 export async function detectIntent(

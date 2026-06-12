@@ -44,7 +44,7 @@ function getPrompt(module) {
 
     mailtest: MAILTEST_PROMPT,
 
-    mailabtestcampaign: MAILCAMPAIGN_ABTEST_PROMPT,
+    mailcampaign_abtest: MAILCAMPAIGN_ABTEST_PROMPT,
   };
 
   return prompts[module];
@@ -60,7 +60,7 @@ export function createAgent({
 
 const prompt = `${getPrompt(module)}
 
-${SHARED_PROMPT}
+ ${SHARED_PROMPT}
 
 ACCOUNT:
 ${accountId}

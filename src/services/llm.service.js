@@ -29,6 +29,19 @@ export function getllmModel(model, apikey) {
     });
   }
 
+  if (provider === "sarvam") {
+    return new ChatOpenAI({
+      modelName: model,
+      apiKey: apikey,
+      temperature: 0.7,
+      maxTokens: 1000,
+      configuration: {
+        baseURL: "https://api.sarvam.ai/v1",
+        timeout: 120000,
+      },
+    });
+  }
+
   const providerConfigs = {
     openai: "https://api.openai.com/v1",
     openrouter: "https://openrouter.ai/api/v1",
@@ -38,6 +51,7 @@ export function getllmModel(model, apikey) {
     deepseek: "https://api.deepseek.com/v1",
     google: "https://generativelanguage.googleapis.com/v1beta/openai",
     ollama: "http://localhost:11434/v1",
+    sarvam: "https://api.sarvam.ai/v1",
   };
 
   const baseURL = providerConfigs[provider] || providerConfigs.openai;
@@ -84,22 +98,25 @@ function detectProvider(apikey) {
   if (apikey.startsWith("together_")) return "together";
 
   // Google Gemini
-  if (apikey.startsWith("AIzaSy")) return "google";
+  if (apikey.startsWith("AIza")) return "google";
 
   // DeepSeek
   if (apikey.startsWith("deepseek-")) return "deepseek";
 
+  // Sarvam AI
+  if (apikey.startsWith("sk_")) return "sarvam";
+
   // Ollama
   if (apikey === "ollama") return "ollama";
-
-  // Mistral
-  if (/^[a-zA-Z0-9]{32}$/.test(apikey)) return "mistral";
 
   // Cohere
   if (apikey.startsWith("co-")) return "cohere";
 
   // OpenAI
   if (apikey.startsWith("sk-")) return "openai";
+
+  // Mistral (keep after more specific checks)
+  if (/^[a-zA-Z0-9]{32}$/.test(apikey)) return "mistral";
 
   return "openai";
 }

@@ -101,39 +101,76 @@ Table:
 - groups g
 - groupmember gm
 
-Mandatory Join:
-- LEFT JOIN groupmember gm
-  ON g.id = gm.groupid
+Group Verification Count Rules
+1. Total Groups
 
+If the user asks for the total number of groups, use:
 
-Filtering Rules:
+SELECT COUNT(*)
+FROM groups
+WHERE displayinunscubscribe = FALSE;
 
-1. if they ask how many validated groups ,Verified groups:
-   SELECT
-    g.id,
-    g.name,
-    COUNT(gm.contactid)::INT AS total,
-    MAX(g.totalemailverfied) AS verified
-FROM groups g
-LEFT JOIN groupmember gm
-    ON g.id = gm.groupid
-WHERE g.displayinunscubscribe = FALSE
-GROUP BY g.id, g.name
-HAVING COUNT(gm.contactid) >= MAX(g.totalemailverfied)
-   AND MAX(g.totalemailverfied) > 0
-   AND (MAX(g.totalemailverfied) * 100.0 / NULLIF(COUNT(gm.contactid), 0)) >= 1
-ORDER BY g.id DESC;
+2. Total Verified Groups
 
-2. Unverified / not validated groups:
-   Apply condition on derived totalemailverfied:
-   IS NULL OR = 0
+If the user asks for the total number of verified groups, use:
 
-3. Derived field filtering must occur after aggregation.
+SELECT COUNT(*) AS TotalGroups
+FROM (
+    SELECT g.id
+    FROM groups g
+    LEFT JOIN groupmember gm
+        ON g.id = gm.groupid
+    WHERE g.displayinunscubscribe = FALSE
+    GROUP BY g.id, g.name
+    HAVING COUNT(gm.contactid) >= MAX(g.totalemailverfied)
+       AND MAX(g.totalemailverfied) > 0
+       AND (MAX(g.totalemailverfied) * 100.0 / NULLIF(COUNT(gm.contactid), 0)) >= 1
+) t;
+3. Total Unverified Groups
 
-4. Add joins and GROUP BY dynamically.
+If the user asks for the total number of unverified groups, calculate:
 
+Unverified Groups = Total Groups − Verified Groups
+
+Use:
+
+SELECT
+(
+    SELECT COUNT(*)
+    FROM groups g
+    WHERE g.displayinunscubscribe = FALSE
+)
+-
+(
+    SELECT COUNT(*)
+    FROM (
+        SELECT g.id
+        FROM groups g
+        LEFT JOIN groupmember gm
+            ON g.id = gm.groupid
+        WHERE g.displayinunscubscribe = FALSE
+        GROUP BY g.id, g.name
+        HAVING COUNT(gm.contactid) >= MAX(g.totalemailverfied)
+           AND MAX(g.totalemailverfied) > 0
+           AND (MAX(g.totalemailverfied) * 100.0 / NULLIF(COUNT(gm.contactid), 0)) >= 1
+    ) v
+) AS UnverifiedGroups;
+Verification Criteria
+
+A group is considered Verified when:
+
+totalemailverfied > 0
+COUNT(groupmember.contactid) >= totalemailverfied
+Verification percentage is greater than or equal to 1%
+
+Groups that do not satisfy the above conditions are considered Unverified.
 
 ##CAMPAIGN REPORT RULES
+
+- if they ask like :
+how many campaign are done from last month or this month or april month or april 1 to april 30 or like that then take from sendingsetting table only and apply date filter on scheduleddate column:
+
+- for all campaign in where condition add scheduledstatus =0;
 
 A. MAIL CAMPAIGN
 

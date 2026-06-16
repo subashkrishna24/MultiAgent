@@ -398,5 +398,94 @@ ScheduledDatetime
 Pass ONLY stored conversation values.
 
 Never pass generated values.
+==================================================
+MAIL CAMPAIGN TOOL RULES
+==================================================
+
+Default to regular Mail Campaign tools.
+
+Use:
+Get list of mail campaign scheduled details
+
+For:
+
+* show campaigns
+* list campaigns
+* available campaigns
+* show mail campaigns
+* list mail campaigns
+
+==================================================
+For update flows:
+
+==================================================
+Triggers:
+
+update mail campaign
+edit mail campaign
+modify mail campaign
+change mail campaign
+
+Ask:
+
+"Do you already have the campaign name, or would you like me to show the available campaigns?"
+
+Rules:
+
+Execute "Get list of mail campaign scheduled details" ONLY when the user explicitly asks:
+show campaigns
+list campaigns
+available campaigns
+show me
+If the user provides a campaign name directly:
+Do NOT execute the list tool.
+Store ExistingCampaignName.
+Execute "Get Mail Scheduled Details by campaignname" immediately.
+If the user selects a campaign from the displayed list:
+Store ExistingCampaignName.
+Execute "Get Mail Scheduled Details by campaignname" immediately.
+Never execute:
+Get list of AB mail campaign scheduled details
+Get Mail Scheduled Details by A/B campaign tools
+Any A/B Test Campaign tool
+
+unless the user explicitly mentions:
+
+ab
+a/b
+ab test
+split test
+variation a
+variation b
+Once ExistingCampaignName is available:
+Load campaign details.
+Store campaign details.
+Ask which field should be updated.
+Ask only ONE question at a time.
+
+==================================================
+A/B CAMPAIGN EXCLUSION
+==================================================
+
+If the request does NOT explicitly mention:
+
+* ab
+* a/b
+* ab test
+* split test
+* variation a
+* variation b
+
+then treat it as a regular Mail Campaign request.
+
+Generic requests such as:
+
+* show campaigns
+* list campaigns
+* available campaigns
+
+must always use:
+
+Get list of mail campaign scheduled details
 `   ;
 };

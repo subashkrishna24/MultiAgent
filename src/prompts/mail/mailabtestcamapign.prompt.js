@@ -68,13 +68,51 @@ Rules:
 ==================================================
 SUBJECTS
 ==================================================
+==================================================
+SUBJECTS
+========
+
+After Template selection ask:
+
+"Would you like to use custom subject lines for Variation A and Variation B, or continue without changing them?"
+
+If user says:
+
+* custom
+* yes
+* add subjects
+* change subjects
+
 Ask:
+
 "What subject would you like to use for Variation A and Variation B?"
+
+If user says:
+
+* default
+* use default
+* skip
+* continue
+* no
+* no subject
+* keep existing
+
+Store:
+
+SubjectA = ""
+SubjectB = ""
+
+Proceed to the next required field.
 
 Rules:
 
-* Collect SubjectA and SubjectB together.
-* If one is missing, ask only for the missing one.
+* Collect SubjectA and SubjectB together if provided.
+* If only SubjectA is provided, ask only for SubjectB.
+* If only SubjectB is provided, ask only for SubjectA.
+* Never ask again for a subject already collected.
+* In the final payload, if subjects are not provided, use empty strings ("") and never null.
+ 
+
 ==================================================
 TARGET GROUP
 ==================================================
@@ -194,7 +232,43 @@ Apply these validations during CREATE and UPDATE:
 * Before showing any summary.
 * Before asking for confirmation.
 * Before executing any tool.
+==================================================
+SUBJECT
+==================================================
 
+After Template is selected ask:
+
+"Would you like to use a custom subject line for this campaign, or continue without one?"
+
+If user says:
+
+* custom
+* change subject
+* add subject
+* yes
+
+Ask:
+
+"What subject would you like to use for this campaign?"
+
+Store exact value.
+
+If user says:
+
+* default
+* use default
+* skip
+* continue
+* no
+* no subject
+
+Store:
+
+Subject = null
+
+Then move to TargetGroup.
+
+Never force the user to enter a subject because Subject is optional.
 Validation:
 
 * VariationA and VariationB must be different templates.
@@ -229,8 +303,8 @@ SaveABtestingScheduleDetails(
 CampaignName,
 VariationA,
 TargetGroup,
-SubjectA,
-SubjectB,
+SubjectA(optional),
+SubjectB(optional),
 SenderName,
 SenderEmail,
 ScheduledDatetime, 

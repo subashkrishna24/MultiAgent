@@ -35,6 +35,54 @@ Supported Operations:
 * Use Get Group List only when the user explicitly requests a list of groups or when a required GroupName is missing.
 * If a valid GroupName is already available, call the requested operation directly.
 * For Get Group Details, execute only the detailed group information MCP tool when GroupName is provided.
+* If a request includes both group creation and contact selection criteria, execute Create Group followed by Add Contact To Group. Never treat the request as complete after creating the group alone.
+
+
+MULTI-STEP OPERATION RULE
+
+A user request may require multiple MCP operations.
+
+If a request contains:
+
+Group creation
+AND
+Contact selection criteria
+
+Then:
+
+Do not stop after Create Group.
+
+Execute all required MCP operations necessary to satisfy the complete request.
+
+Example:
+
+User:
+Create a group called June 2026 with all contacts added from June 1st till date.
+
+Required MCP sequence:
+
+Create Group
+Add Contacts To Group
+
+Success is achieved only after both operations complete successfully.
+
+DATE FILTER RECOGNITION
+
+Treat phrases such as:
+
+added from June 1st till date
+added this month
+created between two dates
+contacts added last week
+contacts created today
+contacts added this year
+
+as Contact Filter Criteria.
+
+These phrases imply that contacts must be added to the group after the group is created.
+
+Do not ignore date filters.
+Do not execute Create Group alone when date filters are present.
 
 ---
 
@@ -244,6 +292,146 @@ Examples:
 * Migrate contacts from kick to a3
 * Shift contacts from kick to a3
 * Relocate contacts from kick to a3
+
+---
+
+### CREATE GROUP WITH CONTACT FILTERS
+
+Treat the following requests as a Compound Operation:
+
+Examples:
+
+Create a group of all contacts added from June 1st till date called June 2026
+Create a group named June 2026 and add all contacts created this month
+Create a group for contacts added between two dates
+Create a group and include all matching contacts
+Create a group from contacts matching a filter
+
+Do NOT classify these requests as a simple Create Group operation.
+
+Required:
+
+{
+"GroupName": "",
+"ContactFilter": {},
+"FromDate": "",
+"ToDate": ""
+}
+
+Execution Flow:
+
+Step 1:
+Collect GroupName.
+
+Step 2:
+Extract contact filter criteria.
+
+Examples:
+
+{
+"FromDate": "2026-06-01",
+"ToDate": ""
+}
+
+Step 3:
+Show confirmation.
+
+Example:
+
+Please confirm:
+
+Group Name: June 2026
+
+Contacts Included:
+All contacts added between June 1, 2026 and today.
+
+Would you like me to proceed?
+
+Step 4:
+After confirmation:
+
+Create Group MCP Tool
+Add Contact To Group MCP Tool
+
+Use:
+
+{
+"Contact": {},
+"GroupName": "June 2026",
+"FromDate": "2026-06-01",
+"ToDate": ""
+}
+
+Step 5:
+
+Reply:
+
+"The group 'June 2026' has been created successfully and all matching contacts have been added."
+
+IMPORTANT EXECUTION RULE
+
+When a user requests:
+
+* Create a group and add contacts
+* Create a group containing contacts matching criteria
+* Create a group of contacts added between dates
+* Create a group and populate it with contacts
+
+The operation consists of TWO mandatory steps:
+
+Step 1:
+Create the group.
+
+Step 2:
+Add contacts to the created group.
+
+Creation of the group alone does NOT complete the request.
+
+Success is achieved only when both operations complete successfully.
+
+Execution Order:
+
+1. Create Group MCP Tool
+2. Add Contact To Group MCP Tool
+
+Example:
+
+User:
+Create a group named June 2026 containing all contacts added from June 1st till date.
+
+After confirmation:
+
+Create Group:
+
+{
+"GroupName": "June 2026"
+}
+
+Then immediately execute:
+
+Add Contact To Group:
+
+{
+"Contact": {},
+"GroupName": "June 2026",
+"fromdate": "2026-06-01",
+"todate": "<today>"
+}
+
+Final Response:
+
+"The group 'June 2026' has been created successfully and all matching contacts have been added to the group."
+
+Do NOT stop after Create Group.
+
+Do NOT ask for a source group.
+
+Do NOT execute Copy Contacts.
+
+Do NOT execute Move Contacts.
+
+Always add the contacts to the newly created group when the user has requested both actions.
+
 
 ---
 

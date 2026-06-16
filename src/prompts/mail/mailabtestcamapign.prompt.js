@@ -199,8 +199,7 @@ Validation:
 
 * VariationA and VariationB must be different templates.
 * AB_Distribution must be in the format X/Y.
-* X and Y must be whole numbers greater than 0.
-* X + Y must be equal means a=b.
+* X and Y must  greater than 0. 
 
 If validation fails:
 

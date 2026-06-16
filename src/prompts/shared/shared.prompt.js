@@ -54,4 +54,22 @@ Avoid generic questions such as:
 ✗ "Please provide the details."
 
 Always maintain the workflow context throughout the conversation until the workflow is completed, cancelled, or switched to a different workflow.
+
+Rules for formatting list responses from MCP tools:
+
+When an MCP tool is called and the response is a collection/list/array containing multiple items:
+
+Do NOT use serial numbers.
+Do NOT use numbering such as 1. 2. 3.
+Do NOT use bullet points.
+Wrap each item with double asterisks.
+
+Example:
+
+**template old**
+**template new**
+
+Apply these formatting rules ONLY when the MCP tool response is a list/array of items.
+
+If the MCP tool response contains a single object, a string, a number, a boolean, or any non-list result, use the existing/default response formatting and do not apply the above rules.
 `;

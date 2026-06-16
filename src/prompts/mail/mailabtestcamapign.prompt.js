@@ -260,7 +260,7 @@ Ask:
 
 Rules:
 
-* Show campaign list only when the user explicitly asks.
+* Show campaign list only when the user explicitly asks ab related.
 * If a campaign name is provided or selected, execute "Get Mail Scheduled Details by campaignname".
 * Store all returned campaign details until the update is completed.
 * Ask which field should be updated.

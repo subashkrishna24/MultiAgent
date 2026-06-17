@@ -190,15 +190,26 @@ Always choose reporting over knowledge.
    {
      "module": "group"
    }
-
 7. Route to MAILTEMPLATE when the user wants:
+
    - create mail templates
+   - duplicate mail templates
    - update mail templates
-   - delete mail templates
+   - archive mail templates
    - view mail templates
    - list mail templates
-   - edit email content
    - manage email templates
+   - generate email content
+   - edit email content
+
+   Example:
+   {
+     "module": "mailtemplate"
+   }
+
+8. If a MAILTEMPLATE flow is already active, route contextual replies
+   such as "show", "yes", "no", "continue", "proceed", "confirm",
+   "use it", "select", and "choose" to MAILTEMPLATE.
 
    Example:
    {

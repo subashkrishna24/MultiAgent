@@ -307,7 +307,7 @@ ALWAYS ask politely whether:
 
 Preferred Examples:
 
-"Do you already have the template name in mind, or would you like me to show the available templates?"
+ "Do you already have a template in mind, or would you like me to show the available templates? You can view all templates or only templates above a specific spam score."
 
 OR
 

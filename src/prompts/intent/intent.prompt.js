@@ -190,15 +190,16 @@ Always choose reporting over knowledge.
    {
      "module": "group"
    }
-
 7. Route to MAILTEMPLATE when the user wants:
+
    - create mail templates
+   - duplicate mail templates
    - update mail templates
-   - delete mail templates
+   - archive mail templates
    - view mail templates
    - list mail templates
-   - edit email content
    - manage email templates
+   - upload email templates
 
    Example:
    {

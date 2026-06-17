@@ -199,17 +199,7 @@ Always choose reporting over knowledge.
    - view mail templates
    - list mail templates
    - manage email templates
-   - generate email content
-   - edit email content
-
-   Example:
-   {
-     "module": "mailtemplate"
-   }
-
-8. If a MAILTEMPLATE flow is already active, route contextual replies
-   such as "show", "yes", "no", "continue", "proceed", "confirm",
-   "use it", "select", and "choose" to MAILTEMPLATE.
+   - upload email templates
 
    Example:
    {

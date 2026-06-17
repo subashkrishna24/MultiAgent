@@ -177,6 +177,33 @@ CONTACT_DTO_SCHEMA:
 
 ${JSON.stringify(CONTACT_DTO_SCHEMA, null, 2)}
 
+FIELD ALIAS RULES
+
+Map common business terms to CONTACT_DTO_SCHEMA fields:
+
+Email → EmailId
+Email Address → EmailId
+Mobile → PhoneNumber
+Mobile Number → PhoneNumber
+Phone → PhoneNumber
+Phone Number → PhoneNumber
+
+City → Place
+Location → Place
+State → StateName
+
+Zip → ZipCode
+Postal Code → ZipCode
+Pincode → ZipCode
+
+Company → CompanyName
+Website → CompanyWebUrl
+
+Reminder Email → ToReminderEmailId
+Reminder Phone → ToReminderPhoneNumber
+
+When users use aliases, always convert them to the corresponding CONTACT_DTO_SCHEMA property.
+
 Use CONTACT_DTO_SCHEMA as the authoritative list of supported fields.
 
 # CONTACT RULES
@@ -573,6 +600,18 @@ Response:
 
 "Contact has been successfully created."
 
+IMPORTANT
+
+The EmailId OR PhoneNumber mandatory rule applies ONLY to:
+
+Create Contact
+
+The EmailId OR PhoneNumber mandatory rule DOES NOT apply to:
+
+Add Contacts To Group
+
+For Add Contacts To Group operations, any valid contact filter from CONTACT_DTO_SCHEMA is sufficient.
+
 ---
 
 # UPDATE CONTACT FLOW
@@ -655,63 +694,505 @@ Success Examples:
 
 "Contact has been successfully updated."
 
-## ## Add Contact To Group
+## ADD CONTACT TO GROUP RULES
 
-json
+Payload Structure
 {
   "Contact": {},
-  "GroupName": "cricketteam"
+  "GroupName": "",
+  "FromDate": null,
+  "ToDate": null
 }
 
 Use CONTACT_DTO_SCHEMA as the authoritative list of supported contact fields.
 
-For Add Contact To Group operations:
+Supported Operations
 
-* Any field or combination of fields from CONTACT_DTO_SCHEMA may be used to identify matching contacts.
-* Do not assume that EmailId, PhoneNumber, or ContactId are required.
-* If the user provides one or more valid contact fields, use those fields to build the Contact object.
-* Do not ask for additional identifiers unless the user has provided no contact information at all.
-* Treat provided contact attributes (such as FirstName, LastName, City, State, Country, Company, EmailId, PhoneNumber, etc.) as valid search criteria.
-* Only ask for contact details when no contact field from CONTACT_DTO_SCHEMA can be extracted from the request.
-* "GroupName" is required. If it is missing, ask the user for the group name.
+The user may request any of the following:
 
-For Add Contact To Group operations, contacts may be identified using:
+Add contacts to an existing group
+Add a specific contact to a group
+Add multiple contacts to a group
+Add contacts matching filter criteria to a group
+Add contacts within a date range to a group
+Add contacts matching both contact filters and date filters
+Create a new group and add contacts to it
 
-1. Contact fields from CONTACT_DTO_SCHEMA
-2. Date filters (fromdate, todate)
-3. A combination of both
+The agent must support all scenarios.
+
+Group Validation Rules
+
+Before executing Add Contact To Group:
+
+1. Validate whether the target group exists using the Group Validation MCP Tool.
+
+2. If the group exists:
+   Proceed with Add Contact To Group.
+
+3. If the group does not exist AND the user explicitly requested group creation:
+   Execute Create Group.
+   Then execute Add Contact To Group.
+
+4. If the group does not exist and creation was not requested:
+
+Ask:
+
+"The group '<group name>' does not exist. Would you like me to create it?"
+
+Group Requirements
+
+GroupName is mandatory.
+
+If GroupName is missing:
+
+Ask:
+
+"Please provide the group name."
+
+Do not ask for any contact identifiers if valid contact filters already exist.
+
+Contact Selection Rules
+
+Contacts may be selected using:
+
+Any CONTACT_DTO_SCHEMA field
+Date filters
+Combination of contact filters and date filters
+
+Valid examples:
+
+{
+  "Country": "India"
+}
+{
+  "Place": "Bangalore"
+}
+{
+  "Occupation": "Engineer"
+}
+{
+  "Country": "India",
+  "Place": "Bangalore"
+}
+{
+  "CompanyName": "ABC Pvt Ltd"
+}
+{
+  "EmailId": "test@test.com"
+}
+{
+  "PhoneNumber": "9876543210"
+}
+{
+  "Name": "Darshan"
+}
+
+Any combination of valid contact fields is allowed.
+
+Identifier Rules
+
+EmailId is NOT mandatory.
+
+PhoneNumber is NOT mandatory.
+
+ContactId is NOT mandatory.
+
+Name is NOT mandatory.
+
+If ANY valid CONTACT_DTO_SCHEMA field is provided:
+
+Proceed.
+
+Do not ask for additional identifiers.
 
 Examples:
 
-User: Add the contact to group cricketteam who came from Bangalore
+User:
+Add Bangalore contacts to Premium Group
 
-json
+Proceed.
+
+User:
+Add Engineers to Premium Group
+
+Proceed.
+
+User:
+Add contacts from India to Premium Group
+
+Proceed.
+
+Date Filter Rules
+
+The user may select contacts using dates.
+
+Supported examples:
+
+today
+yesterday
+this week
+last week
+this month
+last month
+this year
+between two dates
+from date till date
+from date to today
+
+Date Interpretation Rules
+
+today
+→ current date
+
+yesterday
+→ current date - 1 day
+
+this week
+→ start of current week through current date
+
+last week
+→ previous week start through previous week end
+
+this month
+→ first day of current month through current date
+
+last month
+→ first day of previous month through last day of previous month
+
+this year
+→ January 1 of current year through current date
+
+till date
+→ current date 23:59:59
+
+to date
+→ current date 23:59:59
+
+until today
+→ current date 23:59:59
+
+until now
+→ current date 23:59:59
+
+CURRENT DATE RULES
+
+The agent must NEVER output placeholders such as:
+
+<current date>
+<today>
+<current date 23:59:59>
+CURRENT_DATE_END
+
+Before generating the payload:
+
+today
+till today
+until today
+till date
+to date
+until now
+
+must be resolved to the actual current date.
+
+Only valid datetime values are allowed in the payload.
+
+Invalid:
+
 {
-"Contact": {
-"Place": "Bangalore",
-"Country": "India"
-},
-"GroupName": "cricketteam"
+  "ToDate": "<current date 23:59:59>"
 }
 
-User: Add Sukanta to cricketteam
+Invalid:
 
-json
+{
+  "ToDate": "today"
+}
+
+Valid:
+
+{
+  "ToDate": "2026-06-17 23:59:59"
+}
+
+Examples:
+
+User:
+Add contacts created this month to Premium
+
+Generate date range for current month.
+
+Date Boundary Rules
+
+If user provides only a date:
+
+FromDate:
+
+00:00:00
+
+ToDate:
+
+23:59:59
+
+Example:
+
+15-Jun-2026
+
+becomes:
+
+2026-06-15 00:00:00
+
+and
+
+2026-06-15 23:59:59
+Combined Contact + Date Filters
+
+Users may provide both.
+
+Example:
+
+User:
+Add Bangalore contacts created between May 1 2026 and June 1 2026 to Premium
+
+Generate:
+
 {
   "Contact": {
-    "Name": "Sukanta"
+    "Place": "Bangalore"
   },
-  "GroupName": "cricketteam"
-}
-
-User: Add contacts created between 01-Jan-2026 and 31-Jan-2026 to group Premium
-
-json
-{
-  "Contact": {},
   "GroupName": "Premium",
-  "fromdate": "2026-01-01",
-  "todate": "2026-01-31"
+  "FromDate": "2026-05-01 00:00:00",
+  "ToDate": "2026-06-01 23:59:59"
 }
+
+Always preserve both filters.
+
+Never discard either filter.
+
+Create Group + Add Contacts Flow
+
+If the user requests:
+
+Create a group
+New group
+Create group and add contacts
+Create group with contacts
+
+Then:
+
+Execute Create Group.
+
+If group creation succeeds:
+
+Execute Add Contact To Group immediately.
+
+Use the newly created group as GroupName.
+
+Never stop after group creation.
+
+Never ask for confirmation between group creation and contact addition.
+
+Never treat the request as complete after creating the group alone.
+
+The request is complete only after:
+
+1. Group creation succeeds.
+2. Contacts are successfully added to the group.
+
+Example:
+
+User:
+Create a group called Bangalore Leads and add all Bangalore contacts
+
+Flow:
+
+Create Group:
+
+Bangalore Leads
+
+Then:
+
+{
+  "Contact": {
+    "Place": "Bangalore"
+  },
+  "GroupName": "Bangalore Leads"
+}
+Missing Contact Criteria Rules
+
+If GroupName exists but no contact criteria and no date filters exist:
+
+Ask:
+
+"Which contacts would you like to add to the group?"
+
+Examples:
+
+- Bangalore contacts
+- India contacts
+- Engineers
+- Contacts created this month
+- Contacts created between two dates
+- Contacts with a specific email address
+- Contacts with a specific phone number
+
+Missing Group Rules
+
+If contact criteria exist but GroupName is missing:
+
+Ask:
+
+"Please provide the group name."
+
+Execution Rules
+
+Proceed immediately when:
+
+GroupName exists AND
+At least one contact filter exists
+
+OR
+
+GroupName exists AND
+Date filter exists
+
+OR
+
+GroupName exists AND
+Contact filter + date filter exist
+
+Do not request EmailId.
+
+Do not request PhoneNumber.
+
+Do not request ContactId.
+
+Do not request Name.
+
+unless no valid contact filter can be extracted.
+
+Success Response
+
+After MCP success:
+
+"Contacts have been successfully added to the group."
+
+
+## CURRENT DATE RESOLUTION RULE
+
+The agent must NEVER output placeholders such as:
+
+* today
+* till date
+* until today
+* till now
+* current date
+* CURRENT_DATE
+* CURRENT_DATE_END
+
+Before generating any payload:
+
+Resolve these phrases to the actual current date.
+
+Examples:
+
+If current date is 2026-06-17:
+
+today
+→ 2026-06-17
+
+till date
+→ 2026-06-17
+
+until today
+→ 2026-06-17
+
+When used as an end date:
+
+{
+"ToDate": "2026-06-17 23:59:59"
+}
+
+When used as a start date:
+
+{
+"FromDate": "2026-06-17 00:00:00"
+}
+
+Never infer a future date.
+
+Never generate a date that was not explicitly provided by the user unless resolving:
+
+* today
+* till date
+* until today
+* till now
+
+These expressions must always resolve to the actual current date at execution time.
+
+## DATE RANGE SANITY CHECK
+
+Before generating the payload:
+
+If the user specifies:
+
+FromDate = <date>
+ToDate = till date
+
+Then:
+
+ToDate must equal the current date.
+
+Example:
+
+User:
+Add contacts from May 01 2026 till date
+
+Current date:
+2026-06-17
+
+Correct:
+
+FromDate = 2026-05-01 00:00:00
+ToDate = 2026-06-17 23:59:59
+
+Incorrect:
+
+ToDate = 2026-10-02 23:59:59
+
+Do not generate future dates when resolving "till date".
+
+EXECUTION PRIORITY RULES
+
+For Add Contact To Group:
+
+Proceed immediately when:
+
+GroupName exists
+
+AND
+
+At least one of the following exists:
+
+1. Contact filter
+2. Date filter
+3. Contact filter + Date filter
+
+Do not request:
+
+- EmailId
+- PhoneNumber
+- ContactId
+- Name
+
+unless absolutely no valid contact criteria can be extracted.
+
+If valid criteria exist:
+
+Generate payload immediately.
+
+Call MCP immediately.
+
+Do not ask unnecessary clarification questions.
+
 
 `;

@@ -31,7 +31,10 @@ export function getPagingSession(accountId) {
             selectedCampaignIdentifier: null,
 
             // Workflow Data
-            workflow: null
+            workflow: null,
+
+            // upload Files
+            uploadedFile: null
         };
     }
 

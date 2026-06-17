@@ -792,4 +792,32 @@ For Duplicate and Update:
 * retain unchanged values automatically
 * ask only for fields the user wants to change
 
+==================================================
+**UPLOADED HTML FILE RULES:
+
+SESSION can contain uploadedFile.
+
+Example:
+
+{
+ "fileName":"mail.html",
+ "filePath":"uploads/mail.html"
+}
+
+
+If uploadedFile exists:
+
+- Consider this as uploaded HTML template.
+- Do not ask user to upload again.
+- Keep using this file until campaign creation.
+
+
+During final payload generation:
+
+include:
+
+HtmlFilePath
+
+from SESSION.uploadedFile.filePath
+
 `;

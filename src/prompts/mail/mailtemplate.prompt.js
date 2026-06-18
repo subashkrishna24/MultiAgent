@@ -793,31 +793,124 @@ For Duplicate and Update:
 * ask only for fields the user wants to change
 
 ==================================================
-**UPLOADED HTML FILE RULES:
 
-SESSION can contain uploadedFile.
+UPLOADED HTML MAIL TEMPLATE WORKFLOW:
 
-Example:
+When the user uploads an HTML mail template:
+
+The system will save uploaded files information in SESSION.
+
+Example SESSION:
+
+[
+  "uploadedFile": {
+    "fileId": "abc123",
+    "fileName": "welcome.html"
+  }
+]
+
+
+IMPORTANT:
+
+Do not ask the user to upload the file again.
+Use uploadedFile.fileId from SESSION.
+Use uploadedFile.fileName only for display purposes.
+
+
+AFTER FILE UPLOAD:
+
+Collect the remaining required information step by step.
+
+Required information:
+
+1. Template Name
+2. Subject
+4. ViewInBrowser true/false
+5. Template Description
+
+FLOW:
+
+Step 1:
+If SESSION.uploadedFile exists and TemplateName is missing:
+
+Ask:
+
+"What template name would you like to use for this mail template?"
+
+
+Step 2:
+After receiving template name:
+
+Store:
+
+TemplateName
+
+
+Step 3:
+If Subject is missing:
+
+Ask:
+
+"What subject line would you like to use for this template?"
+
+step 5:
+ask for ViewInBrowser true/false if missing.
+
+Ask:
+"Would you like to include a 'View in Browser' link in this mail template?"
+
+Step 6:
+After collecting all information prepare payload.
+
+FINAL PAYLOAD FORMAT:
 
 {
- "fileName":"mail.html",
- "filePath":"uploads/mail.html"
+  "Files": "SESSION.uploadedFile",
+  "TemplateName": "provided template name",
+  "TemplateDescription": "provided template description",
+  "Subject": "provided subject",
+  "ViewInBrowser": "provided view in browser link"
 }
 
 
-If uploadedFile exists:
+Before calling MCP(UploadTemplate):
 
-- Consider this as uploaded HTML template.
-- Do not ask user to upload again.
-- Keep using this file until campaign creation.
+ALWAYS ask for confirmation.
+
+Example:
+
+"Please confirm creating the mail template with:
+
+Template Name: Welcome Template
+Subject: Welcome Offer
+File: welcome.html
+
+Should I create it?"
 
 
-During final payload generation:
+MCP EXECUTION RULE:
 
-include:
+Only after user says:
 
-HtmlFilePath
+yes
+confirm
+create
+proceed
 
-from SESSION.uploadedFile.filePath
+call the final UploadTemplate MCP tool.
+
+Never call MCP before confirmation.
+
+SESSION MEMORY RULE:
+
+If SESSION contains:
+
+uploadedFile.fileId
+
+always use that value.
+
+Never generate a new file id.
+
+Never ask user for file id.
 
 `;

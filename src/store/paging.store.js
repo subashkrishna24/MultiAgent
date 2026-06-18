@@ -8,76 +8,68 @@ export const pagingStore = {};
  * Get user session
  */
 export function getPagingSession(accountId) {
+  if (!pagingStore[accountId]) {
+    pagingStore[accountId] = {
+      // Template Paging
+      templateOffset: 0,
+      templateFetchNext: 10,
 
-    if (!pagingStore[accountId]) {
+      // Group Paging
+      groupOffset: 0,
+      groupFetchNext: 10,
 
-        pagingStore[accountId] = {
+      // Campaign Paging
+      campaignidentifierOffset: 0,
+      campaignidentifierFetchNext: 10,
 
-            // Template Paging
-            templateOffset: 0,
-            templateFetchNext: 10,
+      // Selected Objects
+      selectedTemplate: null,
+      selectedGroup: null,
+      selectedCampaignIdentifier: null,
 
-            // Group Paging
-            groupOffset: 0,
-            groupFetchNext: 10,
+      // Workflow Data
+      workflow: null,
 
-            // Campaign Paging
-            campaignidentifierOffset: 0,
-            campaignidentifierFetchNext: 10,
+      // upload Files
+      uploadedFile: null,
 
-            // Selected Objects
-            selectedTemplate: null,
-            selectedGroup: null,
-            selectedCampaignIdentifier: null,
+      UserDetails: null,
+    };
+  }
 
-            // Workflow Data
-            workflow: null,
-
-            // upload Files
-            uploadedFile: null
-        };
-    }
-
-    return pagingStore[accountId];
+  return pagingStore[accountId];
 }
 
 /**
  * Reset Template Paging
  */
 export function resetTemplatePaging(accountId) {
+  const session = getPagingSession(accountId);
 
-    const session =
-        getPagingSession(accountId);
-
-    session.templateOffset = 0;
+  session.templateOffset = 0;
 }
 
 /**
  * Reset Group Paging
  */
 export function resetGroupPaging(accountId) {
+  const session = getPagingSession(accountId);
 
-    const session =
-        getPagingSession(accountId);
-
-    session.groupOffset = 0;
+  session.groupOffset = 0;
 }
 
 /**
  * Reset Campaign Paging
  */
 export function resetCampaignPaging(accountId) {
+  const session = getPagingSession(accountId);
 
-    const session =
-        getPagingSession(accountId);
-
-    session.campaignOffset = 0;
+  session.campaignOffset = 0;
 }
 
 /**
  * Clear User Session
  */
 export function clearPagingSession(accountId) {
-
-    delete pagingStore[accountId];
+  delete pagingStore[accountId];
 }

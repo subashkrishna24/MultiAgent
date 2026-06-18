@@ -1,22 +1,21 @@
-import {
-  createAgent
-} from "../../utils/agent.factory.js";
+import { createAgent } from "../../utils/agent.factory.js";
 
 export async function executeKnowledgeAgent({
   model,
   tools,
   history,
-  accountId
+  accountId,
+  session,
 }) {
-
   const agent = createAgent({
     module: "knowledge",
     model,
     tools,
-    accountId
+    accountId,
+    session,
   });
 
   return await agent.invoke({
-    messages: history
+    messages: history,
   });
 }

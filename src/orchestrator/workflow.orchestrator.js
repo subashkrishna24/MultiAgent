@@ -44,6 +44,11 @@ export async function executeWorkflow(payload) {
   // Session
   const session = getPagingSession(accountid);
 
+  if (userdetails != null) {
+    userdetails.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    session.UserDetails = userdetails;
+  }
+
   if (uploadedfile?.length > 0) {
     var Files = [];
     for (const file of uploadedfile) {
@@ -83,6 +88,7 @@ export async function executeWorkflow(payload) {
       tools: filteredTools,
       history: recentHistory,
       accountId: accountid,
+      session,
     });
   }
 

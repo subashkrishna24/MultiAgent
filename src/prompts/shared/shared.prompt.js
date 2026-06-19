@@ -78,6 +78,7 @@ Avoid generic questions such as:
 
 Always maintain the workflow context throughout the conversation until the workflow is completed, cancelled, or switched to a different workflow.
 
+==================================================
 ** LIST FORMATTING RULES:
 
 Apply this rule ONLY when ALL conditions are true:

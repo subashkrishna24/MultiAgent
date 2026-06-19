@@ -440,6 +440,7 @@ SENDER NAME
 Ask:
 
 "What sender name would you like to use?"
+without this answered dont proceed to the next step.  
 
 ==================================================
 SENDER EMAIL
@@ -511,14 +512,14 @@ SUMMARY
 
 Show:
 
-Campaign Name
-Template
+Campaign Name(mandatory)
+Template(mandatory)
 Subject
 ConfigurationName
-Target Group
-Scheduled Datetime
-Sender Name
-Sender Email
+Target Group(mandatory)
+Scheduled Datetime(mandatory)
+Sender Name(mandatory)
+Sender Email(mandatory)
 Campaign Type
 Ask:
 
@@ -539,15 +540,16 @@ When user confirms:
 
 then check:
 check spam score of the selected template. If the spam score is less than 5.0, do not proceed to schedule the campaign and ask the user to select a different template.
+check for the mandatory fields. If any mandatory field is missing, do not proceed and ask only for the missing mandatory field.
 then Execute:
 SaveScheduleDetails(
-CampaignName,
-Template,
-TargetGroup,
+CampaignName(mandatory),
+Template(mandatory),
+TargetGroup(mandatory),
 Subject,
-SenderName,
-SenderEmail,
-ScheduledDatetime,
+SenderName(mandatory),
+SenderEmail(mandatory),
+ScheduledDatetime(mandatory),
 ConfigurationName,
 IsPromotionalOrTransactionalType
 )

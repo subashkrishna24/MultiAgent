@@ -219,6 +219,7 @@ Examples:
 * Transfer contacts from kick to a3 without removing them
 * Duplicate contacts from kick to a3
 * Clone contacts from kick to a3
+* Merge all contacts from kick to a3
 
 ---
 

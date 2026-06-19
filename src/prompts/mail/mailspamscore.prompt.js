@@ -93,7 +93,7 @@ SENDER EMAIL SELECTION FLOW
 
 If SenderMail is missing, ask:
 
-"For the spam score analysis, do you already know which sender email address you'd like to use, or would you like me to show the available sender email addresses?"
+"For the spam score analysis, do you already know which sender email address you'd like to use, or would you like me to show the available sender email addresses for the spam score analysis?"
 
 If the user wants sender email addresses:
 

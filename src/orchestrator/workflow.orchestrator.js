@@ -31,10 +31,34 @@ import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapig
 import { getPagingSession } from "../store/paging.store.js";
 
 export async function executeWorkflow(payload) {
-  const { history, accountid, apikey, model, p5apikey } = payload;
+  const {
+    history,
+    accountid,
+    apikey,
+    model,
+    p5apikey,
+    uploadedfile,
+    userdetails,
+  } = payload;
 
-   // Session
+  // Session
   const session = getPagingSession(accountid);
+
+  if (userdetails != null) {
+    userdetails.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    session.UserDetails = userdetails;
+  }
+
+  if (uploadedfile?.length > 0) {
+    var Files = [];
+    for (const file of uploadedfile) {
+      Files.push({
+        fileName: file.fileName,
+        fileId: file.fileId,
+      });
+    }
+    session.uploadedFile = Files;
+  }
 
   const llmModel = getllmModel(model, apikey);
 
@@ -58,12 +82,13 @@ export async function executeWorkflow(payload) {
   const recentHistory = history;
 
   // STEP 4
-   if (intent.module === "knowledge") {
+  if (intent.module === "knowledge") {
     response = await executeKnowledgeAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,
-      accountId: accountid
+      accountId: accountid,
+      session,
     });
   }
 
@@ -72,7 +97,7 @@ export async function executeWorkflow(payload) {
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,
-      accountId: accountid
+      accountId: accountid,
     });
 
     const toolMessages = response.messages.filter(
@@ -97,7 +122,7 @@ export async function executeWorkflow(payload) {
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,
-      accountId: accountid
+      accountId: accountid,
     });
   }
 
@@ -107,7 +132,7 @@ export async function executeWorkflow(payload) {
       tools: filteredTools,
       history: recentHistory,
       accountId: accountid,
-      session
+      session,
     });
   }
 
@@ -117,7 +142,7 @@ export async function executeWorkflow(payload) {
       tools: filteredTools,
       history: recentHistory,
       accountId: accountid,
-      session 
+      session,
     });
   }
 
@@ -127,24 +152,24 @@ export async function executeWorkflow(payload) {
       tools: filteredTools,
       history: recentHistory,
       accountId: accountid,
-      session
+      session,
     });
   }
-  
+
   if (intent.module === "captureform") {
     response = await executeCaptureFormAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,
-      accountId: accountid
+      accountId: accountid,
     });
   }
-   if (intent.module === "mailspamscore") {
+  if (intent.module === "mailspamscore") {
     response = await executeMailSpamScoreAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,
-      accountId: accountid
+      accountId: accountid,
     });
   }
   if (intent.module === "mailtest") {
@@ -152,15 +177,15 @@ export async function executeWorkflow(payload) {
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,
-      accountId: accountid
+      accountId: accountid,
     });
   }
- if (intent.module === "mailcampaign_abtest") {
+  if (intent.module === "mailcampaign_abtest") {
     response = await executeMailAbTestCampaignAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,
-      accountId: accountid
+      accountId: accountid,
     });
   }
   console.log("Final response from agent:", response);

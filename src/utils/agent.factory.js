@@ -23,9 +23,7 @@ import { MAILCAMPAIGN_ABTEST_PROMPT } from "../prompts/mail/mailabtestcamapign.p
 import { SHARED_PROMPT } from "../prompts/shared/shared.prompt.js";
 
 function getPrompt(module) {
-
   const prompts = {
-
     knowledge: KNOWLEDGE_PROMPT,
 
     reporting: REPORTING_PROMPT,
@@ -50,17 +48,17 @@ function getPrompt(module) {
   return prompts[module];
 }
 
-export function createAgent({
-  module,
-  model,
-  tools,
-  accountId,
-  session
-}) {
+export function createAgent({ module, model, tools, accountId, session }) {
 
-const prompt = `${getPrompt(module)}
+  var common_prompt='';
+if(module!="knowledge" && module!="reporting"){
+   common_prompt=`${SHARED_PROMPT}`;
+}
 
- ${SHARED_PROMPT}
+const prompt = `
+${common_prompt}
+
+${getPrompt(module)}
 
 ACCOUNT:
 ${accountId}
@@ -72,6 +70,6 @@ ${JSON.stringify(session || {}, null, 2)}
   return createReactAgent({
     llm: model,
     tools,
-    prompt
+    prompt,
   });
 }

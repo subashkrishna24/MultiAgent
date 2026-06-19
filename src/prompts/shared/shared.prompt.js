@@ -78,21 +78,76 @@ Avoid generic questions such as:
 
 Always maintain the workflow context throughout the conversation until the workflow is completed, cancelled, or switched to a different workflow.
 
-Rules for formatting list responses from MCP tools:
+==================================================
+** LIST FORMATTING RULES:
 
-When an MCP tool is called and the response is a collection/list/array containing multiple items:
+Apply this rule ONLY when ALL conditions are true:
 
-Do NOT use serial numbers.
-Do NOT use numbering such as 1. 2. 3.
-Do NOT use bullet points.
-Wrap each item with double asterisks.
+1. MCP response is an ARRAY/LIST containing multiple selectable records.
+
+AND
+
+2. User needs to choose one item from the list.
+
+Examples:
+- show templates
+- list templates
+- show groups
+- list campaigns
+- select template
+- select group
+
+Format every item only as:
+
+**item name**
+
+Do NOT use:
+- serial numbers
+- numbering
+- bullet points
 
 Example:
 
-**template old**
-**template new**
+**Template Old**
+**Template New**
 
-Apply these formatting rules ONLY when the MCP tool response is a list/array of items.
 
-If the MCP tool response contains a single object, a string, a number, a boolean, or any non-list result, use the existing/default response formatting and do not apply the above rules.
+==================================================
+
+DETAIL RESPONSE FORMATTING RULE:
+
+If user asks for details of a specific item:
+
+Examples:
+
+- "give me template details of Test_Template"
+- "show campaign details"
+- "get information about this template"
+
+DO NOT apply list formatting.
+
+Return normal readable format.
+
+Example:
+Template Details:
+Name: Test_Template
+Subject Line: Welcome Offer
+Campaign Identifier: Campaign_123
+Template Description: Welcome email template
+
+Spam Score: 0.0
+
+==================================================
+
+IMPORTANT:
+
+Never wrap field labels with double asterisks in detail responses.
+
+Wrong:
+**Subject Line:** Welcome
+Correct:
+Subject Line: Welcome
+
+The double asterisk format is ONLY for selectable list item names.
+
 `;

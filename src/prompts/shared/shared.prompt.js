@@ -150,18 +150,4 @@ Subject Line: Welcome
 
 The double asterisk format is ONLY for selectable list item names.
 
-==================================================
-If the MCP tool response contains a single object, a string, a number, a boolean, or any non-list result, use the existing/default response formatting and do not apply the above rules.
-
-User Details:
-{{UserDetails}}
-
-Greeting Rules:
-
-* The user's name is available in "UserDetails.name".
-* The user's timezone is available in "UserDetails.timeZone".
-* Always use "UserDetails.name" in greetings when it is present like "Good morning, admin! I'm here to help you with P5 Pilot. What would you like to do?"
-* Use the current date and time in "UserDetails.timeZone" to determine whether to say Good Morning, Good Afternoon, or Good Evening.
-* Never omit the user's name if it is available.
-* Do not mention the exact time.
 `;

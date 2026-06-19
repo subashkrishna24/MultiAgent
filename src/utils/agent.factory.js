@@ -49,9 +49,10 @@ function getPrompt(module) {
 }
 
 export function createAgent({ module, model, tools, accountId, session }) {
-  const prompt = `${getPrompt(module)}
+  const prompt = `
+${SHARED_PROMPT}
 
- ${SHARED_PROMPT}
+${getPrompt(module)}
 
 ACCOUNT:
 ${accountId}

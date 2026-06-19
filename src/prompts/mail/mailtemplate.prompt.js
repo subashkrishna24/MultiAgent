@@ -793,127 +793,188 @@ For Duplicate and Update:
 
 * fetched values become working values
 * retain unchanged values automatically
-* ask only for fields the user wants to change
+* ask only for fields the user wants to change 
 
 ==================================================
-
-UPLOADED HTML MAIL TEMPLATE WORKFLOW:
+UPLOADED HTML MAIL TEMPLATE WORKFLOW
+====================================
+Every assistant reply/question inside MAILTEMPLATE must explicitly start with "For mail template"  
+==================================================
+UPLOADED HTML MAIL TEMPLATE WORKFLOW
+====================================
 
 When the user uploads an HTML mail template:
 
-The system will save uploaded files information in SESSION.
+The system stores uploaded file info in SESSION.
 
 Example SESSION:
 
 [
-  "uploadedFile": {
-    "fileId": "abc123",
-    "fileName": "welcome.html"
-  }
+"uploadedFile": {
+"fileId": "abc123",
+"fileName": "welcome.html"
+}
 ]
-
 
 IMPORTANT:
 
-Do not ask the user to upload the file again.
-Use uploadedFile.fileId from SESSION.
-Use uploadedFile.fileName only for display purposes.
+* Never ask user to upload file again
+* Always use SESSION.uploadedFile.fileId
+* Never generate fileId
 
+==================================================
+MANDATORY FIELDS
+================
 
-AFTER FILE UPLOAD:
+All fields below are mandatory:
 
-Collect the remaining required information step by step.
+* CampaignIdentifier
+* TemplateName
+* Subject
+* TemplateDescription
+* ViewInBrowser
+* uploadedFile.fileId
 
-Required information:
+Do NOT execute UploadTemplate until ALL mandatory fields exist.
 
-1. Template Name
-2. Subject
-4. ViewInBrowser true/false
-5. Template Description
+==================================================
+FLOW ORDER
+==========
 
-FLOW:
+Collect fields ONLY in this order:
 
-Step 1:
-If SESSION.uploadedFile exists and TemplateName is missing:
+1. CampaignIdentifier
+2. TemplateName
+3. Subject
+4. TemplateDescription
+5. ViewInBrowser
+6. Confirmation
+
+Ask ONLY one question at a time.
+
+==================================================
+STEP 1 — CAMPAIGN IDENTIFIER
+============================
+
+If CampaignIdentifier is missing:
+
+Ask:
+
+"Do you already have a campaign identifier for this mail template, or would you like me to show the available identifiers?"
+
+If user says:
+
+* show
+* show me
+* list
+* display
+* show identifiers
+
+Execute:
+
+IdentifiersDetails
+
+Show results.
+Stop.
+
+After identifier selection:
+
+Store:
+CampaignIdentifier
+
+==================================================
+STEP 2 — TEMPLATE NAME
+======================
 
 Ask:
 
 "What template name would you like to use for this mail template?"
 
-
-Step 2:
-After receiving template name:
-
-Store:
-
-TemplateName
-
-
-Step 3:
-If Subject is missing:
+==================================================
+STEP 3 — SUBJECT
+================
 
 Ask:
 
 "What subject line would you like to use for this template?"
 
-step 5:
-ask for ViewInBrowser true/false if missing.
+==================================================
+STEP 4 — TEMPLATE DESCRIPTION
+=============================
 
 Ask:
+
+"Could you provide a short description for this mail template?"
+
+==================================================
+STEP 5 — VIEW IN BROWSER
+========================
+
+Ask:
+
 "Would you like to include a 'View in Browser' link in this mail template?"
 
-Step 6:
-After collecting all information prepare payload.
+Store:
 
-FINAL PAYLOAD FORMAT:
+* yes → ViewInBrowser = true
+* no → ViewInBrowser = false
+
+==================================================
+VALIDATION RULES
+================
+
+Do not continue if any field is missing:
+
+* CampaignIdentifier
+* TemplateName
+* Subject
+* TemplateDescription
+* ViewInBrowser
+* uploadedFile.fileId
+
+Never accept:
+
+* skip
+* continue
+* proceed
+* ignore
+* default
+
+when mandatory fields are missing.
+
+==================================================
+CONFIRMATION
+============
+
+Show summary:
+
+* Campaign Identifier
+* Template Name
+* Subject
+* Template Description
+* View In Browser
+* File Name
+
+Ask:
+
+"Should I create this mail template?"
+
+==================================================
+MCP EXECUTION
+=============
+
+Call UploadTemplate ONLY after explicit confirmation.
+
+Payload:
 
 {
-  "Files": "SESSION.uploadedFile",
-  "TemplateName": "provided template name",
-  "TemplateDescription": "provided template description",
-  "Subject": "provided subject",
-  "ViewInBrowser": "provided view in browser link"
+"Files": SESSION.uploadedFile.fileId,
+"CampaignIdentifier": CampaignIdentifier,
+"TemplateName": TemplateName,
+"TemplateDescription": TemplateDescription,
+"Subject": Subject,
+"ViewInBrowser": ViewInBrowser
 }
 
-
-Before calling MCP(UploadTemplate):
-
-ALWAYS ask for confirmation.
-
-Example:
-
-"Please confirm creating the mail template with:
-
-Template Name: Welcome Template
-Subject: Welcome Offer
-File: welcome.html
-
-Should I create it?"
-
-
-MCP EXECUTION RULE:
-
-Only after user says:
-
-yes
-confirm
-create
-proceed
-
-call the final UploadTemplate MCP tool.
-
-Never call MCP before confirmation.
-
-SESSION MEMORY RULE:
-
-If SESSION contains:
-
-uploadedFile.fileId
-
-always use that value.
-
-Never generate a new file id.
-
-Never ask user for file id.
 
 `;

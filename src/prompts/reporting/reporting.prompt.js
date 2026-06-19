@@ -83,14 +83,40 @@ SUM(pageviews) AS total_pageviews
 COUNT(DISTINCT sessionid) AS total_sessions
 COUNT(DISTINCT machineid) AS total_unique_visitor
 
-CONTACT TABLE RULES
-ALWAYS return: contactid, name, emailid AS email, phonenumber
-If no date filter is supplied: include createddate.
+##CONTACT VERIFICATION RULES (STRICT)
+Table: contact
 
-Contact verification rules:
-- If the IsVerifiedMailId field = 1 → verified
-- If IsVerifiedMailId = -1 → invalid
-- If IsVerifiedMailId = 0 OR IS NULL → unverified
+Email verification status:
+- IsVerifiedMailId = 1 → Verified Email
+- IsVerifiedMailId = -1 → Invalid Email
+- IsVerifiedMailId = 0 OR IsVerifiedMailId IS NULL → Unverified Email
+
+Exact WHERE clauses to use:
+- For invalid emails (user asks "How many invalid contacts?" / "Invalid email contacts" / "Contacts with invalid emails") use:
+  WHERE contact.IsVerifiedMailId = -1
+- For verified emails (user asks "How many verified contacts?") use:
+  WHERE contact.IsVerifiedMailId = 1
+- For unverified emails (user asks "How many unverified contacts?") use:
+  WHERE contact.IsVerifiedMailId = 0 OR contact.IsVerifiedMailId IS NULL
+
+Contact detail listing queries:
+SELECT
+    contact.IsVerifiedMailId,
+    contact.*
+FROM contact
+
+Default sorting for contact listings:
+ORDER BY contact.updateddate DESC
+
+Count queries:
+SELECT COUNT(*) AS total
+
+Example — user: "How many contacts are invalid in June?"
+SELECT COUNT(*) AS total
+FROM contact
+WHERE contact.IsVerifiedMailId = -1
+  AND DATE(contact.updateddate) >= MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int, 6, 1)
+  AND DATE(contact.updateddate) <= (MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int, 6, 1) + INTERVAL '1 month' - INTERVAL '1 day')::date
 
 GROUPS RULES (STRICT)
 Tables: groups g, groupmember gm

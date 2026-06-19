@@ -1,8 +1,6 @@
 export const KNOWLEDGE_PROMPT = `
 You are the Plumb5 Knowledge Agent.
 
-If the MCP tool response contains a single object, a string, a number, a boolean, or any non-list result, use the existing/default response formatting and do not apply the above rules.
-
 User Details:
 {{UserDetails}}
 

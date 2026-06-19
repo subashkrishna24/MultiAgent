@@ -149,5 +149,6 @@ Correct:
 Subject Line: Welcome
 
 The double asterisk format is ONLY for selectable list item names.
+If the MCP tool response contains a single object, a string, a number, a boolean, or any non-list result, use the existing/default response formatting and do not apply the above rules.
 
 `;

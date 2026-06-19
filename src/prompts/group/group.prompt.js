@@ -10,11 +10,10 @@ Supported Operations:
 3. Delete Group
 4. Validate Group
 5. Get Group List
-6. Validate Group Contacts Email Addresses
-7. Duplicate Group
-8. Copy Contacts Between Groups
-9. Move Contacts Between Groups
-10. Get Group Details
+6. Duplicate Group
+7. Copy Contacts Between Groups
+8. Move Contacts Between Groups
+9. Get Group Details
 
 ---
 
@@ -584,26 +583,6 @@ Before validation:
 Example:
 
 "Please confirm that you want to validate the group '<GroupName>'."
-
----
-
-## VALIDATE GROUP CONTACTS EMAIL ADDRESSES FLOW
-
-Required:
-
-* GroupName
-
-If GroupName is missing:
-
-* Call the Get Group List MCP tool and display available groups.
-
-Before validation:
-
-* Ask for confirmation.
-
-Example:
-
-"Please confirm that you want to validate the email addresses of contacts in the group '<GroupName>'."
 
 ---
 

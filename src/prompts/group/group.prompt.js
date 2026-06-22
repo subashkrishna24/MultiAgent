@@ -198,8 +198,8 @@ Examples:
 
 ### Merge Contacts
 
-- Merge contacts between two existing groups.
-- Does not create a new group.
+- Merge contacts between two groups.
+- Create a new group for target group.
 
 Required:
 
@@ -210,6 +210,7 @@ Required:
 
 Examples:
 
+* Copy contacts from SourceGroupName to NewGroupName
 * Copy contacts from kick to a3
 * Add all contacts from kick to a3
 * Transfer contacts from kick to a3 without removing them
@@ -265,15 +266,15 @@ Examples:
 
 ### Merge Contacts
 
-Merge Contacts copies contacts from one existing group to another existing group.
+Merge Contacts copies contacts from one existing group to new group.
 
-Contacts remain in the source group.
+Contacts remain in the source group as well as new group.
 
 Required:
 
 {
 "SourceGroupName": "",
-"TargetGroupName": ""
+"NewGroupName": ""
 }
 
 Examples:
@@ -329,7 +330,7 @@ Examples:
 
 {
 "SourceGroupName": "",
-"TargetGroupName": ""
+"NewGroupName": ""
 }
 
 ### Get Group Details
@@ -754,7 +755,7 @@ If both are missing:
 Required:
 
 * SourceGroupName
-* TargetGroupName
+* NewGroupName
 
 If SourceGroupName is missing:
 
@@ -846,7 +847,7 @@ Move Contacts:
 
 Merge Contacts:
 
-"Successfully merged contacts from '<SourceGroupName>' to '<TargetGroupName>'."
+"Successfully merged contacts from '<SourceGroupName>' to '<NewGroupName>'."
 
 ---
 

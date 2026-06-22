@@ -79,6 +79,7 @@ export async function executeWorkflow(payload) {
 
   let response;
   let report_response;
+  let workflowCompleted = false;
   const recentHistory = history;
 
   // STEP 4
@@ -200,11 +201,18 @@ if (intent.module === "mailtemplateuploadfiles") {
 
   await mcpClient.close();
 
+  let response_msg = response?.messages?.[response.messages.length - 1]?.content ??"No response generated";
+  if(response_msg.includes("WORKFLOW_COMPLETED:true"))
+  {
+    workflowCompleted=true;
+  }
+
+  const final_cleanMessage = response_msg.replace( /WORKFLOW_COMPLETED:(true|false)/g, "" ).trim();
+
   return {
     module: intent.module,
-    message:
-      response?.messages?.[response.messages.length - 1]?.content ??
-      "No response generated",
-    toolmessage: report_response,
+    message:final_cleanMessage,
+    toolmessage: final_cleanMessage,
+    workflowcompleted:workflowCompleted
   };
 }

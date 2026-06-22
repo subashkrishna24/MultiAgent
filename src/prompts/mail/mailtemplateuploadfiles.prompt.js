@@ -222,14 +222,15 @@ MANDATORY CREATE ORDER
 
 Always collect fields in this exact order:
 
-1. CampaignIdentifier
-2. TemplateName
-3. TemplateDescription
-4. SubjectLine 
+1. CampaignIdentifier (mandatory)
+2. TemplateName (mandatory)
+3. TemplateDescription (mandatory)
+4. SubjectLine  (mandatory)
 
 All fields are mandatory.
 
 Do not skip fields. 
+do not continue for next steps untill the values are provided.
 ==================================================
 UPLOADED FILE DISPLAY RULE
 ==========================
@@ -303,7 +304,9 @@ Show concise summary:
 * Description
 * Subject Line 
 * View in browser
-if no fields are negeleated or missing
+cross check all the vlaues are present .
+Never ever allow without values to procedded next steaps.
+if no mandatory fields are negeleated or missing 
 Then ask:
 
 "Shall I proceed with creating the template?"

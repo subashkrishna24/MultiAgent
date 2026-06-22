@@ -18,5 +18,6 @@ export const MODULES = {
   
   MAILTEST: "mailtest",
   
-  MAILCAMPAIGN_ABTEST: "mailcampaign_abtest"
+  MAILCAMPAIGN_ABTEST: "mailcampaign_abtest",
+  MAILTEMPLATEUPLOADFILES: "mailtemplateuploadfiles"
 };

@@ -27,7 +27,7 @@ import { executeMailSpamScoreAgent } from "../agents/mail/mailspamscore.agent.js
 import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
 
 import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js";
-
+import { executeMailTemplateUploadFilesAgent } from "../agents/mail/uploadmailteamplate.agent.js";
 import { getPagingSession } from "../store/paging.store.js";
 
 export async function executeWorkflow(payload) {
@@ -155,7 +155,15 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
-
+if (intent.module === "mailtemplateuploadfiles") {
+    response = await executeMailTemplateUploadFilesAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
   if (intent.module === "captureform") {
     response = await executeCaptureFormAgent({
       model: llmModel,

@@ -105,6 +105,7 @@ export async function executeWorkflow(payload) {
   let response;
   let report_response;
   let workflowCompleted = false;
+  let recommendedActions = [];
   const recentHistory = history;
 
   // STEP 4
@@ -232,15 +233,18 @@ export async function executeWorkflow(payload) {
   if (response_msg.includes("WORKFLOW_COMPLETED:true")) {
     workflowCompleted = true;
   }
+ const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
+ if(match)
+  {
+    recommendedActions = JSON.parse(match[1]);
+  }
 
-  const final_cleanMessage = response_msg
-    .replace(/WORKFLOW_COMPLETED:(true|false)/g, "")
-    .trim();
+  const final_cleanMessage = response_msg.replace( /WORKFLOW_COMPLETED:(true|false)/g, "" ).trim();
 
   return {
     module: intent.module,
     message: final_cleanMessage,
     toolmessage: final_cleanMessage,
-    workflowcompleted: workflowCompleted,
+    workflowcompleted:workflowCompleted
   };
 }

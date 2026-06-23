@@ -238,13 +238,13 @@ export async function executeWorkflow(payload) {
   {
     recommendedActions = JSON.parse(match[1]);
   }
-
-  const final_cleanMessage = response_msg.replace( /WORKFLOW_COMPLETED:(true|false)/g, "" ).trim();
-
-  return {
+ const final_cleanMessage = response_msg.replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "").trim();
+  
+ return {
     module: intent.module,
     message: final_cleanMessage,
     toolmessage: final_cleanMessage,
-    workflowcompleted:workflowCompleted
+    workflowcompleted:workflowCompleted,
+    actions:recommendedActions
   };
 }

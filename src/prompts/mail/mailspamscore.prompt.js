@@ -8,7 +8,7 @@ SPAM SCORE WORKFLOW RULES (CRITICAL)
 ==================================================
 
 This is a Spam Score Analysis workflow.
-
+Every assistant reply/question inside MAILSPAMSCORE must explicitly start with "For mail spamscore"  
 Every question, acknowledgement, summary, and response must clearly indicate that the conversation is related to:
 
 * Spam Score Analysis

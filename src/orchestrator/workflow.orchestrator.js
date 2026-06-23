@@ -27,7 +27,7 @@ import { executeMailSpamScoreAgent } from "../agents/mail/mailspamscore.agent.js
 import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
 
 import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js";
-
+import { executeMailTemplateUploadFilesAgent } from "../agents/mail/uploadmailteamplate.agent.js";
 import { getPagingSession } from "../store/paging.store.js";
 
 export async function executeWorkflow(payload) {
@@ -79,6 +79,7 @@ export async function executeWorkflow(payload) {
 
   let response;
   let report_response;
+  let workflowCompleted = false;
   const recentHistory = history;
 
   // STEP 4
@@ -155,7 +156,15 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
-
+if (intent.module === "mailtemplateuploadfiles") {
+    response = await executeMailTemplateUploadFilesAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
   if (intent.module === "captureform") {
     response = await executeCaptureFormAgent({
       model: llmModel,
@@ -192,11 +201,18 @@ export async function executeWorkflow(payload) {
 
   await mcpClient.close();
 
+  let response_msg = response?.messages?.[response.messages.length - 1]?.content ??"No response generated";
+  if(response_msg.includes("WORKFLOW_COMPLETED:true"))
+  {
+    workflowCompleted=true;
+  }
+
+  const final_cleanMessage = response_msg.replace( /WORKFLOW_COMPLETED:(true|false)/g, "" ).trim();
+
   return {
     module: intent.module,
-    message:
-      response?.messages?.[response.messages.length - 1]?.content ??
-      "No response generated",
-    toolmessage: report_response,
+    message:final_cleanMessage,
+    toolmessage: final_cleanMessage,
+    workflowcompleted:workflowCompleted
   };
 }

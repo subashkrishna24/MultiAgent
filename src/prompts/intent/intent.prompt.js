@@ -202,8 +202,7 @@ Always choose reporting over knowledge.
    - archive mail templates
    - view mail templates
    - list mail templates
-   - manage email templates
-   - upload email templates
+   - manage email templates 
 
    Example:
    {
@@ -297,5 +296,13 @@ until the workflow is:
 * explicitly switched by the user
 
 Do NOT switch modules while an A/B Test workflow is in progress.
+11. Route to mailtemplateuploadfiles when the user wants:
 
+   - Upload mail templates 
+   - upload email templates
+
+   Example:
+   {
+     "module": "mailtemplateuploadfiles"
+   }
 `;

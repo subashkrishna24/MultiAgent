@@ -21,6 +21,7 @@ import { MAILTEST_PROMPT } from "../prompts/mail/mailtest.prompt.js";
 import { MAILCAMPAIGN_ABTEST_PROMPT } from "../prompts/mail/mailabtestcamapign.prompt.js";
 
 import { SHARED_PROMPT } from "../prompts/shared/shared.prompt.js";
+import { MAILTEMPLATEUPLOADFILES_PROMPT } from "../prompts/mail/mailtemplateuploadfiles.prompt.js";
 
 function getPrompt(module) {
   const prompts = {
@@ -43,6 +44,7 @@ function getPrompt(module) {
     mailtest: MAILTEST_PROMPT,
 
     mailcampaign_abtest: MAILCAMPAIGN_ABTEST_PROMPT,
+    mailtemplateuploadfiles: MAILTEMPLATEUPLOADFILES_PROMPT,
   };
 
   return prompts[module];

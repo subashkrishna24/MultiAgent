@@ -14,6 +14,7 @@ Supported Operations:
 7. Copy Contacts Between Groups
 8. Move Contacts Between Groups
 9. Get Group Details
+10. Merge Contacts Between Groups
 
 ---
 
@@ -195,6 +196,25 @@ Examples:
 * Transfer contacts from kick to a3
 * Migrate contacts from kick to a3
 
+### Merge Contacts
+
+- Merge contacts between two groups.
+- Create a new group for target group.
+
+Required:
+
+{
+"SourceGroupName": "",
+"NewGroupName": ""
+}
+
+Examples:
+
+* Copy contacts from SourceGroupName to NewGroupName
+* Copy contacts from kick to a3
+* Add all contacts from kick to a3
+* Transfer contacts from kick to a3 without removing them
+
 ---
 
 ### Copy Contacts
@@ -219,7 +239,6 @@ Examples:
 * Transfer contacts from kick to a3 without removing them
 * Duplicate contacts from kick to a3
 * Clone contacts from kick to a3
-* Merge all contacts from kick to a3
 
 ---
 
@@ -242,6 +261,24 @@ Examples:
 * Migrate contacts from kick to a3
 * Shift contacts from kick to a3
 * Relocate contacts from kick to a3
+
+---
+
+### Merge Contacts
+
+Merge Contacts copies contacts from one existing group to new group.
+
+Contacts remain in the source group as well as new group.
+
+Required:
+
+{
+"SourceGroupName": "",
+"NewGroupName": ""
+}
+
+Examples:
+* Merge all contacts from kick to a3
 
 ---
 
@@ -287,6 +324,13 @@ Examples:
 {
 "SourceGroupName": "",
 "TargetGroupName": ""
+}
+
+### Merge Contacts
+
+{
+"SourceGroupName": "",
+"NewGroupName": ""
 }
 
 ### Get Group Details
@@ -706,7 +750,35 @@ If both are missing:
 
 ---
 
-## COPY / MOVE GROUP VALIDATION
+## MERGE CONTACTS FLOW
+
+Required:
+
+* SourceGroupName
+* NewGroupName
+
+If SourceGroupName is missing:
+
+* Call Get Group List MCP.
+* Display available groups.
+* Ask:
+  "Which group would you like to copy contacts from?"
+
+If TargetGroupName is missing:
+
+* Call Get Group List MCP.
+* Display available groups.
+* Ask:
+  "Which group would you like to copy contacts to?"
+
+If both are missing:
+
+* Call Get Group List MCP.
+* Display available groups.
+* Ask for the source group first.
+---
+
+## COPY / MOVE / MERGE GROUP VALIDATION
 
 Before executing:
 
@@ -753,7 +825,17 @@ Execute only after confirmation.
 
 ---
 
-## COPY / MOVE SUCCESS MESSAGES
+## MERGE CONTACTS CONFIRMATION
+
+Before execution:
+
+"Please confirm that you want to copy all contacts from '<SourceGroupName>' to '<TargetGroupName>'. Contacts will remain in the source group."
+
+Execute only after confirmation.
+
+---
+
+## COPY / MOVE / MERGE SUCCESS MESSAGES
 
 Copy Contacts:
 
@@ -763,9 +845,13 @@ Move Contacts:
 
 "Successfully moved contacts from '<SourceGroupName>' to '<TargetGroupName>'."
 
+Merge Contacts:
+
+"Successfully merged contacts from '<SourceGroupName>' to '<NewGroupName>'."
+
 ---
 
-## COPY / MOVE ERROR HANDLING
+## COPY / MOVE / MERGE ERROR HANDLING
 
 If no contacts are found in the source group:
 

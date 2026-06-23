@@ -134,8 +134,24 @@ Name: Test_Template
 Subject Line: Welcome Offer
 Campaign Identifier: Campaign_123
 Template Description: Welcome email template
-
 Spam Score: 0.0
+
+IMPORTANT:
+After returning details or information, ALWAYS add RECOMMENDED_ACTIONS based on the module.
+
+ACTION RULES:
+
+For GROUP details:
+Return:
+RECOMMENDED_ACTIONS:["Edit","Delete","Duplicate"]
+
+For MAIL TEMPLATE details:
+Return:
+RECOMMENDED_ACTIONS:["Edit","Delete","Duplicate"]
+
+For Campaign details not for Campaign identifier:
+Return:
+RECOMMENDED_ACTIONS:["Edit","Delete","Duplicate","Reschedule"]
 
 ==================================================
 

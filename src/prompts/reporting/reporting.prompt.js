@@ -88,16 +88,16 @@ Table: contact
 
 Email verification status:
 - IsVerifiedMailId = 1 → Verified Email
-- IsVerifiedMailId = -1 → Invalid Email
-- IsVerifiedMailId = 0 OR IsVerifiedMailId IS NULL → Unverified Email
+- IsVerifiedMailId = -1 → Unverified Email
+- IsVerifiedMailId = 0  → Invalid Email 
 
 Exact WHERE clauses to use:
-- For invalid emails (user asks "How many invalid contacts?" / "Invalid email contacts" / "Contacts with invalid emails") use:
-  WHERE contact.IsVerifiedMailId = -1
+- For unverified emails (user asks "How many unverified contacts?" / "Invalid email contacts" / "Contacts with invalid emails") use:
+  WHERE (contact.IsVerifiedMailId = -1 OR contact.IsVerifiedMailId IS NULL)
 - For verified emails (user asks "How many verified contacts?") use:
   WHERE contact.IsVerifiedMailId = 1
-- For unverified emails (user asks "How many unverified contacts?") use:
-  WHERE contact.IsVerifiedMailId = 0 OR contact.IsVerifiedMailId IS NULL
+- For invalid emails (user asks "How many invalid contacts?") use:
+  WHERE contact.IsVerifiedMailId = 0
 
 Contact detail listing queries:
 SELECT
@@ -111,10 +111,10 @@ ORDER BY contact.updateddate DESC
 Count queries:
 SELECT COUNT(*) AS total
 
-Example — user: "How many contacts are invalid in June?"
+Example — user: "How many contacts are unverified in June?"
 SELECT COUNT(*) AS total
 FROM contact
-WHERE contact.IsVerifiedMailId = -1
+WHERE (contact.IsVerifiedMailId = -1 OR contact.IsVerifiedMailId IS NULL)
   AND DATE(contact.updateddate) >= MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int, 6, 1)
   AND DATE(contact.updateddate) <= (MAKE_DATE(EXTRACT(YEAR FROM CURRENT_DATE)::int, 6, 1) + INTERVAL '1 month' - INTERVAL '1 day')::date
 
@@ -152,9 +152,31 @@ Verification criteria
 - COUNT(groupmember.contactid) >= totalemailverfied
 - Verification percentage >= 1%
 
+4) For the selected groups, provide the count of contacts by email verification status.
+
+Use the following where conditions:
+- Verified Contacts: contact.IsVerifiedMailId = 1
+- Invalid Contacts: contact.IsVerifiedMailId = 0
+- Not Verified Contacts: (contact.IsVerifiedMailId = -1 OR contact.IsVerifiedMailId IS NULL)
+
 CAMPAIGN REPORT RULES
 - When the user asks about campaigns for a period (e.g., last month, this month, 'April', 'April 1 to April 30'), use the relevant sendingsetting table and apply the date filter to the scheduleddate column.
 - For campaign queries add scheduledstatus = 0 in the WHERE clause when applicable.
+
+COUNT-ONLY CAMPAIGN QUERIES
+- If the user asks only for the number of campaigns for a single channel (for example: "How many mail campaigns?" or "Count mail campaigns"), return the count directly from the channel's sending setting table. Do NOT join to the sent table for count-only requests.
+- Use scheduledstatus = 0 when applicable.
+- Channel table mapping:
+  - Mail: mailsendingsetting
+  - SMS: smssendingsetting
+  - WhatsApp: whatsappsendingsetting
+  - Web Push: webpushsendingsetting
+- If a date range is provided, apply DATE(<table>.scheduleddate) filters following the dynamic date rules above.
+- Example COUNT queries:
+  SELECT COUNT(*) AS total FROM mailsendingsetting m WHERE m.scheduledstatus = 0;
+  SELECT COUNT(*) AS total FROM smssendingsetting s WHERE s.scheduledstatus = 0;
+  SELECT COUNT(*) AS total FROM whatsappsendingsetting w WHERE w.scheduledstatus = 0;
+  SELECT COUNT(*) AS total FROM webpushsendingsetting wp WHERE wp.scheduledstatus = 0;
 
 A) MAIL CAMPAIGN
 Tables: mailsendingsetting, mailsent

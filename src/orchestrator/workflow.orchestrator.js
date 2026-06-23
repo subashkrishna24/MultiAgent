@@ -45,7 +45,32 @@ export async function executeWorkflow(payload) {
   const session = getPagingSession(accountid);
 
   if (userdetails != null) {
-    userdetails.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!userdetails.timeZone) {
+      userdetails.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    }
+
+    try {
+      const now = new Date();
+      const hourStr = Intl.DateTimeFormat("en-US", {
+        timeZone: userdetails?.timeZone,
+        hour: "numeric",
+        hour12: false,
+      }).format(now);
+      const hour = parseInt(hourStr, 10);
+      const greeting =
+        hour < 12
+          ? "Good morning"
+          : hour < 17
+            ? "Good afternoon"
+            : "Good evening";
+      userdetails.localHour = Number.isFinite(hour) ? hour : null;
+      userdetails.greeting = greeting;
+    } catch (err) {
+      console.error("Error determining local time for user:", err);
+      userdetails.localHour = null;
+      userdetails.greeting = "Hello";
+    }
+
     session.UserDetails = userdetails;
   }
 
@@ -80,6 +105,7 @@ export async function executeWorkflow(payload) {
   let response;
   let report_response;
   let workflowCompleted = false;
+  let recommendedActions = [];
   const recentHistory = history;
 
   // STEP 4
@@ -156,7 +182,7 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
-if (intent.module === "mailtemplateuploadfiles") {
+  if (intent.module === "mailtemplateuploadfiles") {
     response = await executeMailTemplateUploadFilesAgent({
       model: llmModel,
       tools: filteredTools,
@@ -201,18 +227,24 @@ if (intent.module === "mailtemplateuploadfiles") {
 
   await mcpClient.close();
 
-  let response_msg = response?.messages?.[response.messages.length - 1]?.content ??"No response generated";
-  if(response_msg.includes("WORKFLOW_COMPLETED:true"))
-  {
-    workflowCompleted=true;
+  let response_msg =
+    response?.messages?.[response.messages.length - 1]?.content ??
+    "No response generated";
+  if (response_msg.includes("WORKFLOW_COMPLETED:true")) {
+    workflowCompleted = true;
   }
-
-  const final_cleanMessage = response_msg.replace( /WORKFLOW_COMPLETED:(true|false)/g, "" ).trim();
-
-  return {
+ const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
+ if(match)
+  {
+    recommendedActions = JSON.parse(match[1]);
+  }
+ const final_cleanMessage = response_msg.replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "").trim();
+  
+ return {
     module: intent.module,
-    message:final_cleanMessage,
+    message: final_cleanMessage,
     toolmessage: final_cleanMessage,
-    workflowcompleted:workflowCompleted
+    workflowcompleted:workflowCompleted,
+    actions:recommendedActions
   };
 }

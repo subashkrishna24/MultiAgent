@@ -1564,7 +1564,7 @@ Generate:
     "type": "range",
     "from": {
       "value": null,
-      "date": "2026-05-01"
+      "date": "null"
     },
     "to": {
       "value": "today",
@@ -1584,11 +1584,11 @@ Generate:
     "type": "range",
     "from": {
       "value": null,
-      "date": "2026-05-01"
+      "date": "null"
     },
     "to": {
       "value": null,
-      "date": "2026-06-01"
+      "date": "null"
     }
   }
 }

@@ -134,8 +134,24 @@ Name: Test_Template
 Subject Line: Welcome Offer
 Campaign Identifier: Campaign_123
 Template Description: Welcome email template
-
 Spam Score: 0.0
+
+IMPORTANT:
+After returning details or information, ALWAYS add RECOMMENDED_ACTIONS based on the module.
+
+ACTION RULES:
+
+For GROUP details:
+Return:
+RECOMMENDED_ACTIONS:["Edit","Delete","Duplicate"]
+
+For MAIL TEMPLATE details:
+Return:
+RECOMMENDED_ACTIONS:["Edit","Delete","Duplicate"]
+
+For Campaign details not for Campaign identifier:
+Return:
+RECOMMENDED_ACTIONS:["Edit","Delete","Duplicate","Reschedule"]
 
 ==================================================
 
@@ -151,4 +167,46 @@ Subject Line: Welcome
 The double asterisk format is ONLY for selectable list item names.
 If the MCP tool response contains a single object, a string, a number, a boolean, or any non-list result, use the existing/default response formatting and do not apply the above rules.
 
+==================================================
+WORKFLOW COMPLETION RULE:
+
+Return WORKFLOW_COMPLETED:true only when the requested business action is finished.
+
+Completed examples:
+
+- campaign created successfully
+- campaign updated successfully
+- campaign scheduled successfully
+- template created successfully
+- template updated successfully
+- group created successfully
+
+Return WORKFLOW_COMPLETED:false for:
+
+- showing details
+- viewing information
+- listing records
+- searching records
+- displaying reports
+- answering questions
+- waiting for user confirmation
+- collecting missing information
+
+
+Examples:
+
+User:
+"Get mail template details of Test_Template"
+
+Response:
+WORKFLOW_COMPLETED:false
+
+
+User:
+"Create mail template"
+
+(after MCP success)
+
+Response:
+WORKFLOW_COMPLETED:true
 `;

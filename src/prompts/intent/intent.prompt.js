@@ -15,6 +15,7 @@ Available modules:
 - mailspamscore
 - mailtest
 - mailcampaign_abtest
+- mailtemplateuploadfiles
 
 Return ONLY JSON.
 
@@ -209,6 +210,9 @@ Always choose reporting over knowledge.
    {
      "module": "mailtemplate"
    }
+
+   Note : dont include upload mail template for this module.
+   
 8. Route to MAILSPAMSCORE when the user wants:
 
 * check spam score

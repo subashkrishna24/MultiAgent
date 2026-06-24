@@ -1,20 +1,34 @@
 import { getMcpClient } from "../services/mcp.service.js";
+
 import { getllmModel } from "../services/llm.service.js";
+
 import { detectIntent } from "../agents/intent/intent.agent.js";
+
 import { filterToolsByModule } from "../services/tool-filter.service.js";
+
 import { executeKnowledgeAgent } from "../agents/knowledge/knowledge.agent.js";
+
 import { executeReportingAgent } from "../agents/reporting/reporting.agent.js";
+
 import { executeContactAgent } from "../agents/contact/contact.agent.js";
+
 import { executeGroupAgent } from "../agents/group/group.agent.js";
+
 import { executeMailCampaignAgent } from "../agents/mail/mailcampaign.agent.js";
+
 import { executeMailTemplateAgent } from "../agents/mail/mailtemplate.agent.js";
+
 import { executeCaptureFormAgent } from "../agents/captureform/captureform.agent.js";
+
 import { buildIntentContext } from "../utils/context-builder.js";
+
 import { executeMailSpamScoreAgent } from "../agents/mail/mailspamscore.agent.js";
+
 import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
+
 import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js";
+import { executeMailTemplateUploadFilesAgent } from "../agents/mail/uploadmailteamplate.agent.js";
 import { getPagingSession } from "../store/paging.store.js";
-import { getModuleScopedHistory } from "../utils/module.utils.js"; // Included for history trimming
 
 export async function executeWorkflow(payload) {
   const {
@@ -30,15 +44,38 @@ export async function executeWorkflow(payload) {
   // Session
   const session = getPagingSession(accountid);
 
-  var workflowCompleted = false;
-  var recommendedActions = [];
   if (userdetails != null) {
-    userdetails.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!userdetails.timeZone) {
+      userdetails.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    }
+
+    try {
+      const now = new Date();
+      const hourStr = Intl.DateTimeFormat("en-US", {
+        timeZone: userdetails?.timeZone,
+        hour: "numeric",
+        hour12: false,
+      }).format(now);
+      const hour = parseInt(hourStr, 10);
+      const greeting =
+        hour < 12
+          ? "Good morning"
+          : hour < 17
+            ? "Good afternoon"
+            : "Good evening";
+      userdetails.localHour = Number.isFinite(hour) ? hour : null;
+      userdetails.greeting = greeting;
+    } catch (err) {
+      console.error("Error determining local time for user:", err);
+      userdetails.localHour = null;
+      userdetails.greeting = "Hello";
+    }
+
     session.UserDetails = userdetails;
   }
 
   if (uploadedfile?.length > 0) {
-    let Files = [];
+    var Files = [];
     for (const file of uploadedfile) {
       Files.push({
         fileName: file.fileName,
@@ -49,36 +86,17 @@ export async function executeWorkflow(payload) {
   }
 
   const llmModel = getllmModel(model, apikey);
-  const lastMessage = history[history.length - 1].content.toLowerCase().trim();
+
+  const lastMessage = history[history.length - 1].content;
 
   // STEP 1
   const intentContext = buildIntentContext(history);
-  let intent = await detectIntent(llmModel, intentContext);
 
-  // ==========================================
-  // FIX: STATE-BASED MODULE LOCKING GUARDRAIL
-  // ==========================================
-  if (session.activeModule === "mailtemplate") {
-    // Explicit commands that are allowed to break the lock to go to mailcampaign
-    const explicitCampaignSwitch =
-      /(create|schedule|update|send|manage)\s+mail\s+campaign/i.test(
-        lastMessage,
-      );
-
-    if (!explicitCampaignSwitch) {
-      // Force the module to stay as mailtemplate
-      intent.module = "mailtemplate";
-    } else {
-      // User requested a hard module switch; wipe template drafts safely
-      session.activeModule = null;
-      session.isWaitingForTemplateInput = false;
-      session.draftTemplate = {};
-    }
-  }
-  // ==========================================
+  const intent = await detectIntent(llmModel, intentContext);
 
   // STEP 2
   const mcpClient = getMcpClient(accountid, p5apikey);
+
   const allTools = await mcpClient.getTools();
 
   // STEP 3
@@ -86,6 +104,8 @@ export async function executeWorkflow(payload) {
 
   let response;
   let report_response;
+  let workflowCompleted = false;
+  let recommendedActions = [];
   const recentHistory = history;
 
   // STEP 4
@@ -117,6 +137,8 @@ export async function executeWorkflow(payload) {
       report_response = await reportTool.invoke({
         getquery: sql,
       });
+
+      //console.log(report_response);
     } else {
       report_response = toolMessages[0].content;
     }
@@ -152,13 +174,6 @@ export async function executeWorkflow(payload) {
   }
 
   if (intent.module === "mailtemplate") {
-    // Set active session context before calling agent
-    session.activeModule = "mailtemplate";
-    session.isWaitingForTemplateInput = true;
-
-    // Filter context history so template agent isn't derailed by stale previous module content
-    //const scopedHistory = getModuleScopedHistory(recentHistory, "mailtemplate");
-
     response = await executeMailTemplateAgent({
       model: llmModel,
       tools: filteredTools,
@@ -167,7 +182,15 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
-
+  if (intent.module === "mailtemplateuploadfiles") {
+    response = await executeMailTemplateUploadFilesAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
   if (intent.module === "captureform") {
     response = await executeCaptureFormAgent({
       model: llmModel,
@@ -176,7 +199,6 @@ export async function executeWorkflow(payload) {
       accountId: accountid,
     });
   }
-
   if (intent.module === "mailspamscore") {
     response = await executeMailSpamScoreAgent({
       model: llmModel,
@@ -185,7 +207,6 @@ export async function executeWorkflow(payload) {
       accountId: accountid,
     });
   }
-
   if (intent.module === "mailtest") {
     response = await executeMailTestAgent({
       model: llmModel,
@@ -194,7 +215,6 @@ export async function executeWorkflow(payload) {
       accountId: accountid,
     });
   }
-
   if (intent.module === "mailcampaign_abtest") {
     response = await executeMailAbTestCampaignAgent({
       model: llmModel,
@@ -203,8 +223,8 @@ export async function executeWorkflow(payload) {
       accountId: accountid,
     });
   }
-
   console.log("Final response from agent:", response);
+
   await mcpClient.close();
 
   let response_msg =
@@ -213,19 +233,18 @@ export async function executeWorkflow(payload) {
   if (response_msg.includes("WORKFLOW_COMPLETED:true")) {
     workflowCompleted = true;
   }
-  const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
-  if (match) {
+ const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
+ if(match)
+  {
     recommendedActions = JSON.parse(match[1]);
   }
-  const final_cleanMessage = response_msg
-    .replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "")
-    .trim();
-
-  return {
+ const final_cleanMessage = response_msg.replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "").trim();
+  
+ return {
     module: intent.module,
     message: final_cleanMessage,
-    toolmessage: report_response,
-    workflowcompleted: workflowCompleted,
-    actions: recommendedActions,
+    toolmessage: final_cleanMessage,
+    workflowcompleted:workflowCompleted,
+    actions:recommendedActions
   };
 }

@@ -955,34 +955,67 @@ Use only a single MCP call.
 ### Create Control Group
 
 Purpose:
-Create a control group from an existing source group using a specified percentage of contacts.
+Create a control group from an existing source group using a specified percentage of contacts. Optionally create a non-control group containing the remaining contacts.
 
 Required Inputs:
-- Source Group Name
-- Control Group Name
-- Percentage of Contacts
+
+* Source Group Name
+* Control Group Name
+* Percentage of Contacts
+
+Optional Inputs:
+
+* Create Non-Control Group (True/False)
+* Non-Control Group Name (required only when Create Non-Control Group = True)
 
 Behavior:
-- Identify the source group from which contacts should be selected.
-- Obtain the control group name to be created.
-- Obtain the percentage of contacts to be included in the control group.
-- Pass these values directly to the MCP server.
-- Do not calculate contact counts or perform contact selection in the agent.
-- The MCP server is responsible for validation, contact count calculation, control group creation, contact selection, and result generation.
+
+* Identify the source group.
+* Obtain the control group name.
+* Obtain the percentage of contacts for the control group.
+* If the user chooses to create a non-control group, obtain the non-control group name.
+* Pass all inputs directly to the MCP server.
+* Do not calculate contact counts or determine contact allocation in the agent.
+* The MCP server is responsible for:
+
+  * Validation
+  * Percentage calculation
+  * Contact selection
+  * Control group creation
+  * Non-control group creation (if requested)
+  * Adding contacts to the respective groups
+  * Returning the final result
 
 Examples:
-- Create a control group called "Group A Control" from "Group A" using 10% of contacts.
-- Create a holdout group named "Campaign Control Group" from "All Customers" with 20% of contacts.
-- Create a control group from "Newsletter Subscribers" with 5% of contacts.
+
+Example 1:
+Source Group Name: Group A
+Control Group Name: Group A Control
+Percentage: 40
+
+Result:
+Pass values to MCP server for control group creation.
+
+Example 2:
+Source Group Name: Group A
+Control Group Name: Group A Control
+Percentage: 40
+Create Non-Control Group: True
+Non-Control Group Name: Group A Non-Control
+
+Result:
+Pass values to MCP server. The MCP server will place the selected percentage of contacts in the control group and the remaining contacts in the non-control group.
 
 Supported Terms:
-- Create control group
-- Split group by percentage
-- Create percentage-based group
+* Create control group
+* Control Group
+* Non-Control Group
+* Percentage-based Group
+* Split group by percentage
+* Create percentage-based group
 
 Validation:
 - Percentage must be greater than 0 and less than or equal to 100.
 - Source group must exist.
-
 ---
 `;

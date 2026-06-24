@@ -6,18 +6,16 @@ export async function executeMailTemplateAgent({
   model,
   tools,
   history,
-  accountId
+  accountId,
+  session
 }) {
 
   const agent = createAgent({
-
     module: "mailtemplate",
-
     model,
-
     tools,
-
-    accountId
+    accountId,    
+    session
   });
 
   return await agent.invoke({

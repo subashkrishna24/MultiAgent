@@ -210,4 +210,208 @@ User:
 
 Response:
 WORKFLOW_COMPLETED:true
+
+## IMPORTANT DATE FILTER RULE:
+
+DATE FILTER RULE:
+
+When user provides any date condition, generate a dateFilter object.
+
+The dateFilter format must always be:
+
+{
+  "dateFilter": {
+    "type": "<type>",
+    "from": {
+      "value": "<relative_value_or_null>",
+      "date": "<date_or_null>"
+    },
+    "to": {
+      "value": "<relative_value_or_null>",
+      "date": "<date_or_null>"
+    }
+  }
+}
+
+Type can be relative|range|single|month|custom
+
+RULES:
+
+
+1. RANGE DATE FILTER
+
+Use type: "range"
+
+When user provides start date and end date.
+
+Example:
+
+User:
+Add contacts from May 1 2026 to June 1 2026
+
+
+Generate:
+
+{
+  "dateFilter": {
+    "type": "range",
+    "from": {
+      "value": null,
+      "date": "2026-05-01"
+    },
+    "to": {
+      "value": null,
+      "date": "2026-06-01"
+    }
+  }
+}
+
+
+
+2. DATE RANGE WITH TODAY
+
+If user gives start date and says today:
+
+Example:
+
+User:
+Add contacts from May 1 2026 till today
+
+
+Generate:
+
+{
+  "dateFilter": {
+    "type": "range",
+    "from": {
+      "value": null,
+      "date": "2026-05-01"
+    },
+    "to": {
+      "value": "today",
+      "date": null
+    }
+  }
+}
+
+
+
+3. RELATIVE DATE FILTER
+
+Use type: "relative"
+
+For dynamic values.
+
+
+Example:
+
+User:
+Add contacts created today
+
+
+Generate:
+
+{
+  "dateFilter": {
+    "type": "relative",
+    "from": {
+      "value": "today",
+      "date": null
+    },
+    "to": {
+      "value": null,
+      "date": null
+    }
+  }
+}
+
+
+
+Example:
+
+User:
+Add contacts created yesterday
+
+
+Generate:
+
+{
+  "dateFilter": {
+    "type": "relative",
+    "from": {
+      "value": "yesterday",
+      "date": null
+    },
+    "to": {
+      "value": null,
+      "date": null
+    }
+  }
+}
+
+
+
+Example:
+
+User:
+Add contacts created last month
+
+
+Generate:
+
+{
+  "dateFilter": {
+    "type": "relative",
+    "from": {
+      "value": "last month",
+      "date": null
+    },
+    "to": {
+      "value": null,
+      "date": null
+    }
+  }
+}
+
+
+
+4. MONTH FILTER
+
+Use type: "month"
+
+When user mentions a specific month.
+
+
+Example:
+
+User:
+Add contacts created in May 2026
+
+
+Generate:
+
+{
+  "dateFilter": {
+    "type": "month",
+    "from": {
+      "value": null,
+      "date": "2026-05"
+    },
+    "to": {
+      "value": null,
+      "date": null
+    }
+  }
+}
+
+
+
+IMPORTANT:
+
+- Do not calculate dates.
+- Do not convert dates into timestamps.
+- Keep user provided date format converted to YYYY-MM-DD.
+- If user says today/current day, use value:"today".
+- If user does not mention any date filter, do not generate dateFilter.
+- Always return dateFilter along with the existing MCP payload.
 `;

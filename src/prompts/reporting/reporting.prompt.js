@@ -88,13 +88,13 @@ Table: contact
 
 Email verification status:
 - IsVerifiedMailId = 1 → Verified Email
-- IsVerifiedMailId = -1 → Unverified Email
+- IsVerifiedMailId = -1 → Unverified Email 
 - IsVerifiedMailId = 0  → Invalid Email 
 
 Exact WHERE clauses to use:
-- For unverified emails (user asks "How many unverified contacts?" / "Invalid email contacts" / "Contacts with invalid emails") use:
+- For unverified emails or not verified emails (user asks "How many unverified contacts?" / "Invalid email contacts" / "Contacts with invalid emails") use:
   WHERE (contact.IsVerifiedMailId = -1 OR contact.IsVerifiedMailId IS NULL)
-- For verified emails (user asks "How many verified contacts?") use:
+- For verified emails or valid emails (user asks "How many verified contacts?") use:
   WHERE contact.IsVerifiedMailId = 1
 - For invalid emails (user asks "How many invalid contacts?") use:
   WHERE contact.IsVerifiedMailId = 0
@@ -111,7 +111,7 @@ ORDER BY contact.updateddate DESC
 Count queries:
 SELECT COUNT(*) AS total
 
-Example — user: "How many contacts are unverified in June?"
+Example — user: "How many contacts are unverified or not verified in June?"
 SELECT COUNT(*) AS total
 FROM contact
 WHERE (contact.IsVerifiedMailId = -1 OR contact.IsVerifiedMailId IS NULL)

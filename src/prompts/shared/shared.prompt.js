@@ -141,17 +141,18 @@ After returning details or information, ALWAYS add RECOMMENDED_ACTIONS based on 
 
 ACTION RULES:
 
-For GROUP details:
+For GROUP/TEMPLATE/Campaign identifier details:
 Return:
 RECOMMENDED_ACTIONS:["Edit","Delete","Duplicate"]
 
-For MAIL TEMPLATE details:
+For MAIL GROUP/TEMPLATE/Campaign identifier details:
 Return:
 RECOMMENDED_ACTIONS:["Edit","Delete","Duplicate"]
 
 For Campaign details not for Campaign identifier:
 Return:
 RECOMMENDED_ACTIONS:["Edit","Delete","Duplicate","Reschedule"]
+Note: If campaign status is completed/done/sent Do NOT return RECOMMENDED_ACTIONS.
 
 ==================================================
 

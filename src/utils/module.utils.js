@@ -1,4 +1,6 @@
-// Define the module prefix object at the top of the file
+// THIS IS USED BECAUSE
+//If your app has multiple features (e.g., creating a Contact, then switching to creating a Mail Campaign), 
+// the LLM can easily get confused by old instructions.)
 const MODULE_PREFIX = {
   knowledge: null,
   reporting: null,

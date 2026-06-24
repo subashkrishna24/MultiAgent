@@ -8,6 +8,8 @@ export const pagingStore = {};
  */
 const INITIAL_MODULE_STATES = {
   mailtemplate: () => ({
+    FlowType: "CREATE", // "CREATE", "UPDATE", "DUPLICATE", "DELETE"
+    ExistingTemplateName: "",
     TemplateName: "",
     TemplateDescription: "",
     SubjectLine: "",
@@ -15,10 +17,16 @@ const INITIAL_MODULE_STATES = {
     ViewInBrowser: null,
     CampaignIdentifier: ""
   }),
+  // ==================================================
+  // FIXED: Matches the exact keys utilized by upload agent
+  // ==================================================
   uploadtemplate: () => ({
-    uploadedFiles: [],
-    status: "idle", // idle, processing, completed
-    templateName: ""
+    TemplateName: "",
+    TemplateDescription: "",
+    SubjectLine: "",
+    ViewInBrowser: null,
+    CampaignIdentifier: "",
+    uploadedFiles: []
   }),
   mailtest: () => ({
     TestEmail: "",
@@ -95,8 +103,9 @@ export function getPagingSession(accountId) {
       // ==================================================
       // CORE AGENT STATE MANAGER
       // ==================================================
-      activeModule: null,              // Tracks locked flow ('mailcampaign', 'mailtest', etc.)
+      activeModule: null,               // Tracks locked flow ('mailcampaign', 'mailtest', etc.)
       isWaitingForTemplateInput: false, // Preserves turn context lock
+      isWaitingForUploadInput: false,   // Upload specific turn lock toggle
       
       // Separate active form memory stores
       moduleData: {
@@ -166,6 +175,7 @@ export function resetSpecificModule(accountId, moduleName) {
   const session = getPagingSession(accountId);
   session.activeModule = null;
   session.isWaitingForTemplateInput = false;
+  session.isWaitingForUploadInput = false;
   
   if (session.moduleData[moduleName]) {
     flushModuleState(session, moduleName);

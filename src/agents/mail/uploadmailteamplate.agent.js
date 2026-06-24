@@ -13,15 +13,13 @@ export async function executeMailTemplateUploadFilesAgent({
   // 1. STATE INITIALIZATION & RECOVERY (Explicit Flat Schema)
   // ==================================================
   if (!session.draftTemplate) {
-   session.draftTemplate = {
+    session.draftTemplate = {
       TemplateName: "",
       TemplateDescription: "",
       SubjectLine: "",         // Uniform Key shared across both agents
-      BodyContent: "",         
       ViewInBrowser: null,
       CampaignIdentifier: "",
       uploadedFiles: [] 
- 
     };
   }
 
@@ -53,7 +51,7 @@ export async function executeMailTemplateUploadFilesAgent({
       } else if (lastAssistantQuestion.includes("short description")) {
         uploadState.TemplateDescription = userResponseRaw;
       } else if (lastAssistantQuestion.includes("subject line")) {
-        uploadState.Subject = userResponseRaw;
+        uploadState.SubjectLine = userResponseRaw; 
       } else if (lastAssistantQuestion.includes("view in browser")) {
         uploadState.ViewInBrowser = /(true|yes|y)/i.test(userResponseClean) ? "true" : "false";
       } else if (lastAssistantQuestion.includes("campaign identifier") && !userResponseClean.includes("show")) {
@@ -85,7 +83,7 @@ export async function executeMailTemplateUploadFilesAgent({
     - CampaignIdentifier: "${uploadState.CampaignIdentifier || ""}"
     - TemplateName: "${uploadState.TemplateName || ""}"
     - TemplateDescription: "${uploadState.TemplateDescription || ""}"
-    - Subject: "${uploadState.Subject || ""}"
+    - SubjectLine: "${uploadState.SubjectLine || ""}"
     - ViewInBrowser: "${uploadState.ViewInBrowser || ""}"
     
     If the user asks for status, a summary, or a side question, use this data to respond naturally.`
@@ -108,8 +106,8 @@ export async function executeMailTemplateUploadFilesAgent({
   if (/(cancel|stop\s+this|exit\s+flow|nevermind|abort)/i.test(lastMessage)) {
     session.activeModule = null;
     session.isWaitingForTemplateInput = false; 
-    session.isWaitingForUploadInput = false; // Synchronized global lock releases
-    session.uploadState = null; 
+    session.isWaitingForUploadInput = false; 
+    session.draftTemplate = null; 
   }
 
   // Construct and execute the agent node
@@ -135,8 +133,8 @@ export async function executeMailTemplateUploadFilesAgent({
     
     session.activeModule = null;
     session.isWaitingForTemplateInput = false; 
-    session.isWaitingForUploadInput = false; // Total cleanup integration
-    session.uploadState = null; 
+    session.isWaitingForUploadInput = false; 
+    session.draftTemplate = null; 
   }
 
   return result;

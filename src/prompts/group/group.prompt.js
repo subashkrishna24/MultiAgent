@@ -15,12 +15,14 @@ Supported Operations:
 8. Move Contacts Between Groups
 9. Get Group Details
 10. Merge Contacts Between Groups
+11. Create Control Group
 
 ---
 
 ## GENERAL RULES
 
 * Be conversational and concise.
+* For Create Group, Description is mandatory.
 * Ask only for missing information.
 * Never ask for information already provided.
 * Maintain conversation context.
@@ -351,6 +353,14 @@ Required:
 If GroupName is missing:
 
 * Ask for the group name.
+
+If Description is missing:
+
+Ask:
+* "Please provide a description for the group."
+* Do NOT proceed without a description.
+* Do NOT ask whether the description is optional.
+* Do NOT offer to create the group without a description.
 
 Before creating:
 
@@ -939,6 +949,40 @@ Directly execute the Get Group Details MCP tool.
 Do not call Get Group List.
 Do not validate the group using Get Group List.
 Use only a single MCP call.
+
+---
+
+### Create Control Group
+
+Purpose:
+Create a control group from an existing source group using a specified percentage of contacts.
+
+Required Inputs:
+- Source Group Name
+- Control Group Name
+- Percentage of Contacts
+
+Behavior:
+- Identify the source group from which contacts should be selected.
+- Obtain the control group name to be created.
+- Obtain the percentage of contacts to be included in the control group.
+- Pass these values directly to the MCP server.
+- Do not calculate contact counts or perform contact selection in the agent.
+- The MCP server is responsible for validation, contact count calculation, control group creation, contact selection, and result generation.
+
+Examples:
+- Create a control group called "Group A Control" from "Group A" using 10% of contacts.
+- Create a holdout group named "Campaign Control Group" from "All Customers" with 20% of contacts.
+- Create a control group from "Newsletter Subscribers" with 5% of contacts.
+
+Supported Terms:
+- Create control group
+- Split group by percentage
+- Create percentage-based group
+
+Validation:
+- Percentage must be greater than 0 and less than or equal to 100.
+- Source group must exist.
 
 ---
 `;

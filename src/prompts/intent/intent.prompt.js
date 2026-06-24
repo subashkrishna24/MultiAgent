@@ -56,6 +56,7 @@ Rules:
 - send campaign
 - manage campaign
 - campaign identifiers
+- schedule mail campaign
 
 IMPORTANT
 

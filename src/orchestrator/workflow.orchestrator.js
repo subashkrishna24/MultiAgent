@@ -157,12 +157,12 @@ export async function executeWorkflow(payload) {
     session.isWaitingForTemplateInput = true;
 
     // Filter context history so template agent isn't derailed by stale previous module content
-    const scopedHistory = getModuleScopedHistory(recentHistory, "mailtemplate");
+    //const scopedHistory = getModuleScopedHistory(recentHistory, "mailtemplate");
 
     response = await executeMailTemplateAgent({
       model: llmModel,
       tools: filteredTools,
-      history: scopedHistory,
+      history: recentHistory,
       accountId: accountid,
       session,
     });

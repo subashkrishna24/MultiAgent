@@ -30,6 +30,8 @@ export async function executeWorkflow(payload) {
   // Session
   const session = getPagingSession(accountid);
 
+  var workflowCompleted = false;
+  var recommendedActions = [];
   if (userdetails != null) {
     userdetails.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     session.UserDetails = userdetails;
@@ -58,7 +60,10 @@ export async function executeWorkflow(payload) {
   // ==========================================
   if (session.activeModule === "mailtemplate") {
     // Explicit commands that are allowed to break the lock to go to mailcampaign
-    const explicitCampaignSwitch = /(create|schedule|update|send|manage)\s+mail\s+campaign/i.test(lastMessage);
+    const explicitCampaignSwitch =
+      /(create|schedule|update|send|manage)\s+mail\s+campaign/i.test(
+        lastMessage,
+      );
 
     if (!explicitCampaignSwitch) {
       // Force the module to stay as mailtemplate
@@ -149,7 +154,7 @@ export async function executeWorkflow(payload) {
   if (intent.module === "mailtemplate") {
     // Set active session context before calling agent
     session.activeModule = "mailtemplate";
-    session.isWaitingForTemplateInput = true; 
+    session.isWaitingForTemplateInput = true;
 
     // Filter context history so template agent isn't derailed by stale previous module content
     const scopedHistory = getModuleScopedHistory(recentHistory, "mailtemplate");
@@ -171,7 +176,7 @@ export async function executeWorkflow(payload) {
       accountId: accountid,
     });
   }
-  
+
   if (intent.module === "mailspamscore") {
     response = await executeMailSpamScoreAgent({
       model: llmModel,
@@ -180,7 +185,7 @@ export async function executeWorkflow(payload) {
       accountId: accountid,
     });
   }
-  
+
   if (intent.module === "mailtest") {
     response = await executeMailTestAgent({
       model: llmModel,
@@ -189,7 +194,7 @@ export async function executeWorkflow(payload) {
       accountId: accountid,
     });
   }
-  
+
   if (intent.module === "mailcampaign_abtest") {
     response = await executeMailAbTestCampaignAgent({
       model: llmModel,
@@ -198,15 +203,29 @@ export async function executeWorkflow(payload) {
       accountId: accountid,
     });
   }
-  
+
   console.log("Final response from agent:", response);
   await mcpClient.close();
 
+  let response_msg =
+    response?.messages?.[response.messages.length - 1]?.content ??
+    "No response generated";
+  if (response_msg.includes("WORKFLOW_COMPLETED:true")) {
+    workflowCompleted = true;
+  }
+  const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
+  if (match) {
+    recommendedActions = JSON.parse(match[1]);
+  }
+  const final_cleanMessage = response_msg
+    .replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "")
+    .trim();
+
   return {
     module: intent.module,
-    message:
-      response?.messages?.[response.messages.length - 1]?.content ??
-      "No response generated",
+    message: final_cleanMessage,
     toolmessage: report_response,
+    workflowcompleted: workflowCompleted,
+    actions: recommendedActions,
   };
 }

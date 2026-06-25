@@ -210,45 +210,221 @@ User:
 
 Response:
 WORKFLOW_COMPLETED:true
+--------------------------------------------------
+## DATE FILTER PAYLOAD RULES
 
-## IMPORTANT DATE FILTER RULE:
+The agent must NOT calculate runtime dates.
 
-DATE FILTER RULE:
+The agent must NOT generate actual current dates.
 
-When user provides any date condition, generate a dateFilter object.
+The agent must represent date selections using the dateFilter object.
 
-The dateFilter format must always be:
+Supported dateFilter.type values:
+
+relative
+range
+single
+month
+custom
+DATE CLASSIFICATION RULE
+
+Before generating a dateFilter payload, classify the user input as either a calendar date or a relative period.
+
+1. If the value represents an actual calendar date
+   (e.g. 2026-06-01, June 1 2026, 01/06/2026)
+   → store in date
+
+2. If the value represents a relative period
+   (today, yesterday, this week, last week, last 7 days, last 30 days, this month, last month, this year, till today)
+   → store in value
+
+3. Relative periods must never be stored in date.
+
+Calendar Dates
+
+The following are calendar dates and MUST be stored in the date property:
+
+2026-06-01
+June 1 2026
+01/06/2026
+May 15 2026
+15-Jun-2026
+
+Examples:
 
 {
-  "dateFilter": {
-    "type": "<type>",
-    "from": {
-      "value": "<relative_value_or_null>",
-      "date": "<date_or_null>"
-    },
-    "to": {
-      "value": "<relative_value_or_null>",
-      "date": "<date_or_null>"
-    }
-  }
+  "value": null,
+  "date": "2026-06-01"
 }
 
-Type can be relative|range|single|month|custom
+Relative Periods
 
-RULES:
+Examples
+
+The agent must NEVER generate:
+
+{
+  "value": null,
+  "date": "today"
+}
+
+or
+
+{
+  "value": null,
+  "date": "last 7 days"
+}
+
+because relative periods are not calendar dates.
+
+RELATIVE PERIOD PROTECTION RULE
+
+The following values are relative periods and must NEVER be converted into actual dates:
+
+- today
+- yesterday
+- this week
+- last week
+- this month
+- last month
+- this year
+- last year
+- this quarter
+- last quarter
+- last N days
+- previous N days
+- past N days
+- last 7 days
+- last 15 days
+- last 30 days
+- last 90 days
+
+These values must always remain inside:
+
+dateFilter.from.value
+
+or
+
+dateFilter.to.value
+
+and must never be stored inside:
+
+dateFilter.from.date
+
+or
+
+dateFilter.to.date
+
+The backend system is responsible for resolving relative periods.
+
+DATE FILTER TYPE DETERMINATION RULE
+
+The agent must determine dateFilter.type using the following rules:
+
+If the user specifies a relative period only:
+
+Examples:
+
+today
+yesterday
+this week
+last week
+this month
+last month
+this year
+last 7 days
+last 30 days
+
+Generate:
+
+"type": "relative"
+
+If the user specifies a start and end boundary:
+
+Examples:
+
+from May 1 2026 to June 1 2026
+from last 30 days till today
+from June 1 2026 till today
+
+Generate:
+
+"type": "range"
+
+If the user specifies a single calendar date:
+
+Examples:
+
+June 1 2026
+2026-06-01
+15-Jun-2026
+
+Generate:
+
+"type": "single"
+
+If the user specifies a month:
+
+Examples:
+
+May 2026
+June 2025
+
+Generate:
+
+"type": "month"
+
+Use "custom" only when explicitly required by the backend implementation.
 
 
-1. RANGE DATE FILTER
+DATE PARSING PRECEDENCE RULE
 
-Use type: "range"
+When extracting date filters:
 
-When user provides start date and end date.
+1. First determine whether the value is:
+   - Relative Period
+   - Calendar Date
+
+2. If Relative Period:
+   Store only in value.
+
+3. If Calendar Date:
+   Store only in date.
+
+4. Never store relative periods in date.
+
+5. Never convert relative periods into actual dates.
+
+Examples:
+
+"today"
+→ { "value": "today", "date": null }
+
+"last 7 days"
+→ { "value": "last 7 days", "date": null }
+
+"June 1 2026"
+→ { "value": null, "date": "2026-06-01" }
+
+RELATIVE DAY RANGE RULE
+
+Expressions such as:
+
+last 7 days
+last 15 days
+last 30 days
+last 90 days
+previous 7 days
+previous 30 days
+past 7 days
+past 30 days
+
+represent relative periods and MUST always be stored in value.
 
 Example:
 
 User:
-Add contacts from May 1 2026 to June 1 2026
-
+Add contacts from last 7 days till today
 
 Generate:
 
@@ -256,27 +432,111 @@ Generate:
   "dateFilter": {
     "type": "range",
     "from": {
-      "value": null,
-      "date": "2026-05-01"
+      "value": "last 7 days",
+      "date": null
     },
     "to": {
-      "value": null,
-      "date": "2026-06-01"
+      "value": "today",
+      "date": null
     }
   }
 }
 
+User:
+Add contacts from last 30 days till today
 
+Generate:
 
-2. DATE RANGE WITH TODAY
+{
+  "dateFilter": {
+    "type": "range",
+    "from": {
+      "value": "last 30 days",
+      "date": null
+    },
+    "to": {
+      "value": "today",
+      "date": null
+    }
+  }
+}
+RANGE DATE RULE
 
-If user gives start date and says today:
+For dateFilter.type = "range":
+
+Both from and to must contain at least one populated field:
+
+value
+or
+date
+
+For range filters, at least one boundary must be supplied by the user for BOTH from and to.
+
+The agent must never leave both boundaries empty.
+
+If a user provides only one boundary:
+
+Examples:
+
+from May 1 2026
+until today
+
+the agent must ask for the missing boundary instead of generating an invalid range payload.
+
+The agent must never generate:
+
+{
+  "type": "range",
+  "from": {
+    "value": null,
+    "date": null
+  },
+  "to": {
+    "value": null,
+    "date": null
+  }
+}
+TILL TODAY RULE
+
+If the user specifies:
+
+till today
+until today
+till date
+to date
+until now
+
+The ending boundary must be:
+
+{
+  "value": "today",
+  "date": null
+}
 
 Example:
 
 User:
 Add contacts from May 1 2026 till today
 
+Generate:
+
+{
+  "dateFilter": {
+    "type": "range",
+    "from": {
+      "value": null,
+      "date": "null"
+    },
+    "to": {
+      "value": "today",
+      "date": null
+    }
+  }
+}
+EXAMPLES
+
+User:
+Add contacts from May 1 2026 to June 1 2026
 
 Generate:
 
@@ -285,30 +545,18 @@ Generate:
     "type": "range",
     "from": {
       "value": null,
-      "date": "2026-05-01"
+      "date": "null"
     },
     "to": {
-      "value": "today",
-      "date": null
+      "value": null,
+      "date": "null"
     }
   }
 }
-
-
-
-3. RELATIVE DATE FILTER
-
-Use type: "relative"
-
-For dynamic values.
-
-
-Example:
 
 User:
 Add contacts created today
 
-
 Generate:
 
 {
@@ -325,37 +573,8 @@ Generate:
   }
 }
 
-
-
-Example:
-
-User:
-Add contacts created yesterday
-
-
-Generate:
-
-{
-  "dateFilter": {
-    "type": "relative",
-    "from": {
-      "value": "yesterday",
-      "date": null
-    },
-    "to": {
-      "value": null,
-      "date": null
-    }
-  }
-}
-
-
-
-Example:
-
 User:
 Add contacts created last month
-
 
 Generate:
 
@@ -373,20 +592,8 @@ Generate:
   }
 }
 
-
-
-4. MONTH FILTER
-
-Use type: "month"
-
-When user mentions a specific month.
-
-
-Example:
-
 User:
 Add contacts created in May 2026
-
 
 Generate:
 
@@ -404,14 +611,54 @@ Generate:
   }
 }
 
+DATE FILTER VALIDATION RULE
 
+Before generating a dateFilter payload:
 
-IMPORTANT:
+If type = "range":
 
-- Do not calculate dates.
-- Do not convert dates into timestamps.
-- Keep user provided date format converted to YYYY-MM-DD.
-- If user says today/current day, use value:"today".
-- If user does not mention any date filter, do not generate dateFilter.
-- Always return dateFilter along with the existing MCP payload.
+At least one of the following must be present for BOTH from and to:
+
+value
+or
+date
+
+The agent must never return:
+
+{
+  "value": null,
+  "date": null
+}
+
+## IMPORTANT
+
+The agent must never convert the following into actual dates:
+
+today
+yesterday
+this week
+last week
+this month
+last month
+this year
+till today
+until today
+till date
+to date
+until now
+last N days
+previous N days
+past N days
+last 7 days
+last 15 days
+last 30 days
+last 90 days
+
+These values MUST remain in:
+
+dateFilter.from.value
+or
+dateFilter.to.value
+
+The backend system is responsible for resolving relative dates.
 `;

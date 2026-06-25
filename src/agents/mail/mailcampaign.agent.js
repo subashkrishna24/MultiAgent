@@ -22,6 +22,6 @@ export async function executeMailCampaignAgent({
  
 
   return await agent.invoke({
-    messages: history // Send the sanitized timeline to the agent
+    messages: history 
   });
 }

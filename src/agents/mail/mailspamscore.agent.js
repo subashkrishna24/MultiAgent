@@ -10,13 +10,9 @@ export async function executeMailSpamScoreAgent({
 }) {
 
   const agent = createAgent({
-
     module: "mailspamscore",
-
     model,
-
     tools,
-
     accountId
   });
 

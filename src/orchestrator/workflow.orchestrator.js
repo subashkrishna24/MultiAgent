@@ -1,79 +1,33 @@
 import { getMcpClient } from "../services/mcp.service.js";
-
 import { getllmModel } from "../services/llm.service.js";
-
 import { detectIntent } from "../agents/intent/intent.agent.js";
-
 import { filterToolsByModule } from "../services/tool-filter.service.js";
-
 import { executeKnowledgeAgent } from "../agents/knowledge/knowledge.agent.js";
-
 import { executeReportingAgent } from "../agents/reporting/reporting.agent.js";
-
 import { executeContactAgent } from "../agents/contact/contact.agent.js";
-
 import { executeGroupAgent } from "../agents/group/group.agent.js";
-
 import { executeMailCampaignAgent } from "../agents/mail/mailcampaign.agent.js";
-
 import { executeMailTemplateAgent } from "../agents/mail/mailtemplate.agent.js";
-
 import { executeCaptureFormAgent } from "../agents/captureform/captureform.agent.js";
-
 import { buildIntentContext } from "../utils/context-builder.js";
-
 import { executeMailSpamScoreAgent } from "../agents/mail/mailspamscore.agent.js";
-
 import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
-
 import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js";
 import { executeMailTemplateUploadFilesAgent } from "../agents/mail/uploadmailteamplate.agent.js";
-import { getPagingSession } from "../store/paging.store.js";
+import { getSession } from "../store/session.store.js";
+import { handlePagination } from "../utils/pagination.helper.js";
+import { prepareUserDetails } from "../utils/shared.helper.js";
 
 export async function executeWorkflow(payload) {
-  const {
-    history,
-    accountid,
-    apikey,
-    model,
-    p5apikey,
-    uploadedfile,
-    userdetails,
-  } = payload;
+  const {history,accountid,apikey,model,p5apikey,uploadedfile,userdetails} = payload;
 
   // Session
-  const session = getPagingSession(accountid);
+  const session = getSession(accountid);
+  
+  // User Details
+  prepareUserDetails(userdetails,session);
 
-  if (userdetails != null) {
-    if (!userdetails.timeZone) {
-      userdetails.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    }
-
-    try {
-      const now = new Date();
-      const hourStr = Intl.DateTimeFormat("en-US", {
-        timeZone: userdetails?.timeZone,
-        hour: "numeric",
-        hour12: false,
-      }).format(now);
-      const hour = parseInt(hourStr, 10);
-      const greeting =
-        hour < 12
-          ? "Good morning"
-          : hour < 17
-            ? "Good afternoon"
-            : "Good evening";
-      userdetails.localHour = Number.isFinite(hour) ? hour : null;
-      userdetails.greeting = greeting;
-    } catch (err) {
-      console.error("Error determining local time for user:", err);
-      userdetails.localHour = null;
-      userdetails.greeting = "Hello";
-    }
-
-    session.UserDetails = userdetails;
-  }
-
+  // Upload Files
   if (uploadedfile?.length > 0) {
     var Files = [];
     for (const file of uploadedfile) {
@@ -107,6 +61,8 @@ export async function executeWorkflow(payload) {
   let workflowCompleted = false;
   let recommendedActions = [];
   const recentHistory = history;
+
+  handlePagination(history,session,intent.module);
 
   // STEP 4
   if (intent.module === "knowledge") {
@@ -227,17 +183,17 @@ export async function executeWorkflow(payload) {
 
   await mcpClient.close();
 
-  let response_msg =
-    response?.messages?.[response.messages.length - 1]?.content ??
-    "No response generated";
+  let response_msg =response?.messages?.[response.messages.length - 1]?.content ??"No response generated";
+  
   if (response_msg.includes("WORKFLOW_COMPLETED:true")) {
     workflowCompleted = true;
   }
- const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
- if(match)
-  {
-    recommendedActions = JSON.parse(match[1]);
-  }
+ 
+  const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
+  if(match)
+    {
+      recommendedActions = JSON.parse(match[1]);
+    }
  const final_cleanMessage = response_msg.replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "").trim();
   
  return {

@@ -2,14 +2,14 @@
 // Key = accountId
 // Value = user session data
 
-export const pagingStore = {};
+export const sessionStore = {};
 
 /**
  * Get user session
  */
-export function getPagingSession(accountId) {
-  if (!pagingStore[accountId]) {
-    pagingStore[accountId] = {
+export function getSession(accountId) {
+  if (!sessionStore[accountId]) {
+    sessionStore[accountId] = {
       // Template Paging
       templateOffset: 0,
       templateFetchNext: 10,
@@ -37,14 +37,14 @@ export function getPagingSession(accountId) {
     };
   }
 
-  return pagingStore[accountId];
+  return sessionStore[accountId];
 }
 
 /**
  * Reset Template Paging
  */
 export function resetTemplatePaging(accountId) {
-  const session = getPagingSession(accountId);
+  const session = getSession(accountId);
 
   session.templateOffset = 0;
 }
@@ -53,7 +53,7 @@ export function resetTemplatePaging(accountId) {
  * Reset Group Paging
  */
 export function resetGroupPaging(accountId) {
-  const session = getPagingSession(accountId);
+  const session = getSession(accountId);
 
   session.groupOffset = 0;
 }
@@ -62,7 +62,7 @@ export function resetGroupPaging(accountId) {
  * Reset Campaign Paging
  */
 export function resetCampaignPaging(accountId) {
-  const session = getPagingSession(accountId);
+  const session = getSession(accountId);
 
   session.campaignOffset = 0;
 }
@@ -71,5 +71,5 @@ export function resetCampaignPaging(accountId) {
  * Clear User Session
  */
 export function clearPagingSession(accountId) {
-  delete pagingStore[accountId];
+  delete sessionStore[accountId];
 }

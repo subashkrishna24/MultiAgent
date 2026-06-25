@@ -7,9 +7,9 @@ export const sessionStore = {};
 /**
  * Get user session
  */
-export function getSession(accountId) {
-  if (!sessionStore[accountId]) {
-    sessionStore[accountId] = {
+export function getSession(machineid) {
+  if (!sessionStore[machineid]) {
+    sessionStore[machineid] = {
       // Template Paging
       templateOffset: 0,
       templateFetchNext: 10,
@@ -37,14 +37,14 @@ export function getSession(accountId) {
     };
   }
 
-  return sessionStore[accountId];
+  return sessionStore[machineid];
 }
 
 /**
  * Reset Template Paging
  */
-export function resetTemplatePaging(accountId) {
-  const session = getSession(accountId);
+export function resetTemplatePaging(machineid) {
+  const session = getSession(machineid);
 
   session.templateOffset = 0;
 }
@@ -52,8 +52,8 @@ export function resetTemplatePaging(accountId) {
 /**
  * Reset Group Paging
  */
-export function resetGroupPaging(accountId) {
-  const session = getSession(accountId);
+export function resetGroupPaging(machineid) {
+  const session = getSession(machineid);
 
   session.groupOffset = 0;
 }
@@ -61,8 +61,8 @@ export function resetGroupPaging(accountId) {
 /**
  * Reset Campaign Paging
  */
-export function resetCampaignPaging(accountId) {
-  const session = getSession(accountId);
+export function resetCampaignPaging(machineid) {
+  const session = getSession(machineid);
 
   session.campaignOffset = 0;
 }
@@ -70,6 +70,6 @@ export function resetCampaignPaging(accountId) {
 /**
  * Clear User Session
  */
-export function clearPagingSession(accountId) {
-  delete sessionStore[accountId];
+export function clearPagingSession(machineid) {
+  delete sessionStore[machineid];
 }

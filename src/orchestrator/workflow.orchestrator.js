@@ -20,13 +20,22 @@ import { prepareUserDetails } from "../utils/shared.helper.js";
 import { getDateContext } from "../utils/datecontext.helper.js";
 
 export async function executeWorkflow(payload) {
-  const {history,accountid,apikey,model,p5apikey,uploadedfile,userdetails} = payload;
+  const {
+    history,
+    accountid,
+    apikey,
+    model,
+    p5apikey,
+    uploadedfile,
+    userdetails,
+    machineid,
+  } = payload;
 
   // Session
-  const session = getSession(accountid);
-  
+  const session = getSession(machineid);
+
   // User Details
-  prepareUserDetails(userdetails,session);
+  prepareUserDetails(userdetails, session);
 
   // Upload Files
   if (uploadedfile?.length > 0) {
@@ -62,16 +71,16 @@ export async function executeWorkflow(payload) {
   let workflowCompleted = false;
   let recommendedActions = [];
 
- //Add fromdate and todate in prompt
-   const recentHistory = [
-  {
-  role:"system",
-  content:getDateContext()
-  },
-  ...history
+  //Add fromdate and todate in prompt
+  const recentHistory = [
+    {
+      role: "system",
+      content: getDateContext(),
+    },
+    ...history,
   ];
 
-  handlePagination(recentHistory,session,intent.module);
+  handlePagination(recentHistory, session, intent.module);
 
   // STEP 4
   if (intent.module === "knowledge") {
@@ -192,24 +201,27 @@ export async function executeWorkflow(payload) {
 
   await mcpClient.close();
 
-  let response_msg =response?.messages?.[response.messages.length - 1]?.content ??"No response generated";
-  
+  let response_msg =
+    response?.messages?.[response.messages.length - 1]?.content ??
+    "No response generated";
+
   if (response_msg.includes("WORKFLOW_COMPLETED:true")) {
     workflowCompleted = true;
   }
- 
+
   const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
-  if(match)
-    {
-      recommendedActions = JSON.parse(match[1]);
-    }
- const final_cleanMessage = response_msg.replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "").trim();
-  
- return {
+  if (match) {
+    recommendedActions = JSON.parse(match[1]);
+  }
+  const final_cleanMessage = response_msg
+    .replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "")
+    .trim();
+
+  return {
     module: intent.module,
     message: final_cleanMessage,
     toolmessage: report_response,
-    workflowcompleted:workflowCompleted,
-    actions:recommendedActions
+    workflowcompleted: workflowCompleted,
+    actions: recommendedActions,
   };
 }

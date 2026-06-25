@@ -1018,24 +1018,87 @@ Call MCP immediately.
 
 Do not ask unnecessary clarification questions.
 
+DATE PARAMETER MAPPING RULES
+
+The AddContactToGroup MCP tool accepts:
+
+- contactFilter
+- grpname
+- fromdate
+- todate
+
+IMPORTANT:
+
+fromdate and todate are NOT part of contactFilter.
+
+Never generate:
+
+{
+  "Place": "Bangalore",
+  "FromDate": "2026-06-01",
+  "ToDate": "2026-06-30"
+}
+
+inside contactFilter.
+
+Instead generate:
+
+contactFilter:
+{
+  "Place": "Bangalore"
+}
+
+fromdate:
+"2026-06-01 00:00:00"
+
+todate:
+"2026-06-30 23:59:59"
+
+RULES:
+
+1. Any date range requested by the user must populate only:
+   - fromdate
+   - todate
+
+2. contactFilter must contain only CONTACT_DTO_SCHEMA contact fields.
+
+3. Remove FromDate and ToDate from contactFilter if they were extracted.
+
+4. When both contact filters and date filters are provided:
+   Preserve both.
+
+Example:
+
+User:
+Add Bangalore contacts created between 1-Jun-2026 and 30-Jun-2026 to Premium Group
+
+Tool Call:
+
+contactFilter:
+{
+  "Place": "Bangalore"
+}
+
+grpname:
+"Premium Group"
+
+fromdate:
+"2026-06-01 00:00:00"
+
+todate:
+"2026-06-30 23:59:59"
+
+Never place date ranges inside contactFilter.
+
 ## REMOVE CONTACTS FROM GROUP
 
 Payload Structure
 
 {
   "contactFilter": {},
-  "GroupName": "",
-  "dateFilter": {
-    "type": "relative|range|single|month|custom",
-    "from": {
-      "value": null,
-      "date": null
-    },
-    "to": {
-      "value": null,
-      "date": null
-    }
-  }
+   "GroupName": "",
+   fromdate :"",
+   todate : ""
 }
 
 Use CONTACT_DTO_SCHEMA as the authoritative list of supported contact fields.

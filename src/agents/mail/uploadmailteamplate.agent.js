@@ -11,7 +11,7 @@ export async function executeMailTemplateUploadFilesAgent({
 
   const agent = createAgent({
 
-    module: "mailtemplate",
+    module: "mailtemplateuploadfiles",
 
     model,
 

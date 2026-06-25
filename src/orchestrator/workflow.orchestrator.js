@@ -17,6 +17,7 @@ import { executeMailTemplateUploadFilesAgent } from "../agents/mail/uploadmailte
 import { getSession } from "../store/session.store.js";
 import { handlePagination } from "../utils/pagination.helper.js";
 import { prepareUserDetails } from "../utils/shared.helper.js";
+import { getDateContext } from "../utils/datecontext.helper.js";
 
 export async function executeWorkflow(payload) {
   const {history,accountid,apikey,model,p5apikey,uploadedfile,userdetails} = payload;
@@ -60,9 +61,17 @@ export async function executeWorkflow(payload) {
   let report_response;
   let workflowCompleted = false;
   let recommendedActions = [];
-  const recentHistory = history;
 
-  handlePagination(history,session,intent.module);
+ //Add fromdate and todate in prompt
+   const recentHistory = [
+  {
+  role:"system",
+  content:getDateContext()
+  },
+  ...history
+  ];
+
+  handlePagination(recentHistory,session,intent.module);
 
   // STEP 4
   if (intent.module === "knowledge") {
@@ -199,7 +208,7 @@ export async function executeWorkflow(payload) {
  return {
     module: intent.module,
     message: final_cleanMessage,
-    toolmessage: final_cleanMessage,
+    toolmessage: report_response,
     workflowcompleted:workflowCompleted,
     actions:recommendedActions
   };

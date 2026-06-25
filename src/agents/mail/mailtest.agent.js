@@ -10,13 +10,9 @@ export async function executeMailTestAgent({
 }) {
 
   const agent = createAgent({
-
     module: "mailtest",
-
     model,
-
     tools,
-
     accountId
   });
 

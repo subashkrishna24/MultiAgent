@@ -159,13 +159,28 @@ Use the following where conditions:
 - Invalid Contacts: contact.IsVerifiedMailId = 0
 - Not Verified Contacts: (contact.IsVerifiedMailId = -1 OR contact.IsVerifiedMailId IS NULL)
 
+CAMPAIGN STATUS MAPPING (MANDATORY)
+ScheduledStatus values for all sending setting tables:
+  - 0: "Completed"
+  - 1: "Yet To Go"
+  - 2: "In-Progress"
+  - 3: "Stopped"
+  - 4: "Stopped"
+
+Campaign status detection rules:
+- If user asks for "completed campaigns", "done campaigns", or similar → use scheduledstatus = 0
+- If user asks for "pending campaigns", "yet to go", "upcoming", or similar → use scheduledstatus = 1
+- If user asks for "in-progress", "running", "active" campaigns → use scheduledstatus = 2
+- If user asks for "stopped", "paused", or "halted" campaigns → use scheduledstatus IN (3, 4)
+- If user asks without status qualifier → apply NO status filter (return all campaigns regardless of status)
+
 CAMPAIGN REPORT RULES
 - When the user asks about campaigns for a period (e.g., last month, this month, 'April', 'April 1 to April 30'), use the relevant sendingsetting table and apply the date filter to the scheduleddate column.
-- For campaign queries add scheduledstatus = 0 in the WHERE clause when applicable.
+- Apply scheduledstatus filter ONLY if the user explicitly asks for campaigns by status (e.g., "completed campaigns", "pending campaigns"). Otherwise, do NOT filter by status.
 
 COUNT-ONLY CAMPAIGN QUERIES
 - If the user asks only for the number of campaigns for a single channel (for example: "How many mail campaigns?" or "Count mail campaigns"), return the count directly from the channel's sending setting table. Do NOT join to the sent table for count-only requests.
-- Use scheduledstatus = 0 when applicable.
+- Apply scheduledstatus filter based on user intent using the CAMPAIGN STATUS MAPPING above.
 - Channel table mapping:
   - Mail: mailsendingsetting
   - SMS: smssendingsetting
@@ -173,10 +188,11 @@ COUNT-ONLY CAMPAIGN QUERIES
   - Web Push: webpushsendingsetting
 - If a date range is provided, apply DATE(<table>.scheduleddate) filters following the dynamic date rules above.
 - Example COUNT queries:
-  SELECT COUNT(*) AS total FROM mailsendingsetting m WHERE m.scheduledstatus = 0;
-  SELECT COUNT(*) AS total FROM smssendingsetting s WHERE s.scheduledstatus = 0;
-  SELECT COUNT(*) AS total FROM whatsappsendingsetting w WHERE w.scheduledstatus = 0;
-  SELECT COUNT(*) AS total FROM webpushsendingsetting wp WHERE wp.scheduledstatus = 0;
+  SELECT COUNT(*) AS total FROM mailsendingsetting m WHERE m.scheduledstatus = 0; -- Completed
+  SELECT COUNT(*) AS total FROM smssendingsetting s WHERE s.scheduledstatus = 1; -- Yet To Go
+  SELECT COUNT(*) AS total FROM whatsappsendingsetting w WHERE w.scheduledstatus = 2; -- In-Progress
+  SELECT COUNT(*) AS total FROM webpushsendingsetting wp WHERE wp.scheduledstatus IN (3, 4); -- Stopped
+  SELECT COUNT(*) AS total FROM mailsendingsetting m; -- All (no status filter)
 
 A) MAIL CAMPAIGN
 Tables: mailsendingsetting, mailsent

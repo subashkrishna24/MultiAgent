@@ -310,4 +310,34 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    {
      "module": "mailtemplateuploadfiles"
    }
-`;
+
+12. Route the user's request to the appropriate module based on their intent.
+
+Use intent matching rather than exact keyword matching. The example phrases below are illustrative only. If the user's request has the same meaning or intent, route it to the corresponding module.
+
+Examples:
+
+"Show me the list of all my campaigns." → mailcampaign
+"Show me the list of mail campaigns." → mailcampaign
+"Create a new email campaign." → mailcampaign
+"Edit my campaign." → mailcampaign
+"How can I check the performance of my email campaigns?" → reporting
+"Show my campaign analytics." → reporting
+"Display campaign reports." → reporting
+"Can you help me create a new group for my contacts?" → group
+"Show me the list of all my groups." → group
+"Manage my contact groups." → group
+"Show me the list of all my contacts." → contact
+"List my contacts." → contact
+"Search for a contact." → contact
+"Show me the list of mail templates." → mailtemplate
+"List my email templates." → mailtemplate
+"Create a new email template." → mailtemplate
+"Create a capture form." → captureform
+"Show my capture forms." → captureform
+"Check the spam score of this email." → mailspamscore
+"Send a test email." → mailtest
+"Create an A/B test for my campaign." → mailcampaign_abtest
+"Upload an image or attachment for my email template." → mailtemplateuploadfiles
+
+If the user's request does not match any of the examples above, infer the user's intent and route the request to the single most appropriate module. Only use the knowledge module when the request is a general question, help request, documentation lookup, or does not belong to any of the specialized modules.`;

@@ -252,9 +252,9 @@ JOIN: chat.id = chatformresponses.chatid
 Return: chat.name AS "chat name", COUNT(*) AS total_responded
 
 I) TEMPLATE REPORT RULES
-MAIL TEMPLATE: mailtemplate.id AS templateid, mailtemplate.name, mailtemplate.templatestatus AS status, mailtemplate.createddate, mailtemplate.spamscore
-SMS TEMPLATE: smstemplate.id AS templateid, smstemplate.name, smstemplate.templatestatus AS status, smstemplate.messagecontent, smstemplate.createddate
-WEB PUSH TEMPLATE: webpushtemplate.id AS templateid, webpushtemplate.templatename AS name, webpushtemplate.title, webpushtemplate.messagecontent, webpushtemplate.iconimage, webpushtemplate.bannerimage, webpushtemplate.button1_label, webpushtemplate.button2_label, webpushtemplate.createddate
+MAIL TEMPLATE: mailtemplate.name, mailtemplate.templatestatus AS status, mailtemplate.createddate, mailtemplate.spamscore
+SMS TEMPLATE: smstemplate.name, smstemplate.templatestatus AS status, smstemplate.messagecontent, smstemplate.createddate
+WEB PUSH TEMPLATE: webpushtemplate.templatename AS name, webpushtemplate.title, webpushtemplate.messagecontent, webpushtemplate.iconimage, webpushtemplate.bannerimage, webpushtemplate.button1_label, webpushtemplate.button2_label, webpushtemplate.createddate
 Always ORDER BY createddate DESC
 
 NAMING CONSISTENCY (STRICT)

@@ -310,4 +310,67 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    {
      "module": "mailtemplateuploadfiles"
    }
+
+12. Route the user's request to the appropriate module based on their intent.
+Always determine the user's intent before selecting a module.
+Do not rely on exact keyword matching. The example phrases below are illustrative only. If the user's request has the same meaning or intent, route it to the corresponding module.
+
+Examples:
+mailcampaign:
+"Show me the list of all my campaigns."
+"Show me the list of mail campaigns."
+"Create a new email campaign."
+"Show me the campaign details for 'Campaign Name'."
+"Edit my campaign."
+"Schedule a mail campaign."
+
+reporting:
+"How can I check the performance of my email campaigns?"
+"Show my campaign analytics."
+"Display campaign reports."
+
+group:
+"Can you help me create a new group for my contacts?"
+"Show me the list of all my groups."
+"Show me the group details for 'Group Name'."
+"Manage my contact groups."
+
+contact:
+"Show me the list of all my contacts."
+"List my contacts."
+"Search for a contact."
+
+mailtemplate:
+"Show me the list of mail templates."
+"List my email templates."
+"Show me the template details for 'Template Name'."
+"Create a new email template."
+
+captureform:
+"Create a capture form."
+"Show my capture forms."
+
+mailspamscore:
+"Check the spam score of this email."
+
+mailtest:
+"Send a test email."
+
+mailcampaign_abtest:
+"Create an A/B test for my campaign."
+
+mailtemplateuploadfiles:
+"Upload an image or attachment for my email template."
+
+Important Routing Rules:
+Always analyze the user's intent before selecting a module.
+Check whether the request matches any specialized module first.
+Do NOT default to the knowledge module simply because the wording is different from the examples. Infer the user's intent and map it to the closest specialized module whenever possible.
+Use the knowledge module only if:
+the request is asking for general help or product documentation,
+the user is asking how a feature works,
+the request is informational rather than an action on campaigns, contacts, groups, templates, reports, forms, spam score, test emails, uploads, or A/B testing,
+or no specialized module reasonably matches the user's intent.
+
+Always return one best matching module.
 `;

@@ -22,28 +22,31 @@ Current Year:
 ${currentYear}
 
 
-DYNAMIC DATE RESOLUTION RULES (GLOBAL):
+GLOBAL TIME-HORIZON RESOLUTION RULES (ALL MODULES):
 
 1. BASE CALCULATIONS:
-Use the provided reference Today's date (${today}) to dynamically calculate the targeted calendar date(s) for any relative time expressions mentioned by the user (e.g., "today", "yesterday", "tomorrow", "last week", "next month", "this month").
+Use Today's reference date (${today}) as the baseline anchor to evaluate any time-descriptor context used by the user.
 
-2. MANDATORY TIME-BOUND EXPANSION (FOR ALL TOOLS & QUERIES):
-Whenever parsing dates for any module, tool parameters, filtering windows, or backend queries, you MUST always expand a single calendar date into a complete 24-hour timestamp range. Never use a raw YYYY-MM-DD format without time.
-- Start Boundary: Always append 00:00:00 to the calculated start date.
-- End Boundary: Always append 23:59:59 to the calculated end date.
+2. THE "UPCOMING / FUTURE" HORIZON RULE:
+When the user requests anything relative to the future (e.g., "upcoming", "scheduled", "future", "next", "active forecasts"), you must map the time window from the current moment stretching forward indefinitely:
+- Start Date/Time: ${today} 00:00:00 (or the exact current time)
+- End Date/Time: 2099-12-31 23:59:59 (Use this maximum future date to capture all upcoming data)
 
-3. DYNAMIC RANGE MAPPING REFERENCE:
-As a calculation reference using Today (${today}):
-- If the resolved period is a single day (e.g., "today"):
-  Start: ${today} 00:00:00 | End: ${today} 23:59:59
-- If the resolved period is the previous 7 days (e.g., "last week"):
-  Start: ${lastWeekStartStr} 00:00:00 | End: ${lastWeekEndStr} 23:59:59
+3. THE "PAST / HISTORICAL" HORIZON RULE:
+When the user requests historical summaries or synopsis data across the past (e.g., "past", "previous", "historical", "sent", "completed", "old logs"), you must map the time window from the beginning of data collection up until the end of today:
+- Start Date/Time: 2000-01-01 00:00:00 (Use this baseline past date to capture all historic data)
+- End Date/Time: ${today} 23:59:59
 
-4. STRING FORMAT CONTROL:
+4. MANDATORY 24-HOUR TIMESTAMP EXPANSION:
+Never pass a raw YYYY-MM-DD date alone to any tool parameter or query filter. Every date must be bounded to a precise second:
+- Day Start: Always append 00:00:00
+- Day End: Always append 23:59:59
+
+5. DYNAMIC RANGE MAPPING REFERENCE (USING TODAY: ${today}):
+- "today": Start: ${today} 00:00:00 | End: ${today} 23:59:59
+- "last week": Start: ${lastWeekStartStr} 00:00:00 | End: ${lastWeekEndStr} 23:59:59
+
+6. STRING FORMAT CONTROL:
 - All temporal arguments provided to backend execution tools or query parameters must strictly follow the "YYYY-MM-DD HH:mm:ss" structural schema.
-
-5. HYPOTHETICAL GUARDRAILS:
-- Do not derive current execution date contexts from historical conversation history logs.
-- Forward-looking operations must verify that target times reside chronologically in the future relative to the current system time.
 `;
 }

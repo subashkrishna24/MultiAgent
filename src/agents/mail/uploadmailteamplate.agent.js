@@ -6,18 +6,35 @@ export async function executeMailTemplateUploadFilesAgent({
   model,
   tools,
   history,
-  accountId
+  accountId,
+  session
 }) {
-
   const agent = createAgent({
-  
-    module: "mailtemplateuploadfiles", 
+    module: "mailtemplateuploadfiles",
     model,
     tools,
-    accountId
+    accountId,
+    session
   });
 
+  let uploadedFileContext = "SESSION UPLOADED FILES: NONE";
+
+    if (session?.uploadedFile?.length > 0) {
+    uploadedFileContext = `
+    SESSION UPLOADED FILES:
+    ${session.uploadedFile
+    .map(file => `- ${file.fileName}`)
+    .join("\n")}
+    `;
+    }
+
   return await agent.invoke({
-    messages: history
+    messages: [
+      {
+        role: "system",
+        content: uploadedFileContext
+      },
+      ...history
+    ]
   });
 }

@@ -141,11 +141,13 @@ After returning details or information, ALWAYS add RECOMMENDED_ACTIONS based on 
 
 ACTION RULES:
 
-For GROUP/TEMPLATE/Campaign identifier details:
+For GROUP/Campaign identifier details:
 Return:
 RECOMMENDED_ACTIONS:["Edit","Delete","Duplicate"]
-
-For MAIL GROUP/TEMPLATE/Campaign identifier details:
+For TEMPLATE:
+Return:
+RECOMMENDED_ACTIONS:["Edit","Archive","Duplicate"]
+For MAIL GROUP/Campaign identifier details:
 Return:
 RECOMMENDED_ACTIONS:["Edit","Delete","Duplicate"]
 

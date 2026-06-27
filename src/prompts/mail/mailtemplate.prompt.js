@@ -143,8 +143,9 @@ Never call CreateMailTemplate until all 6 fields are collected. Do not pass empt
 
 UPDATE AND DUPLICATE RULE
 For UpdateMailTemplate and DuplicateTemplate:
-* Use fetched template values as defaults.
-* Retain unchanged values automatically.
+* Use fetched template values as defaults for identification and modification tracking.
+* Retain unchanged values automatically for updates.
+* CRITICAL DUPLICATION EXCEPTION: For DuplicateTemplate, if the template body content (BodyContents) is not explicitly updated or changed by the user, you must pass an empty string ("") for the BodyContents field in the tool payload.
 * Ask only for fields the user wants to modify (including ViewInBrowser if requested).
 
 If any field is unavailable, missing, null, or not provided:
@@ -318,8 +319,10 @@ Then ask ONLY:
 "For mail template, would you like to change anything for the duplicated template, or keep the existing values?"
 
 Rules:
-* All fetched values are defaults. Do not ask field-by-field. Ask only for fields the user wants to modify.
-* If the user says "keep same", "use same", "no changes", or provides an arbitrary template name like "test_uufdfd", do not switch modules. Map the input to the duplication fields.
+* All fetched values are defaults for comparison. Ask only for fields the user wants to modify.
+* If the user says "keep same", "use same", "no changes", or provides a new template name without altering content, do not change the body.
+* CRITICAL PAYLOAD PROTECTION: If the user does not explicitly request a modification to the body content string during this step, you must explicitly pass "" (empty string) as the value for BodyContents in the final DuplicateTemplate execution schema call.
+* If the user provides an arbitrary template name like "test_uufdfd", do not switch modules. Map the input to the duplication fields.
 
 After confirmation, call: DuplicateTemplate
 
@@ -374,4 +377,4 @@ DRAFT PERSISTENCE & CROSS-FLOW RECOVERY RULE
 1. Whenever the user provides parameters during a new creation flow (TemplateName, TemplateDescription, SubjectLine, etc.), maintain those inputs securely.
 2. If the user makes an explicit mid-flow distraction choice (like viewing other templates or looking up spam scores) and then requests "continue with my template creation", "use before details", or "keep the above entered details", you MUST inspect the context data provided within the SESSION snapshot.
 3. If the data configuration inside your session memory context indicates that creation properties are already logged (e.g., TemplateName exists), recover those values automatically. 
-4. DO NOT loop back or start the creation prompt sequence over from the initial step. Calculate which of your 6 mandatory parameters remain uncollected and directly issue the prompt query corresponding strictly to the next missing step.`;
+4. DO NOT loop back or start the creation prompt sequence over from the initial step. Calculate which of your 6 mandatory parameters remain uncollected and directly issue the prompt query corresponding strictly to the next missing step.   `;

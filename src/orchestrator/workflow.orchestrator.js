@@ -156,15 +156,7 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
-  if (intent.module === "mailtemplateuploadfiles") {
-    response = await executeMailTemplateUploadFilesAgent({
-      model: llmModel,
-      tools: filteredTools,
-      history: recentHistory,
-      accountId: accountid,
-      session,
-    });
-  }
+
   if (intent.module === "captureform") {
     response = await executeCaptureFormAgent({
       model: llmModel,

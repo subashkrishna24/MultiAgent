@@ -1,40 +1,40 @@
-import {
-  createAgent
-} from "../../utils/agent.factory.js";
+  import {
+    createAgent
+  } from "../../utils/agent.factory.js";
 
-export async function executeMailTemplateUploadFilesAgent({
-  model,
-  tools,
-  history,
-  accountId,
-  session
-}) {
-  const agent = createAgent({
-    module: "mailtemplateuploadfiles",
+  export async function executeMailTemplateUploadFilesAgent({
     model,
     tools,
+    history,
     accountId,
     session
-  });
+  }) {
+    const agent = createAgent({
+      module: "",
+      model,
+      tools,
+      accountId,
+      session
+    });
 
-  let uploadedFileContext = "SESSION UPLOADED FILES: NONE";
+    let uploadedFileContext = "SESSION UPLOADED FILES: NONE";
 
-    if (session?.uploadedFile?.length > 0) {
-    uploadedFileContext = `
-    SESSION UPLOADED FILES:
-    ${session.uploadedFile
-    .map(file => `- ${file.fileName}`)
-    .join("\n")}
-    `;
-    }
+      if (session?.uploadedFile?.length > 0) {
+      uploadedFileContext = `
+      SESSION UPLOADED FILES:
+      ${session.uploadedFile
+      .map(file => `- ${file.fileName}`)
+      .join("\n")}
+      `;
+      }
 
-  return await agent.invoke({
-    messages: [
-      {
-        role: "system",
-        content: uploadedFileContext
-      },
-      ...history
-    ]
-  });
-}
+    return await agent.invoke({
+      messages: [
+        {
+          role: "system",
+          content: uploadedFileContext
+        },
+        ...history
+      ]
+    });
+  }

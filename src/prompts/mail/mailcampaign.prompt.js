@@ -530,7 +530,8 @@ SenderName(mandatory),
 SenderEmail(mandatory),
 ScheduledDatetime(mandatory),
 ConfigurationName,
-IsPromotionalOrTransactionalType
+IsPromotionalOrTransactionalType 
+ 
 )
 
 ==================================================
@@ -605,7 +606,7 @@ UPDATE FLOW
 After campaign details are loaded:
 
 --------------------------------------------------
-SPECIFIC ACTION HANDLING (RESCHEDULE / STOP)
+SPECIFIC ACTION HANDLING (RESCHEDULE(1) / STOP(2))
 --------------------------------------------------
 If the user's requirement/intent is to "reschedule" the campaign:
 1. Ask the user: "At what time do you want to reschedule this campaign? (Template Name: {Template})"
@@ -647,7 +648,7 @@ After modification:
 "Would you like me to update this campaign?"
 
 When confirmed:
-
+* For Reschedule = 0 when its update or edit ,it is 1 when it is Reschedule and 2 if it is stop.
 * Execute UpdateScheduleDetails.
 * Pass only modified fields.
 * Unchanged fields must be null.

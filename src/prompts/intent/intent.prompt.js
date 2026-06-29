@@ -301,13 +301,5 @@ until the workflow is:
 * explicitly switched by the user
 
 Do NOT switch modules while an A/B Test workflow is in progress.
-11. Route to mailtemplateuploadfiles when the user wants:
-
-   - Upload mail templates 
-   - upload email templates
-
-   Example:
-   {
-     "module": "mailtemplateuploadfiles"
-   }
+ 
 `;

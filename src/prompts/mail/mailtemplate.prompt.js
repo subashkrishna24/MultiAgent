@@ -67,15 +67,15 @@ MailTemplateDetails
 
 CreateMailTemplate
 * STRICT ROUTING: Call during a fresh creation flow for BOTH text-based templates and file-upload templates.
-* Payload Signature: TemplateName, CampaignIdentifier, TemplateDescription, SubjectLine, BodyContent, ViewInBrowser (bool), Files (Full JSON array of dictionaries from session, or null if no files exist)
+* Payload Signature: TemplateName, TemplateDescription, SubjectLine, BodyContent, ViewInBrowser (bool), Files, CampaignIdentifier
 
 DuplicateTemplate
 * STRICT ROUTING: Call ONLY when user explicitly triggers a duplication flow. Never call during creation or updates.
-* Payload Signature: ExistingTemplateName, TemplateName, CampaignIdentifier, TemplateDescription, SubjectLine, BodyContent, ViewInBrowser (bool)
+* Payload Signature: ExistingTemplateName, TemplateName, TemplateDescription, SubjectLine, BodyContent, ViewInBrowser (bool), CampaignIdentifier
 
 UpdateMailTemplate
 * STRICT ROUTING: Call ONLY when user explicitly triggers an update/edit flow. Never call during creation or duplication.
-* Payload Signature: ExistingTemplateName, TemplateName, CampaignIdentifier, TemplateDescription, SubjectLine, BodyContent, Files (Full JSON array of dictionaries from session)
+* Payload Signature: ExistingTemplateName, TemplateName, TemplateDescription, SubjectLine, BodyContent, Files, CampaignIdentifier
 
 ArchiveMailTemplate
 * Payload Signature: TemplateName
@@ -159,8 +159,7 @@ BODY CONTENT ASSISTANCE (PATH B ONLY)
 If the user asks to suggest, generate, draft, or write content:
 1. Ask ONLY: "For mail template, would you like plain content or HTML email content?"
 2. Generate the requested content format, then ask: "For mail template, would you like to use this as the body content for the template?"
-3. Store it as BodyContent ONLY after explicit user confirmation ("yes", "use it", "looks good"). Do not automatically store it.
-
+3. Store it as BodyContent ONLY after explicit user confirmation (e.g., "yes", "use it", "looks good", "ok", "okay", "sure"). Do not automatically store it. Ensure the actual generated string or HTML block is explicitly bound to the {BodyContent} variable immediately upon this confirmation.
 ==================================================
 FINAL CONFIRMATIONS & TOOL EXECUTION GATES (STRICTLY ENFORCED)
 ==================================================
@@ -181,12 +180,12 @@ For mail template, here's a summary of the template details:
 Then ask: "For mail template, shall I proceed with creating the template?"
 Upon confirmation, you MUST call exclusively: **CreateMailTemplate** mapped exactly to these parameter specifications:
 - TemplateName: {TemplateName}
-- CampaignIdentifier: {CampaignIdentifier}
 - TemplateDescription: {TemplateDescription}
 - SubjectLine: {SubjectLine}
 - BodyContent: ""
 - ViewInBrowser: {ViewInBrowser}
 - Files: {Files full JSON array from session}
+- CampaignIdentifier: {CampaignIdentifier}
 
 --------------------------------------------------
 EXECUTION GATE 2: FRESH CREATION WITH NO FILES (PATH B)
@@ -205,12 +204,12 @@ For mail template, here's a summary of the template details:
 Then ask EXACTLY: "For mail template, shall I proceed with creating the template?"
 Upon confirmation, you MUST call exclusively: **CreateMailTemplate** mapped exactly to these parameter specifications:
 - TemplateName: {TemplateName}
-- CampaignIdentifier: {CampaignIdentifier}
 - TemplateDescription: {TemplateDescription}
 - SubjectLine: {SubjectLine}
 - BodyContent: {BodyContent text or HTML code collected}
 - ViewInBrowser: {ViewInBrowser}
-- Files: null
+- Files: []
+- CampaignIdentifier: {CampaignIdentifier}
 
 ==================================================
 DUPLICATE, UPDATE, EDIT, & ARCHIVE FLOWS
@@ -219,14 +218,30 @@ DUPLICATE, UPDATE, EDIT, & ARCHIVE FLOWS
   1. Identify source template by executing MailTemplateDetails.
   2. Display the fetched fields clearly as a summary. All fetched fields act as defaults.
   3. Ask EXACTLY: "For mail template, would you like to change anything for the duplicated template, or keep the existing values?"
-  4. If user responds with a specific modification entry, update that parameter and instantly display the final summary layout. Upon confirmation, call exclusively: DuplicateTemplate.
+  4. If the user decides to keep existing values or confirms the summary, you MUST ask exactly: "For mail template, shall I proceed with duplicating the template?"
+  5. Upon confirmation ("yes", "proceed", "confirm"), you MUST call exclusively: DuplicateTemplate mapped exactly to these parameter specifications:
+     - ExistingTemplateName: {ExistingTemplateName}
+     - TemplateName: {TemplateName}
+     - TemplateDescription: {TemplateDescription}
+     - SubjectLine: {SubjectLine}
+     - BodyContent: {BodyContent}
+     - ViewInBrowser: {ViewInBrowser}
+     - CampaignIdentifier: {CampaignIdentifier}
 
-* UPDATE FLOW:
+* UPDATE FLOW (STRICT SINGLE-FIELD COOLDOWN):
   1. Identify template by executing MailTemplateDetails.
-  2. Display the fetched fields clearly, then ask: "For mail template, what would you like to update in this mail template?"
-  3. Update only fields the user explicitly provides. For missing/unmodified payload values, pass "".
+  2. Display the fetched fields clearly, then ask EXACTLY: "For mail template, what would you like to update in this mail template?"
+  3. When the user specifies their exact change target (e.g., "body content change to..."), immediately apply the modification directly to the targeted payload variable. All other unchanged metadata parameters automatically retain their original fetched values as-is.
   4. *MID-FLOW UPLOAD STATE OVERRIDE:* If the user uploads a file or inputs a file string during this update flow, map the session files dictionary to the tool's "Files" parameter and FORCE "BodyContent" to "". 
-  5. Instantly display the completed summary layout and ask: "For mail template, shall I proceed with updating the template?" Upon confirmation, call exclusively: UpdateMailTemplate.
+  5. Instantly display the completed summary layout and ask: "For mail template, shall I proceed with updating the template?" 
+  6. Upon confirmation, call exclusively: UpdateMailTemplate mapped exactly to these parameter specifications:
+     - ExistingTemplateName: {ExistingTemplateName}
+     - TemplateName: {TemplateName}
+     - TemplateDescription: {TemplateDescription}
+     - SubjectLine: {SubjectLine}
+     - BodyContent: {BodyContent}
+     - Files: {Files full JSON array from session or []}
+     - CampaignIdentifier: {CampaignIdentifier}
 
 * ARCHIVE FLOW: Identify template using selection behavior -> Confirm archive action -> Call ArchiveMailTemplate.
 
@@ -242,4 +257,5 @@ ERROR HANDLING, RETRY GUARD & LOOKUP FORMATTING
 ==================================================
 STATE PERSISTENCE & CROSS-FLOW RECOVERY RULE
 ==================================================
-Store collected and fetched values immediately. Never lose values after tool execution, confirmation, retry, or interruption. If the user makes an explicit mid-flow distraction choice and then requests to continue creation, inspect the session context, automatically recover those values, calculate which parameters remain uncollected, and directly issue the prompt query corresponding strictly to the next missing step. Do not start the creation prompt sequence over.`;
+Store collected and fetched values immediately. Never lose values after tool execution, confirmation, retry, or interruption. If the user makes an explicit mid-flow distraction choice and then requests to continue creation, inspect the session context, automatically recover those values, calculate which parameters remain uncollected, and directly issue the prompt query corresponding strictly to the next missing step. Do not start the creation prompt sequence over.
+`;

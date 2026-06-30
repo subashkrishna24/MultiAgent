@@ -14,7 +14,7 @@ import { executeMailSpamScoreAgent } from "../agents/mail/mailspamscore.agent.js
 import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
 import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js";
 import { executeMailTemplateUploadFilesAgent } from "../agents/mail/uploadmailteamplate.agent.js";
-import { getSession } from "../store/session.store.js";
+import { getSession, clearPagingSession } from "../store/session.store.js";
 import { handlePagination } from "../utils/pagination.helper.js";
 import { prepareUserDetails } from "../utils/shared.helper.js";
 import { getDateContext } from "../utils/datecontext.helper.js";
@@ -31,6 +31,9 @@ export async function executeWorkflow(payload) {
     machineid,
   } = payload;
 
+  if (history.length === 1) {
+    clearPagingSession(machineid);
+  }
   // Session
   const session = getSession(machineid);
 

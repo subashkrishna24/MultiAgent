@@ -42,14 +42,26 @@ export async function executeWorkflow(payload) {
 
   // Upload Files
   if (uploadedfile?.length > 0) {
-    var Files = [];
+    const Files = [];
+    let hasContactImport = false;
+
     for (const file of uploadedfile) {
       Files.push({
         fileName: file.fileName,
         fileId: file.fileId,
+        contactImport: file.importfields,
       });
+
+      if (file.type?.toLowerCase() === "contact import") {
+        hasContactImport = true;
+      }
     }
-    session.uploadedFile = Files;
+
+    if (hasContactImport) {
+      session.contactImport = Files;
+    } else {
+      session.uploadedFile = Files;
+    }
   }
 
   const llmModel = getllmModel(model, apikey);

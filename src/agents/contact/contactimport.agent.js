@@ -19,10 +19,10 @@
 
     let uploadedFileContext = "SESSION UPLOADED FILES: NONE";
 
-      if (session?.uploadedFile?.length > 0) {
+      if (session?.contactImport?.length > 0) {
       uploadedFileContext = `
       SESSION UPLOADED FILES:
-      ${session.uploadedFile
+      ${session.contactImport
       .map(file => `- ${file.fileName}`)
       .join("\n")}
       `;

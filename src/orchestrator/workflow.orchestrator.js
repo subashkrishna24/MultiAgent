@@ -18,7 +18,7 @@ import { getSession, clearPagingSession } from "../store/session.store.js";
 import { handlePagination } from "../utils/pagination.helper.js";
 import { prepareUserDetails } from "../utils/shared.helper.js";
 import { getDateContext } from "../utils/datecontext.helper.js";
-
+import { executeContactImportAgent } from "../agents/contact/contactimport.agent.js";
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -49,7 +49,7 @@ export async function executeWorkflow(payload) {
       Files.push({
         fileName: file.fileName,
         fileId: file.fileId,
-        contactImport: file.importfields,
+        jsonmappingfields: file.importfields,
       });
 
       if (file.type?.toLowerCase() === "contact import") {
@@ -204,6 +204,15 @@ export async function executeWorkflow(payload) {
       accountId: accountid,
     });
   }
+  if (intent.module === "contactimport") {
+    response = await executeContactImportAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  } 
   console.log("Final response from agent:", response);
 
   await mcpClient.close();

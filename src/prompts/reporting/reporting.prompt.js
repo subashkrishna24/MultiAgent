@@ -247,6 +247,8 @@ G) FORM RULES
 JOIN: formdetails.id = formresponses.formid
 Return: formdetails.formidentifier AS "form name", COUNT(*) AS total_responded
 
+for active forms, apply only formdetails.formstatus = true
+
 H) CHAT RULES
 JOIN: chat.id = chatformresponses.chatid
 Return: chat.name AS "chat name", COUNT(*) AS total_responded

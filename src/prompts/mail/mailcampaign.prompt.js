@@ -409,6 +409,7 @@ STRICT DATE RESOLUTION RULES:
  
 5. Convert the user's relative time request into a strict ISO datetime format.
 6. CRITICAL FORMATTING: Do NOT output the date in UTC format ending with 'Z'. You MUST explicitly preserve the local timezone offset ending with '+05:30' (e.g., 'YYYY-MM-DDTHH:mm:ss+05:30').
+7. Don't convert the date to UTC or any other timezone. Always preserve the local timezone offset.
 Store resolved ScheduledDatetime immediately.
 
 ==================================================

@@ -22,7 +22,7 @@ import { MAILCAMPAIGN_ABTEST_PROMPT } from "../prompts/mail/mailabtestcamapign.p
 
 import { SHARED_PROMPT } from "../prompts/shared/shared.prompt.js";
 import { MAILTEMPLATEUPLOADFILES_PROMPT } from "../prompts/mail/mailtemplateuploadfiles.prompt.js";
-
+import { CONTACTIMPORT_PROMPT } from "../prompts/contact/contactimport.prompt.js";
 function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
@@ -45,6 +45,7 @@ function getPrompt(module) {
 
     mailcampaign_abtest: MAILCAMPAIGN_ABTEST_PROMPT,
     mailtemplateuploadfiles: MAILTEMPLATEUPLOADFILES_PROMPT,
+    contactimport: CONTACTIMPORT_PROMPT,
   };
 
   return prompts[module];

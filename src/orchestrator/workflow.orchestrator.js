@@ -14,11 +14,11 @@ import { executeMailSpamScoreAgent } from "../agents/mail/mailspamscore.agent.js
 import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
 import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js";
 import { executeMailTemplateUploadFilesAgent } from "../agents/mail/uploadmailteamplate.agent.js";
-import { getSession } from "../store/session.store.js";
+import { getSession, clearPagingSession } from "../store/session.store.js";
 import { handlePagination } from "../utils/pagination.helper.js";
 import { prepareUserDetails } from "../utils/shared.helper.js";
 import { getDateContext } from "../utils/datecontext.helper.js";
-
+import { executeContactImportAgent } from "../agents/contact/contactimport.agent.js";
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -31,6 +31,9 @@ export async function executeWorkflow(payload) {
     machineid,
   } = payload;
 
+  if (history.length === 1) {
+    clearPagingSession(machineid);
+  }
   // Session
   const session = getSession(machineid);
 
@@ -39,14 +42,26 @@ export async function executeWorkflow(payload) {
 
   // Upload Files
   if (uploadedfile?.length > 0) {
-    var Files = [];
+    const Files = [];
+    let hasContactImport = false;
+
     for (const file of uploadedfile) {
       Files.push({
         fileName: file.fileName,
         fileId: file.fileId,
+        jsonmappingfields: file.importfields,
       });
+
+      if (file.type?.toLowerCase() === "contact import") {
+        hasContactImport = true;
+      }
     }
-    session.uploadedFile = Files;
+
+    if (hasContactImport) {
+      session.contactImport = Files;
+    } else {
+      session.uploadedFile = Files;
+    }
   }
 
   const llmModel = getllmModel(model, apikey);
@@ -189,6 +204,15 @@ export async function executeWorkflow(payload) {
       accountId: accountid,
     });
   }
+  if (intent.module === "contactimport") {
+    response = await executeContactImportAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  } 
   console.log("Final response from agent:", response);
 
   await mcpClient.close();

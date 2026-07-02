@@ -34,6 +34,8 @@ export function getSession(machineid) {
       uploadedFile: null,
 
       UserDetails: null,
+
+      contactImport: null,
     };
   }
 

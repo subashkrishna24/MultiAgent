@@ -16,6 +16,7 @@ Available modules:
 - mailtest
 - mailcampaign_abtest
 - mailtemplateuploadfiles
+- contactimport
 
 Return ONLY JSON.
 
@@ -301,5 +302,13 @@ until the workflow is:
 * explicitly switched by the user
 
 Do NOT switch modules while an A/B Test workflow is in progress.
- 
+ 5. Route to CONTACTIMPORT when the user wants:
+   - upload contacts
+   - import contacts
+   - contacts import  
+
+   Example:
+    {
+      "module": "contactimport"
+    }
 `;

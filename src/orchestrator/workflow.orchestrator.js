@@ -51,6 +51,7 @@ export async function executeWorkflow(payload) {
   if (uploadedfile?.length > 0) {
     const Files = [];
     let hasContactImport = false;
+    let hasLeadsImport = false;
 
     for (const file of uploadedfile) {
       Files.push({
@@ -59,13 +60,19 @@ export async function executeWorkflow(payload) {
         jsonmappingfields: file.importfields,
       });
 
-      if (file.type?.toLowerCase() === "contact import") {
+      const fileType = file.type?.toLowerCase();
+
+      if (fileType === "contact import") {
         hasContactImport = true;
+      } else if (fileType === "leads import") {
+        hasLeadsImport = true;
       }
     }
 
     if (hasContactImport) {
       session.contactImport = Files;
+    } else if (hasLeadsImport) {
+      session.LeadsImport = Files;
     } else {
       session.uploadedFile = Files;
     }

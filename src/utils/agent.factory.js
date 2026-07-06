@@ -3,6 +3,7 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { KNOWLEDGE_PROMPT } from "../prompts/knowledge/knowledge.prompt.js";
 
 import { REPORTING_PROMPT } from "../prompts/reporting/reporting.prompt.js";
+import { REPORT_PLANNER_PROMPT } from "../prompts/reporting/reportplanner.prompt.js";
 
 import { CONTACT_PROMPT } from "../prompts/contact/contact.prompt.js";
 
@@ -23,6 +24,8 @@ import { MAILCAMPAIGN_ABTEST_PROMPT } from "../prompts/mail/mailabtestcamapign.p
 import { SHARED_PROMPT } from "../prompts/shared/shared.prompt.js";
 import { MAILTEMPLATEUPLOADFILES_PROMPT } from "../prompts/mail/mailtemplateuploadfiles.prompt.js";
 import { CONTACTIMPORT_PROMPT } from "../prompts/contact/contactimport.prompt.js";
+import { REPORTING_ANALYSIS_PROMPT } from "../prompts/reporting/reportinganalysis.prompt.js";
+
 function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
@@ -46,6 +49,8 @@ function getPrompt(module) {
     mailcampaign_abtest: MAILCAMPAIGN_ABTEST_PROMPT,
     mailtemplateuploadfiles: MAILTEMPLATEUPLOADFILES_PROMPT,
     contactimport: CONTACTIMPORT_PROMPT,
+    reportplanner: REPORT_PLANNER_PROMPT,
+    reportinganalysis: REPORTING_ANALYSIS_PROMPT,
   };
 
   return prompts[module];

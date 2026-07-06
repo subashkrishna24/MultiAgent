@@ -4,19 +4,26 @@ import { detectIntent } from "../agents/intent/intent.agent.js";
 import { filterToolsByModule } from "../services/tool-filter.service.js";
 import { executeKnowledgeAgent } from "../agents/knowledge/knowledge.agent.js";
 import { executeReportingAgent } from "../agents/reporting/reporting.agent.js";
+import { executeReportPlannerAgent } from "../agents/reporting/reportplanner.agent.js";
+import { executeReportingAnalysisAgent } from "../agents/reporting/reportinganalysis.agent.js";
 import { executeContactAgent } from "../agents/contact/contact.agent.js";
 import { executeGroupAgent } from "../agents/group/group.agent.js";
 import { executeMailCampaignAgent } from "../agents/mail/mailcampaign.agent.js";
 import { executeMailTemplateAgent } from "../agents/mail/mailtemplate.agent.js";
 import { executeCaptureFormAgent } from "../agents/captureform/captureform.agent.js";
 import { buildIntentContext } from "../utils/context-builder.js";
+import { extractJSON } from "../utils/json.utils.js";
 import { executeMailSpamScoreAgent } from "../agents/mail/mailspamscore.agent.js";
 import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
 import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js";
 import { executeMailTemplateUploadFilesAgent } from "../agents/mail/uploadmailteamplate.agent.js";
 import { getSession, clearPagingSession } from "../store/session.store.js";
 import { handlePagination } from "../utils/pagination.helper.js";
-import { prepareUserDetails } from "../utils/shared.helper.js";
+import {
+  prepareUserDetails,
+  cleanReportEntry,
+  cleanMergedResults,
+} from "../utils/shared.helper.js";
 import { getDateContext } from "../utils/datecontext.helper.js";
 import { executeContactImportAgent } from "../agents/contact/contactimport.agent.js";
 export async function executeWorkflow(payload) {
@@ -109,27 +116,90 @@ export async function executeWorkflow(payload) {
   }
 
   if (intent.module === "reporting") {
-    response = await executeReportingAgent({
+    // Step 1: Get execution plan
+    const plannerResponse = await executeReportPlannerAgent({
       model: llmModel,
-      tools: filteredTools,
       history: recentHistory,
       accountId: accountid,
     });
 
-    const toolMessages = response.messages.filter(
-      (x) => x._getType?.() === "tool",
-    );
+    let executionPlan = {
+      executionType: "single",
+      datasets: [{ name: "Report" }],
+    };
 
-    if (toolMessages.length == 0) {
-      const sql = response.messages[response.messages.length - 1].content;
-      const reportTool = allTools.find((x) => x.name === "GetReport");
-      report_response = await reportTool.invoke({
-        getquery: sql,
-      });
+    console.log(plannerResponse.messages.at(-1).content);
 
-      //console.log(report_response);
+    try {
+      executionPlan = extractJSON(plannerResponse.messages.at(-1).content);
+    } catch (error) {
+      console.error("Failed to parse reporting planner JSON:", error);
+    }
+
+    // Step 2: Generate SQL(s)
+    const reportingRequestHistory = [
+      {
+        role: "system",
+        content: `REPORT_PLANNER: ${JSON.stringify(executionPlan)}`,
+      },
+      ...recentHistory,
+    ];
+
+    const reportingAgentResponse = await executeReportingAgent({
+      model: llmModel,
+      tools: [],
+      history: reportingRequestHistory,
+      accountId: accountid,
+    });
+
+    let queryPlan = { queries: [] };
+
+    try {
+      queryPlan = extractJSON(reportingAgentResponse.messages.at(-1).content);
+    } catch (error) {
+      console.error("Failed to parse reporting query JSON:", error);
+    }
+
+    const reportTool = allTools.find((x) => x.name === "GetReport");
+    const queries = Array.isArray(queryPlan.queries) ? queryPlan.queries : [];
+
+    if (executionPlan.executionType === "single") {
+      if (queries.length > 0 && queries[0].query) {
+        report_response = await reportTool.invoke({
+          getquery: queries[0].query,
+        });
+      }
+
+      response = reportingAgentResponse;
     } else {
-      report_response = toolMessages[0].content;
+      const mergedResults = [];
+
+      for (const item of queries) {
+        if (!item?.query) continue;
+
+        const result = await reportTool.invoke({
+          getquery: item.query,
+        });
+
+        mergedResults.push({
+          name: item.name || "Report",
+          data: result,
+        });
+      }
+
+      report_response = mergedResults;
+      const cleanedResults = cleanMergedResults(mergedResults);
+
+      response = await executeReportingAnalysisAgent({
+        model: llmModel,
+        history: [
+          {
+            role: "system",
+            content: `MERGED_RESULTS: ${JSON.stringify(cleanedResults, null, 2)}`,
+          },
+        ],
+        accountId: accountid,
+      });
     }
   }
 
@@ -212,7 +282,7 @@ export async function executeWorkflow(payload) {
       accountId: accountid,
       session,
     });
-  } 
+  }
   console.log("Final response from agent:", response);
 
   await mcpClient.close();

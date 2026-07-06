@@ -160,6 +160,52 @@ Always choose reporting over knowledge.
       "module": "reporting"
     }
 
+    If module = reporting, you MUST also determine the report type.
+
+Possible report types:
+
+1. report
+   - display
+   - fetch
+   - report
+   - dashboard
+
+2. comparison
+   - compare
+   - versus
+   - vs
+   - difference
+   - better than
+   - highest vs lowest
+   - top vs bottom
+
+3. trend
+   - trend
+   - over time
+   - month wise
+   - weekly
+   - daily
+   - year over year
+   - growth
+   - decline
+
+4. analysis
+   - why
+   - insights
+   - explain
+   - summarize
+   - recommendation
+   - best performing
+   - worst performing
+   - analysis
+
+Return
+
+{
+  "module":"reporting",
+  "reportType":"comparison"
+}
+
 5. Route to CONTACT when the user wants:
    - create contacts
    - update contacts

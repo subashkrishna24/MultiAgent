@@ -128,6 +128,8 @@ Only switch modules if the user explicitly starts a different workflow.
    - update capture form
    - delete capture form
    - modify form settings
+   - get rules based on form name
+   - get rules
 
    Example:
     {

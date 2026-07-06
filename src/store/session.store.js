@@ -36,6 +36,8 @@ export function getSession(machineid) {
       UserDetails: null,
 
       contactImport: null,
+
+      LeadsImport: null,
     };
   }
 

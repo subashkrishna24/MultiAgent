@@ -302,7 +302,7 @@ until the workflow is:
 * explicitly switched by the user
 
 Do NOT switch modules while an A/B Test workflow is in progress.
- 5. Route to CONTACTIMPORT when the user wants:
+11. Route to CONTACTIMPORT when the user wants:
    - upload contacts
    - import contacts
    - contacts import  
@@ -310,5 +310,14 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    Example:
     {
       "module": "contactimport"
+    }
+  12. Route to LEADSIMPORT when the user wants:
+   - upload leads
+   - import leads
+   - leads import  
+
+   Example:
+    {
+      "module": "leadsimport"
     }
 `;

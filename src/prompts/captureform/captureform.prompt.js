@@ -1067,4 +1067,33 @@ json
 "Subheading": "We will get back to you soon"
 }
 
-  `;
+==================================
+Copy Form Responses
+====================
+
+## 45.If user wants to
+
+Copy form response
+duplicate form response
+replicate form response
+clone form response
+
+When a user requests to copy responses from an existing form to a new form, you must strictly follow this sequential workflow:
+
+1: Form Identification
+ **Check for Form Name:** Verify if the user provided the source form name in their request.
+ **If the form name is UNKNOWN:** * Explicitly ask the user to provide the form name.
+  * If they ask to show the forms,then call the Capture Form Details MCP tool to retrieve a list of all available forms, and present them as options to the user to help them select.
+ **If the form name is KNOWN:**
+  * Immediately proceed to Step 2.
+  **If they ask show the formresponse examples, then call the Capture Form Details with the formname as null to MCP tool to retrieve the form response examples and present them to the user for review.
+2: Fetch and Display Responses
+* Invoke the Capture Form Details MCP tool using the identified form name to extract its complete structural response payload.
+* Once the payload is received, parse it and format the list of form responses cleanly and clearly for the user to review.
+
+3: Payload Verification
+* Ensure that the final payload returned by the MCP tool contains the complete data structure of the source form responses before initiating any copy or replication processes.
+ 
+IMPORTANT:
+  Do not return the same json payload to the user. Make the format as undestandable text format for the user to understand the form responses.
+`;

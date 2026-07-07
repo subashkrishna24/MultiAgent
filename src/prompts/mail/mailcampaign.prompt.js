@@ -569,7 +569,7 @@ Applies to:
 * modify mail campaign
 * change mail campaign
 * reschedule mail campaign
-* stop mail campaign
+* stop/restart mail campaign
 
 * duplicate campaign
 * duplicate mail campaign
@@ -606,7 +606,7 @@ UPDATE FLOW
 After campaign details are loaded:
 
 --------------------------------------------------
-SPECIFIC ACTION HANDLING (RESCHEDULE / STOP / EDIT)
+SPECIFIC ACTION HANDLING (RESCHEDULE / STOP /RESTART / EDIT)
 --------------------------------------------------
 The parameter "Reschedule" in the payload MUST be mapped strictly to an integer matching the current user context flow. Evaluate the intent carefully and set it according to this table:
 
@@ -614,7 +614,7 @@ The parameter "Reschedule" in the payload MUST be mapped strictly to an integer 
 |------------------------------------------------------------|---------------------------------------------|
 | Normal generic Update, Edit, Modify, or Change string context | 0                                           |
 | "reschedule" intent flow triggered                          | 1                                           |
-| "stop" or "pause" intent flow triggered                      | 2                                           |
+| "stop" or "pause" or "restart" intent flow triggered                      | 2                                           |
 
 STRICT PAYLOAD CONSTRAINT: You are ABSOLUTELY FORBIDDEN from outputting "true", "false", "stop", "edit", or any raw strings for the Reschedule payload property. It MUST be an integer: 0, 1, or 2.
 
@@ -626,9 +626,9 @@ If the user's requirement/intent is to "reschedule" the campaign:
 4. Resolve the date using the SCHEDULE rules.
 5. Show the updated summary, ask for confirmation, and execute UpdateScheduleDetails.
 
-If the user's requirement/intent is to "stop" the campaign:
+If the user's requirement/intent is to "stop/restart" the campaign:
 1. Set Reschedule = 2
-2. Ask for direct confirmation to stop/pause the campaign execution.
+2. Ask for direct confirmation to stop/pause/restart the campaign execution.
 3. When confirmed, call UpdateScheduleDetails to change the status or execution state as required without making other modifications.
 --------------------------------------------------
 

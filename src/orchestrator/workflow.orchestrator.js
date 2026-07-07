@@ -26,6 +26,7 @@ import {
 } from "../utils/shared.helper.js";
 import { getDateContext } from "../utils/datecontext.helper.js";
 import { executeContactImportAgent } from "../agents/contact/contactimport.agent.js";
+import { executeLeadsImportAgent } from "../agents/lms/leadsimport.agent.js";
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -288,6 +289,15 @@ export async function executeWorkflow(payload) {
       history: recentHistory,
       accountId: accountid,
       session,
+    });
+  }
+  if (intent.module === "leadsimport") {
+    response = await executeLeadsImportAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session, 
     });
   }
   console.log("Final response from agent:", response);

@@ -7,7 +7,9 @@ templateFetchNext
 groupOffset
 groupFetchNext
 campaignOffset
-campaignFetchNext
+campaignFetchNext 
+lmssourceOffset
+lmssourceFetchNext
 
 Use these values when fetching the next or previous page of results.
 
@@ -96,6 +98,8 @@ Examples:
 - list campaigns
 - select template
 - select group
+- show lmssource or source
+- list lmssource or source
 
 Format every item only as:
 

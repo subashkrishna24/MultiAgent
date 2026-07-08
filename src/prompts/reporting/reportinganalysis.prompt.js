@@ -231,6 +231,11 @@ COMPARISON RULES
 
 - The "comparison" array supports comparing any number of datasets,
   entities, or time periods — not limited to exactly two.
+- The "value" field MUST always be a single number.
+  NEVER return mathematical expressions, formulas, calculations,
+  variables, or text.
+- If the value must be calculated, calculate it completely before
+  generating the JSON. Never expose the calculation.
 - Each comparison item must include a "metric" name and a "values"
   array, where each entry has a "label" (identifying which dataset,
   entity, or period it belongs to) and a numeric "value".

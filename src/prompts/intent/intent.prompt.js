@@ -17,6 +17,7 @@ Available modules:
 - mailcampaign_abtest
 - mailtemplateuploadfiles
 - contactimport
+- leadsimport
 
 Return ONLY JSON.
 
@@ -128,8 +129,6 @@ Only switch modules if the user explicitly starts a different workflow.
    - update capture form
    - delete capture form
    - modify form settings
-   - get rules based on form name
-   - get rules
 
    Example:
     {
@@ -161,52 +160,6 @@ Always choose reporting over knowledge.
     {
       "module": "reporting"
     }
-
-    If module = reporting, you MUST also determine the report type.
-
-Possible report types:
-
-1. report
-   - display
-   - fetch
-   - report
-   - dashboard
-
-2. comparison
-   - compare
-   - versus
-   - vs
-   - difference
-   - better than
-   - highest vs lowest
-   - top vs bottom
-
-3. trend
-   - trend
-   - over time
-   - month wise
-   - weekly
-   - daily
-   - year over year
-   - growth
-   - decline
-
-4. analysis
-   - why
-   - insights
-   - explain
-   - summarize
-   - recommendation
-   - best performing
-   - worst performing
-   - analysis
-
-Return
-
-{
-  "module":"reporting",
-  "reportType":"comparison"
-}
 
 5. Route to CONTACT when the user wants:
    - create contacts
@@ -350,7 +303,7 @@ until the workflow is:
 * explicitly switched by the user
 
 Do NOT switch modules while an A/B Test workflow is in progress.
- 5. Route to CONTACTIMPORT when the user wants:
+11. Route to CONTACTIMPORT when the user wants:
    - upload contacts
    - import contacts
    - contacts import  
@@ -358,5 +311,14 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    Example:
     {
       "module": "contactimport"
+    }
+      11. Route to LEADSIMPORT when the user wants:
+   - upload leads
+   - import leads
+   - leads import  
+
+   Example:
+    {
+      "module": "leadsimport"
     }
 `;

@@ -26,6 +26,7 @@ import {
 } from "../utils/shared.helper.js";
 import { getDateContext } from "../utils/datecontext.helper.js";
 import { executeContactImportAgent } from "../agents/contact/contactimport.agent.js";
+import { executeLeadsImportAgent } from "../agents/lms/leadsimport.agent.js";
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -123,7 +124,6 @@ export async function executeWorkflow(payload) {
   }
 
   if (intent.module === "reporting") {
-    // Step 1: Get execution plan
     const plannerResponse = await executeReportPlannerAgent({
       model: llmModel,
       history: recentHistory,
@@ -142,14 +142,15 @@ export async function executeWorkflow(payload) {
     } catch (error) {
       console.error("Failed to parse reporting planner JSON:", error);
     }
-
-    // Step 2: Generate SQL(s)
+    const lastUserMessage = [...recentHistory]
+      .reverse()
+      .find((m) => m.role === "user");
     const reportingRequestHistory = [
       {
         role: "system",
         content: `REPORT_PLANNER: ${JSON.stringify(executionPlan)}`,
       },
-      ...recentHistory,
+      lastUserMessage,
     ];
 
     const reportingAgentResponse = await executeReportingAgent({
@@ -196,7 +197,6 @@ export async function executeWorkflow(payload) {
 
       report_response = mergedResults;
       const cleanedResults = cleanMergedResults(mergedResults);
-
       response = await executeReportingAnalysisAgent({
         model: llmModel,
         history: [
@@ -204,6 +204,7 @@ export async function executeWorkflow(payload) {
             role: "system",
             content: `MERGED_RESULTS: ${JSON.stringify(cleanedResults, null, 2)}`,
           },
+          lastUserMessage,
         ],
         accountId: accountid,
       });
@@ -283,6 +284,15 @@ export async function executeWorkflow(payload) {
   }
   if (intent.module === "contactimport") {
     response = await executeContactImportAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+  if (intent.module === "leadsimport") {
+    response = await executeLeadsImportAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,

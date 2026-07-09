@@ -2,7 +2,7 @@ export const REPORTING_PROMPT = `You are a PostgreSQL query generator.
 Your task is to generate ONLY a JSON object containing one or more SQL query definitions based on the user's request.
 Do not execute any SQL or call any tools.
 
-Return ONLY JSON in this exact format:
+Return ONLY JSON in this  exact format:
 {
   "reportType": "report" | "comparison" | "trend" | "analysis",
   "queries": [
@@ -135,6 +135,16 @@ GROUPS RULES (STRICT)
 Tables: groups g, groupmember gm
 
 Group verification rules
+
+The SQL queries below are canonical.
+
+Copy them verbatim.
+Do NOT regenerate them from memory.
+Do NOT rewrite, optimize, simplify, reformat, or reconstruct them.
+Do NOT add or remove parentheses, aliases, joins, GROUP BY, HAVING, ORDER BY, LIMIT, or any other SQL clause.
+Output the SQL exactly as written below, character-for-character, except for replacing placeholders (if any).
+If the user request matches one of the predefined queries below, return the predefined SQL exactly as provided.
+
 1) Total Groups
 If the user asks for the total number of groups, use:
 SELECT COUNT(*)
@@ -255,6 +265,11 @@ Required fields: groups.name, SUM(contactimportoverview.successcount) AS success
 GROUP BY groups.name, contactimportoverview.createddate
 ORDER BY createddate DESC
 Use LIMIT when the user asks for top results.
+
+rules:
+-total contacts imported: use only date condition.
+-only completed :use iscompleted=1
+-failed imports: use iscompleted=3
 
 G) FORM RULES
 JOIN: formdetails.id = formresponses.formid

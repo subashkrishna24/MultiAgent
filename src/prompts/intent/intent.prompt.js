@@ -144,6 +144,15 @@ Only switch modules if the user explicitly starts a different workflow.
    - update capture form
    - delete capture form
    - modify form settings
+   - create form rules
+   - update form rules
+   - delete form rules
+   - save form rules
+   - display form rules
+   - view form rules
+   - list form rules
+   - manage form rules
+   - edit rule conditions
 
    Example:
     {

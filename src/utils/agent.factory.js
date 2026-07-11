@@ -25,7 +25,7 @@ import { SHARED_PROMPT } from "../prompts/shared/shared.prompt.js";
 import { MAILTEMPLATEUPLOADFILES_PROMPT } from "../prompts/mail/mailtemplateuploadfiles.prompt.js";
 import { CONTACTIMPORT_PROMPT } from "../prompts/contact/contactimport.prompt.js";
 import { LEADSIMPORT_PROMPT } from "../prompts/lms/leadsimport.prompt.js";
-
+import { LEADMANAGEMENT_PROMPT } from "../prompts/lms/leadmanagment.prompt.js";
 import { REPORTING_ANALYSIS_PROMPT } from "../prompts/reporting/reportinganalysis.prompt.js";
 function getPrompt(module) {
   const prompts = {
@@ -53,6 +53,7 @@ function getPrompt(module) {
     leadsimport: LEADSIMPORT_PROMPT,
     reportplanner: REPORT_PLANNER_PROMPT,
     reportinganalysis: REPORTING_ANALYSIS_PROMPT,
+    leadmanagement: LEADMANAGEMENT_PROMPT,
   };
 
   return prompts[module];

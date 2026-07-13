@@ -19,6 +19,7 @@ import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapig
 import { executeMailTemplateUploadFilesAgent } from "../agents/mail/uploadmailteamplate.agent.js";
 import { getSession, clearPagingSession } from "../store/session.store.js";
 import { handlePagination } from "../utils/pagination.helper.js";
+
 import {
   prepareUserDetails,
   cleanReportEntry,
@@ -27,6 +28,7 @@ import {
 import { getDateContext } from "../utils/datecontext.helper.js";
 import { executeContactImportAgent } from "../agents/contact/contactimport.agent.js";
 import { executeLeadsImportAgent } from "../agents/lms/leadsimport.agent.js";
+import { executeLeadManagementAgent } from "../agents/lms/leadmanagment.agent.js";
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -293,6 +295,15 @@ export async function executeWorkflow(payload) {
   }
   if (intent.module === "leadsimport") {
     response = await executeLeadsImportAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+   if (intent.module === "leadmanagement") {
+    response = await executeLeadManagementAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,

@@ -22,5 +22,6 @@ export const MODULES = {
   CONTACTIMPORT: "contactimport", 
   LEADSIMPORT: "leadsimport",
   LEADMANAGEMENT: "leadmanagement",
+  LEADSFOLLOWUP: "leadsfollowup",
    
 };

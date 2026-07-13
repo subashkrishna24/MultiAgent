@@ -29,12 +29,11 @@ Available modules:
 - captureform
 - mailspamscore
 - mailtest
-- mailcampaign_abtest
-- mailtemplateuploadfiles
+- mailcampaign_abtest 
 - contactimport
 - leadsimport
 - leadmanagement
-
+- lmsfollowup
 Return ONLY JSON.
 
 Rules:
@@ -363,5 +362,15 @@ Do NOT switch modules while an A/B Test workflow is in progress.
     Example:
     {
       "module": "leadmanagement"
+    }
+    14. Route to LEADSFOLLOWUP when the user wants:
+   - follow up
+   - followup
+   - lms follow up
+   - lms followup
+
+   Example:
+    {
+      "module": "leadsfollowup"
     }
   `;

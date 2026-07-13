@@ -15,8 +15,7 @@ import { buildIntentContext } from "../utils/context-builder.js";
 import { extractJSON } from "../utils/json.utils.js";
 import { executeMailSpamScoreAgent } from "../agents/mail/mailspamscore.agent.js";
 import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
-import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js";
-import { executeMailTemplateUploadFilesAgent } from "../agents/mail/uploadmailteamplate.agent.js";
+import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js"; 
 import { getSession, clearPagingSession } from "../store/session.store.js";
 import { handlePagination } from "../utils/pagination.helper.js";
 
@@ -28,7 +27,8 @@ import {
 import { getDateContext } from "../utils/datecontext.helper.js";
 import { executeContactImportAgent } from "../agents/contact/contactimport.agent.js";
 import { executeLeadsImportAgent } from "../agents/lms/leadsimport.agent.js";
-import { executeLeadManagementAgent } from "../agents/lms/leadmanagment.agent.js";
+import { executeLeadManagementAgent } from "../agents/lms/leadmanagment.agent.js"; 
+import { executeLeadsFollowUpAgent } from "../agents/lms/leadsfollowup.agent.js";
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -304,6 +304,15 @@ export async function executeWorkflow(payload) {
   }
    if (intent.module === "leadmanagement") {
     response = await executeLeadManagementAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+  if (intent.module === "leadsfollowup") {
+    response = await executeLeadsFollowUpAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,

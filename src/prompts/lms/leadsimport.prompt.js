@@ -48,9 +48,9 @@ Once the LMS source and Group configuration is completed, you must ask the user 
   *Wait for user confirmation.*
 
 - **(Source Type Selection - Radio Button Style):** "Lastly, how should we handle the lead source for this import? Please select one of the following options:
-  1) Create and Stay Source (Default)
-  2) Override Existing Source
-  3) Create New Source"
+  1) **Create and Stay Source (Default)**
+  2) **Override Existing Source**
+  3) **Create New Source**
   
   *Map the user's selection internally as follows:*
   - Option 1 (or if they express no preference/skip): sourcetype = 0

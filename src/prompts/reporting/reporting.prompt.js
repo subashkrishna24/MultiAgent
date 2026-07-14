@@ -89,6 +89,10 @@ DATE HANDLING
 - NEVER hardcode a year — derive from CURRENT_DATE when needed.
 
 SESSIONTRACKER RULES
+Rule:
+- dont generate duplicate name for the query
+- Give the correct sqlquery for the user request
+
 - machineid → alias as "visitor"
 - refertype → alias as "source type"
 Traffic queries MUST include:
@@ -259,6 +263,12 @@ WHERE DATE(table.scheduleddate) >= CURRENT_DATE - INTERVAL '30 days'
 GROUP BY table.name, DATE(table.scheduleddate)
 
 F) CONTACT IMPORT OVERVIEW
+
+Rules:
+-if the user ask about total contacts imported, use only date condition.
+-if the user ask about only completed imports, use iscompleted=1
+-if the user ask about failed imports, use iscompleted=3
+
 Tables: contactimportoverview, groups
 JOIN: contactimportoverview.groupid = groups.id
 Required fields: groups.name, SUM(contactimportoverview.successcount) AS successcount, SUM(contactimportoverview.rejectedcount) AS rejectedcount, contactimportoverview.createddate AS createddate
@@ -276,6 +286,12 @@ JOIN: formdetails.id = formresponses.formid
 Return: formdetails.formidentifier AS "form name", COUNT(*) AS total_responded
 
 for active forms, apply only formdetails.formstatus = true
+
+Rule:
+- If the user requests a specific form category (e.g., Embedded Form, Pop-up Form, or Tagged Form), set the embeddedformorpopupformortaggedform field to the corresponding value:
+  - "EmbeddedForm"
+  - "PopUpForm"
+  - "TaggedForm"
 
 H) CHAT RULES
 JOIN: chat.id = chatformresponses.chatid

@@ -21,5 +21,7 @@ export const MODULES = {
   MAILCAMPAIGN_ABTEST: "mailcampaign_abtest",
   CONTACTIMPORT: "contactimport", 
   LEADSIMPORT: "leadsimport",
+  LEADMANAGEMENT: "leadmanagement",
+  LEADSFOLLOWUP: "leadsfollowup",
    
 };

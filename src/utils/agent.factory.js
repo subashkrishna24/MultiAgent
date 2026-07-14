@@ -21,7 +21,7 @@ import { MAILTEST_PROMPT } from "../prompts/mail/mailtest.prompt.js";
 
 import { MAILCAMPAIGN_ABTEST_PROMPT } from "../prompts/mail/mailabtestcamapign.prompt.js";
 
-import { SHARED_PROMPT } from "../prompts/shared/shared.prompt.js"; 
+import { SHARED_PROMPT } from "../prompts/shared/shared.prompt.js";
 import { CONTACTIMPORT_PROMPT } from "../prompts/contact/contactimport.prompt.js";
 import { LEADSIMPORT_PROMPT } from "../prompts/lms/leadsimport.prompt.js";
 import { LEADMANAGEMENT_PROMPT } from "../prompts/lms/leadmanagment.prompt.js";
@@ -47,7 +47,7 @@ function getPrompt(module) {
 
     mailtest: MAILTEST_PROMPT,
 
-    mailcampaign_abtest: MAILCAMPAIGN_ABTEST_PROMPT, 
+    mailcampaign_abtest: MAILCAMPAIGN_ABTEST_PROMPT,
     contactimport: CONTACTIMPORT_PROMPT,
     leadsimport: LEADSIMPORT_PROMPT,
     reportplanner: REPORT_PLANNER_PROMPT,
@@ -61,12 +61,7 @@ function getPrompt(module) {
 
 export function createAgent({ module, model, tools, accountId, session }) {
   var common_prompt = "";
-  if (
-    module != "knowledge" &&
-    module != "reporting" &&
-    module != "reportplanner" &&
-    module != "reportinganalysis"
-  ) {
+  if (module != "knowledge" && module != "reporting") {
     common_prompt = SHARED_PROMPT;
   }
 

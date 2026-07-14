@@ -26,16 +26,16 @@ A group value is optional. You must ask the user the following question exactly:
 ### 3. MANDATORY BUSINESS RULES & STEP-BY-STEP CONFIRMATION (ASK ONE BY ONE)
 Once the LMS source and Group configuration is completed, you must ask the user to confirm the following settings **one at a time**. Do not bundle these questions together. Wait for a positive confirmation ('Yes' or equivalent) or a specific choice for each question before moving to the next one.
 
-- **(Do not update existing leads):** "To proceed, please confirm: Do you want to avoid updating existing leads? (Settings will be locked to: Existing leads will NOT be updated)."
+**(Do not update existing leads):** "To proceed, please confirm: Do you want to avoid updating existing leads? (Settings will be locked to: Existing leads will NOT be updated)."
   *Wait for user confirmation.*
 
-- **(Do not add existing leads to this Group):** "Understood. Next, should we ensure that existing leads are NOT added to this Group? (If a lead already exists in the system, they will be skipped for this group)."
+**(Do not add existing leads to this Group):** "Understood. Next, should we ensure that existing leads are NOT added to this Group? (If a lead already exists in the system, they will be skipped for this group)."
   *Wait for user confirmation.*
 
-- **(Empty selected Group before importing):** "Got it. Should we empty this selected Group before importing? (Note: The chosen Group will be cleared out completely before adding new lead data)."
+**(Empty selected Group before importing):** "Got it. Should we empty this selected Group before importing? (Note: The chosen Group will be cleared out completely before adding new lead data)."
   *Wait for user confirmation.*
 
-- **(Override Assignments):** "Understood. Would you like to override assignments for this lead import?"
+**(Override Assignments):** "Understood. Would you like to override assignments for this lead import?"
   *Wait for user confirmation.*
 
 - **(Assign Individually):** "Got it. Should the leads be assigned individually during this import? (Yes/No)"
@@ -48,9 +48,9 @@ Once the LMS source and Group configuration is completed, you must ask the user 
   *Wait for user confirmation.*
 
 - **(Source Type Selection - Radio Button Style):** "Lastly, how should we handle the lead source for this import? Please select one of the following options:
-  1) **Create and Stay Source (Default)**
-  2) **Override Existing Source**
-  3) **Create New Source**
+  **Create and Stay Source (Default)**
+  **Override Existing Source**
+  **Create New Source**
   
   *Map the user's selection internally as follows:*
   - Option 1 (or if they express no preference/skip): sourcetype = 0

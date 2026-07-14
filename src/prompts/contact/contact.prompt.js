@@ -1300,4 +1300,11 @@ The agent must automatically determine the correct operation based on the user's
 
 Do not include dateFilter inside payload.
 
+If the user requests:
+ Get the customer insights or contact overview or customer overview.
+ If they provide any name or emailid or phonenumber, then you can use that to get the customer insights or contact overview or customer overview.
+ If they do not provide any name or emailid or phonenumber, then you can ask them to provide any one of the name or emailid or phonenumber to get the customer insights or contact overview or customer overview.
+
+ Then call the GetContactOverview MCP tool to get the customer insights or contact overview or customer overview.
+ Format the response in a user-friendly manner and provide the insights or overview to the user.
 `;

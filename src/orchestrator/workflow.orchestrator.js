@@ -124,91 +124,30 @@ export async function executeWorkflow(payload) {
   }
 
   if (intent.module === "reporting") {
-    const plannerResponse = await executeReportPlannerAgent({
-      model: llmModel,
-      history: recentHistory,
-      accountId: accountid,
-    });
+    const reportTool = filteredTools.find((t) => t.name === "GetReport");
 
-    let executionPlan = {
-      executionType: "single",
-      datasets: [{ name: "Report" }],
-    };
-
-    console.log(plannerResponse.messages.at(-1).content);
-
-    try {
-      executionPlan = extractJSON(plannerResponse.messages.at(-1).content);
-    } catch (error) {
-      console.error("Failed to parse reporting planner JSON:", error);
-    }
     const lastUserMessage = [...recentHistory]
       .reverse()
       .find((m) => m.role === "user");
-    const reportingRequestHistory = [
-      {
-        role: "system",
-        content: `REPORT_PLANNER: ${JSON.stringify(executionPlan)}`,
-      },
-      lastUserMessage,
-    ];
 
-    const reportingAgentResponse = await executeReportingAgent({
-      model: llmModel,
-      tools: [],
-      history: reportingRequestHistory,
-      accountId: accountid,
+    const toolResponse = await reportTool.invoke({
+      getquery: lastUserMessage?.content ?? "",
     });
 
-    let queryPlan = { queries: [] };
+    const result = JSON.parse(toolResponse);
 
-    try {
-      queryPlan = extractJSON(reportingAgentResponse.messages.at(-1).content);
-    } catch (error) {
-      console.error("Failed to parse reporting query JSON:", error);
-    }
+    response = {
+      messages: [
+        {
+          role: "assistant",
+          content: result.Message || "No response generated",
+        },
+      ],
+    };
 
-    const reportTool = allTools.find((x) => x.name === "GetReport");
-    const queries = Array.isArray(queryPlan.queries) ? queryPlan.queries : [];
-
-    if (executionPlan.executionType === "single") {
-      if (queries.length > 0 && queries[0].query) {
-        report_response = await reportTool.invoke({
-          getquery: queries[0].query,
-        });
-      }
-
-      response = reportingAgentResponse;
-    } else {
-      const mergedResults = [];
-
-      for (const item of queries) {
-        if (!item?.query) continue;
-
-        const result = await reportTool.invoke({
-          getquery: item.query,
-        });
-
-        mergedResults.push({
-          name: item.name || "Report",
-          data: result,
-        });
-      }
-
-      report_response = mergedResults;
-      const cleanedResults = cleanMergedResults(mergedResults);
-      response = await executeReportingAnalysisAgent({
-        model: llmModel,
-        history: [
-          {
-            role: "system",
-            content: `MERGED_RESULTS: ${JSON.stringify(cleanedResults, null, 2)}`,
-          },
-          lastUserMessage,
-        ],
-        accountId: accountid,
-      });
-    }
+    report_response = {
+      dbdata: result.sucess ? result.dbdata : JSON.stringify([]),
+    };
   }
 
   if (intent.module === "contact") {

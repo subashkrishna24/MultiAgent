@@ -375,8 +375,7 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    Example:
     {
       "module": "leadsfollowup"
-    }
-<<<<<<< HEAD
+    } 
     15. Route to SENDMAILTOLEAD when the user wants:
    - send mail to lead
    - send email to lead
@@ -388,7 +387,4 @@ Do NOT switch modules while an A/B Test workflow is in progress.
     {
       "module": "sendmailtolead"
     }
-  `;
-=======
-  `;
->>>>>>> cb731f39d0eb90e074cdb9a918df37ea2b33f719
+  `; 

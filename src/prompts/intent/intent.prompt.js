@@ -176,6 +176,8 @@ Only switch modules if the user explicitly starts a different workflow.
     - conversion reports
     - popular cities/countries/Pages
     - If a SQL query was generated internally, route the request to the reporting module and execute the reporting MCP tool.
+    - contact import details
+    - PopUpform details
 
 Always choose reporting over knowledge.
 

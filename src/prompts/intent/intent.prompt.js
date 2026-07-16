@@ -177,6 +177,8 @@ Only switch modules if the user explicitly starts a different workflow.
     - conversion reports
     - popular cities/countries/Pages
     - If a SQL query was generated internally, route the request to the reporting module and execute the reporting MCP tool.
+    - contact import details
+    - PopUpform details
 
 Always choose reporting over knowledge.
 
@@ -374,6 +376,7 @@ Do NOT switch modules while an A/B Test workflow is in progress.
     {
       "module": "leadsfollowup"
     }
+<<<<<<< HEAD
     15. Route to SENDMAILTOLEAD when the user wants:
    - send mail to lead
    - send email to lead
@@ -386,3 +389,6 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       "module": "sendmailtolead"
     }
   `;
+=======
+  `;
+>>>>>>> cb731f39d0eb90e074cdb9a918df37ea2b33f719

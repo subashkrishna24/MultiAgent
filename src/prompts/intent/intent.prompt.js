@@ -34,6 +34,7 @@ Available modules:
 - leadsimport
 - leadmanagement
 - lmsfollowup
+- sendmailtolead
 Return ONLY JSON.
 
 Rules:
@@ -372,5 +373,16 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    Example:
     {
       "module": "leadsfollowup"
+    }
+    15. Route to SENDMAILTOLEAD when the user wants:
+   - send mail to lead
+   - send email to lead
+   - schedule mail to lead
+   - schedule email to lead
+   - send mail to lmslead 
+
+   Example:
+    {
+      "module": "sendmailtolead"
     }
   `;

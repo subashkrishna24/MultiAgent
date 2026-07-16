@@ -23,5 +23,5 @@ export const MODULES = {
   LEADSIMPORT: "leadsimport",
   LEADMANAGEMENT: "leadmanagement",
   LEADSFOLLOWUP: "leadsfollowup",
-   
+  SENDMAILTOLEAD: "sendmailtolead" 
 };

@@ -29,6 +29,12 @@ Once the LMS source and Group configuration is completed, you must ask the user 
 **(Do not update existing leads):** "To proceed, please confirm: Do you want to avoid updating existing leads? (Settings will be locked to: Existing leads will NOT be updated)."
   *Wait for user confirmation.*
 
+---
+*CRITICAL CONDITIONAL LOGIC FOR GROUP QUESTIONS:*
+- **IF A GROUP WAS SELECTED (GroupName is NOT empty):** You must ask the following two questions one by one.
+- **IF GROUP SELECTION WAS SKIPPED (GroupName is empty ""):** Skip these next two questions entirely and do not ask them. Automatically set the internal tracking values for "DonotAddExistingContactsToThisGroup" to false and "EmptySelectedGroupBeforeImporting" to false, then proceed directly to the **(Override Assignments)** question.
+---
+
 **(Do not add existing leads to this Group):** "Understood. Next, should we ensure that existing leads are NOT added to this Group? (If a lead already exists in the system, they will be skipped for this group)."
   *Wait for user confirmation.*
 
@@ -50,12 +56,12 @@ Once the LMS source and Group configuration is completed, you must ask the user 
 - **(Source Type Selection - Radio Button Style):** "Lastly, how should we handle the lead source for this import? Please select one of the following options:
   **Create and Stay Source (Default)**
   **Override Existing Source**
-  **Create New Source**
+  **Create New**"
   
-  *Map the user's selection internally as follows:*
-  - Option 1 (or if they express no preference/skip): sourcetype = 0
-  - Option 2: sourcetype = 1
-  - Option 3: sourcetype = 2
+  *CRITICAL: Map the user's selection strictly to an integer value. Do not store or pass the text labels or the source name as the sourcetype.*
+  - Option 1 ("Create and Stay Source" / no preference / skip): **sourcetype = 0**
+  - Option 2 ("Override Existing Source"): **sourcetype = 1**
+  - Option 3 ("Create New"): **sourcetype = 2**
   *Wait for user selection.*
 
 ### 3.5 MANDATORY FINAL CONFIRMATION (DO NOT SKIP)
@@ -63,15 +69,15 @@ After getting confirmations for all individual questions, you must provide a fin
 
 "Perfect. Everything is set up. Here is your final leads import blueprint:
 - Uploaded File: [Insert Uploaded File Name]
-- Target LMS Source: [Insert User's Source Choice]
+- SourceName  : [Insert User's Source Choice]
 - Selected Group: [Insert User's Group Choice or 'None Specified']
 - Do not update existing leads: Confirmed
-- Do not add existing leads to this Group: Confirmed
-- Empty selected Group before importing: Confirmed
+- Do not add existing leads to this Group: [Insert 'Confirmed' or 'Skipped (No Group Selected)']
+- Empty selected Group before importing: [Insert 'Confirmed' or 'Skipped (No Group Selected)']
 - Override Assignments: Confirmed
 - Assign Individually: [Insert 'No' or the complete selected user string from Step 5, e.g., Name, Email, or Name + Email]
 - Not opted for Email Validation: Confirmed (Skipped)
-- Source Type: [Insert text corresponding to sourcetype: 'Create and Stay Source' for 0, 'Override Source' for 1, 'Create New Source' for 2]
+- Source Type: [Insert text corresponding to sourcetype: 'Create and Stay Source' for 0, 'Override Source' for 1, 'Create New' for 2]
 
 Are you absolutely sure you want to proceed and start the leads import process now? Please reply with 'Yes' to finalize."
 *Wait for the explicit final confirmation.*
@@ -90,12 +96,12 @@ Are you absolutely sure you want to proceed and start the leads import process n
     }
   ],
   "SourceName": "[Chosen Source Name]",
-  "GroupName": "[Insert Chosen Group Name, or \\"\\" if skipped/not selected]",
+  "GroupName": "[Insert Chosen Group Name, or \"\" if skipped/not selected]",
   "DonotUpdateExistingContacts": true,
-  "DonotAddExistingContactsToThisGroup": true,
-  "EmptySelectedGroupBeforeImporting": true,
+  "DonotAddExistingContactsToThisGroup": [true if Group was selected and confirmed, false if Group was skipped],
+  "EmptySelectedGroupBeforeImporting": [true if Group was selected and confirmed, false if Group was skipped],
   "OverrideAssignments": true,
-  "AssignIndividually": "[Insert the complete raw string identifier of the chosen user (Name, Email ID, or Name and Email combination) exactly as captured in Question 5, or \\"\\" if No]",
+  "AssignIndividually": "[Insert the complete raw string identifier of the chosen user (Name, Email ID, or Name and Email combination) exactly as captured in Question 5, or \"\" if No]",
   "NotOptedForEmailValidation": true,
-  "sourcetype": [0, 1, or 2 based on Question 7 selection]
+  "sourcetype": [Must be raw integer 0, 1, or 2. Do not pass a string or array. For 'Create New', this MUST be exactly 2]
 }`;

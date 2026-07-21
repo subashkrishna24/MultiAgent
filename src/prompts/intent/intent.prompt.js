@@ -9,6 +9,8 @@ Campaign ≠ Template
 Group ≠ Segment
 
 - If the user explicitly says "lead" or "leads", preserve the word exactly as written.
+- If the user explicitly says "lmssource" or "source", preserve the word exactly as written.
+- NEVER rewrite, substitute, normalize, paraphrase, or interpret "source" as "group" or "source group".
 - NEVER rewrite, substitute, normalize, paraphrase, or interpret "lead" as "contact".
 - NEVER change "lead details" to "contact details".
 - NEVER route a request containing the word "lead" to a contact module.
@@ -35,6 +37,7 @@ Available modules:
 - leadmanagement
 - lmsfollowup
 - sendmailtolead
+
 Return ONLY JSON.
 
 Rules:
@@ -362,6 +365,10 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    - leads with stage X
    - lmsleads in stage X
    - lmsleads with stage X
+   - get stages
+   - get sources
+   - create or update source
+   - move leads from source
     Example:
     {
       "module": "leadmanagement"

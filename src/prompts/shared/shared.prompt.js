@@ -100,6 +100,7 @@ Examples:
 - select group
 - show lmssource or source
 - list lmssource or source
+- show lmsstages or stage
 
 Format every item only as:
 

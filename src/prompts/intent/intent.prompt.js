@@ -190,16 +190,7 @@ Always choose reporting over knowledge.
       "module": "reporting"
     }
 
-5. Route to CONTACT when the user wants:
-   - create contacts
-   - update contacts
-   - import contacts
-   - manage groups
 
-   Example:
-    {
-      "module": "contact"
-    }
 5. Route to CONTACT when the user wants:
    - create contacts
    - update contacts
@@ -208,6 +199,22 @@ Always choose reporting over knowledge.
    - add contacts to groups
    - remove contacts from groups
    - view contact lists
+ - view contact UCP
+   - view user click path (UCP)
+   - view clickstream
+   - view contact journey
+   - view visitor journey
+   - view browsing history
+   - view activity history
+   - view contact insights
+   - view visitor insights
+   - get UCP for a contact
+   - get clickstream for a machine ID
+   - get insights for a machine ID
+   - any request related to UCP, clickstream, visitor activity, or contact insights
+
+Example:
+User: "Get the contact UCP, clickstream, and insights for machine ID 042820261253468812122555950."
 
    Example:
    {

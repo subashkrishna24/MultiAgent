@@ -376,6 +376,7 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    - get sources
    - create or update source
    - move leads from source
+   - update leads stages or substages
     Example:
     {
       "module": "leadmanagement"

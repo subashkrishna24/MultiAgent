@@ -74,14 +74,20 @@ DYNAMIC PAYLOAD TEMPLATE REFERENCE:
     "OffSet": 0,
     "FetchNext": 10,
     "operators": "AND",
-    "CustomFields": {
-      "HandelBy": "manoj",
-      "stage": "unstage,proposition",
-      "stage_operator": "OR",
-      "UtmTagSource": "plumb5leads"
-    }
+   {
+  "CustomFields": {
+    "HandelBy": "manoj",
+    "HandelBy_between_operator": "AND",
+
+    "stage": "unstage,prospect,pro1",
+    "stage_operator": "OR",
+    "stage_between_operator": "OR",
+
+    "UtmTagSource": "plumb5,manual",
+    "UtmTagSource_operator": "OR"
+  }
+}
   }
 }
 
-Execute the GetLeadsDetails tool immediately using this exact JSON architecture layout. Do not write markdown comments outside the tool invocation block.
-`;
+ `;

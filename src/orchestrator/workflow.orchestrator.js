@@ -15,7 +15,7 @@ import { buildIntentContext } from "../utils/context-builder.js";
 import { extractJSON } from "../utils/json.utils.js";
 import { executeMailSpamScoreAgent } from "../agents/mail/mailspamscore.agent.js";
 import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
-import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js"; 
+import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js";
 import { getSession, clearPagingSession } from "../store/session.store.js";
 import { handlePagination } from "../utils/pagination.helper.js";
 
@@ -27,7 +27,7 @@ import {
 import { getDateContext } from "../utils/datecontext.helper.js";
 import { executeContactImportAgent } from "../agents/contact/contactimport.agent.js";
 import { executeLeadsImportAgent } from "../agents/lms/leadsimport.agent.js";
-import { executeLeadManagementAgent } from "../agents/lms/leadmanagment.agent.js"; 
+import { executeLeadManagementAgent } from "../agents/lms/leadmanagment.agent.js";
 import { executeLeadsFollowUpAgent } from "../agents/lms/leadsfollowup.agent.js";
 import { executeSendMailToLeadAgent } from "../agents/lms/sendmailtolead.agent.js";
 export async function executeWorkflow(payload) {
@@ -135,6 +135,7 @@ export async function executeWorkflow(payload) {
 
     const toolResponse = await reportTool.invoke({
       getquery: lastUserMessage?.content ?? "",
+      type: 1,
     });
 
     const result = JSON.parse(toolResponse);
@@ -242,7 +243,7 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
-   if (intent.module === "leadmanagement") {
+  if (intent.module === "leadmanagement") {
     response = await executeLeadManagementAgent({
       model: llmModel,
       tools: filteredTools,

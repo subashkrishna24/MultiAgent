@@ -29,7 +29,7 @@ Map extracted user parameters into the wrapped "input" object matching the "GetL
    - input.FetchNext: Integer page size (default 10 or user-requested count).
    - input.operators: 
      - Set to "AND" when distinct, separate fields must ALL match within a single query context (e.g., HandelBy AND stage AND source).
-     - Set to "OR" ONLY if the primary root logic across distinct fields is alternative (e.g., HandelBy OR UtmTagSource).
+     - Set to "OR" ONLY if the primary root logic across distinct fields is alternative (e.g., HandelBy OR Source).
 
 2. Universal Dynamic Key-Value Routing (input.CustomFields):
    Inject ALL search parameters, user assignments, stages, tags, sources, custom fields, and field-level multi-value conditions into "CustomFields":
@@ -37,13 +37,13 @@ Map extracted user parameters into the wrapped "input" object matching the "GetL
    - User Assignment: "comes under manoj" → "CustomFields": { "HandelBy": "manoj" }
    - Stages / Statuses: "stage unstage or stage proposition" → "CustomFields": { "stage": "unstage,proposition", "stage_operator": "OR" }
    - Sub-Stages: "substage qualified" → "CustomFields": { "substage": "qualified" }
-   - Sources / Campaigns: "source plumb5leads" → "CustomFields": { "UtmTagSource": "plumb5leads" }
+   - Sources / Campaigns: "source plumb5leads" → "CustomFields": { "Source": "plumb5leads" }
    - Lead Identifiers: "leadname", "EmailId", "PhoneNumber", "SearchKeyword".
    - Arbitrary/Custom Columns: e.g., "project commercial" → "CustomFields": { "project": "commercial" }
 
 CRITICAL FIELD OPERATOR RULES:
-- ONLY inject a field-level operator (e.g., "stage_operator": "OR", "UtmTagSource_operator": "OR") into CustomFields IF AND ONLY IF that specific field contains MULTIPLE comma-separated values (e.g., "unstage,proposition").
-- NEVER inject a field-level operator for single-value fields (e.g., "UtmTagSource": "plumb5leads" MUST NOT have "UtmTagSource_operator").
+- ONLY inject a field-level operator (e.g., "stage_operator": "OR", "Source_operator": "OR") into CustomFields IF AND ONLY IF that specific field contains MULTIPLE comma-separated values (e.g., "unstage,proposition").
+- NEVER inject a field-level operator for single-value fields (e.g., "Source": "plumb5leads" MUST NOT have "Source_operator").
 
 MANDATORY DATA FILL RULES:
 - Default "OffSet" to 0 and "FetchNext" to 10 if omitted.
@@ -83,8 +83,8 @@ DYNAMIC PAYLOAD TEMPLATE REFERENCE:
     "stage_operator": "OR",
     "stage_between_operator": "OR",
 
-    "UtmTagSource": "plumb5,manual",
-    "UtmTagSource_operator": "OR"
+    "Source": "plumb5,manual",
+    "Source_operator": "OR"
   }
 }
   }

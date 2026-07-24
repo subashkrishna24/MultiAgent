@@ -74,20 +74,19 @@ DYNAMIC PAYLOAD TEMPLATE REFERENCE:
     "OffSet": 0,
     "FetchNext": 10,
     "operators": "AND",
-   {
-  "CustomFields": {
-    "HandelBy": "manoj",
-    "HandelBy_between_operator": "AND",
+    "CustomFields": {
+      "HandelBy": "manoj",
+      "HandelBy_between_operator": "AND",
 
-    "stage": "unstage,prospect,pro1",
-    "stage_operator": "OR",
-    "stage_between_operator": "OR",
+      "stage": "unstage,prospect,pro1",
+      "stage_operator": "OR",
+      "stage_between_operator": "OR",
 
-    "UtmTagSource": "plumb5,manual",
-    "UtmTagSource_operator": "OR"
+      "Source": "plumb5,manual",
+      "Source_operator": "OR"
+    }
   }
 }
-  }
-}
+   
 
  `;

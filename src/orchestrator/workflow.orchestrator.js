@@ -283,7 +283,7 @@ export async function executeWorkflow(payload) {
   }
 
   const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
-  if (match) {
+  if (match && intent.module != "contact") {
     recommendedActions = JSON.parse(match[1]);
   }
   const final_cleanMessage = response_msg

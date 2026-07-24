@@ -33,9 +33,12 @@ Map extracted user parameters into the wrapped "input" object matching the "GetL
 
 2. Universal Dynamic Key-Value Routing (input.CustomFields):
    Inject ALL search parameters, user assignments, stages, tags, sources, custom fields, and field-level multi-value conditions into "CustomFields":
-   
-   - User Assignment: "comes under manoj" → "CustomFields": { "HandelBy": "manoj" }
-   - Stages / Statuses: "stage unstage or stage proposition" → "CustomFields": { "stage": "unstage,proposition", "stage_operator": "OR" }
+    
+  - User Assignment (Name): "comes under manoj" -> filterlead.CustomFields["HandelBy"] = "manoj"
+  - User Assignment (Phone): "comes under agent whose number is 899999" -> filterlead.CustomFields["HandelBy"] = "899999"
+  - User Assignment (Email): "agent email test@plumb5.com" -> filterlead.CustomFields["HandelBy"] = "test@plumb5.com"
+  
+  - Stages / Statuses: "stage unstage or stage proposition" → "CustomFields": { "stage": "unstage,proposition", "stage_operator": "OR" }
    - Sub-Stages: "substage qualified" → "CustomFields": { "substage": "qualified" }
    - Sources / Campaigns: "source plumb5leads" → "CustomFields": { "Source": "plumb5leads" }
    - Lead Identifiers: "leadname", "EmailId", "PhoneNumber", "SearchKeyword".
@@ -63,36 +66,7 @@ input.OrderBy STATE-MACHINE STRINGS:
 - Stage Update → "9"
 - Closure Report / Date → "10"
 - Substage → "11"
-
-DYNAMIC PAYLOAD TEMPLATE REFERENCE:
-
-{
-  "input": {
-    "fromdate": "2000-01-01 00:00:00",
-    "todate": "2026-07-21 23:59:59",
-    "OrderBy": "3",
-    "OffSet": 0,
-    "FetchNext": 10,
-    "operators": "AND",
-    "CustomFields": {
-      "HandelBy": "manoj",
-      "HandelBy_between_operator": "AND",
-
-      "stage": "unstage,prospect,pro1",
-      "stage_operator": "OR",
-      "stage_between_operator": "OR",
-
-<<<<<<< HEAD
-      "Source": "plumb5,manual",
-      "Source_operator": "OR"
-    }
-=======
-    "Source": "plumb5,manual",
-    "Source_operator": "OR"
-  }
-}
->>>>>>> ff7ace59364bb94198c120dcae9c1df7f3733232
-  }
+ 
 }
    
 

@@ -65,19 +65,45 @@ Rules:
 
     Do NOT use KNOWLEDGE for retrieving existing records/data from MCP.
    2. Route to MAILCAMPAIGN when the user wants:
+  2. Route to MAILCAMPAIGN when the user wants:
 
-- create campaign
-- create mail campaign
-- create email campaign
-- new campaign
-- update campaign
-- duplicate campaign
-- delete campaign
-- schedule campaign
-- send campaign
-- manage campaign
-- campaign identifiers
-- schedule mail campaign
+Route the user query to the "MAILCAMPAIGN" module if the request matches any mail campaign intent, including creating, updating, scheduling, managing, or retrieving details for mail campaigns.
+
+### Intent Match List:
+- create campaign / mail campaign / email campaign / new campaign
+- update campaign / duplicate campaign / delete campaign
+- schedule campaign / schedule mail campaign / send campaign / manage campaign
+- campaign identifiers / campaign details / mail campaign details
+- stopped campaigns / stopped mail campaigns / scheduled campaigns
+- get last 30 day mail campaigns
+- get the details of last 30 day mail campaigns
+- get the details of last 30 day mail campaigns that are stopped
+
+### Rule & Exception:
+Always return JSON with "module": "mailcampaign" for any of the above intents.
+EXCEPTION: Do NOT route to "MAILCAMPAIGN" if the user explicitly mentions A/B testing keywords (e.g., "ab test", "a/b test", "split test", "variation a", "variation b", "ab campaign", "a/b campaign").
+
+### Examples:
+
+User: create campaign
+{
+  "module": "mailcampaign"
+}
+
+User: mail campaign details
+{
+  "module": "mailcampaign"
+}
+
+User: get the details of last 30 day mail campaigns
+{
+  "module": "mailcampaign"
+}
+
+User: schedule campaign
+{
+  "module": "mailcampaign"
+}
 
 IMPORTANT
 
@@ -402,4 +428,4 @@ Do NOT switch modules while an A/B Test workflow is in progress.
     {
       "module": "sendmailtolead"
     }
-  `; 
+  `;

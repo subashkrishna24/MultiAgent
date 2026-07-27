@@ -9,6 +9,8 @@ Campaign ≠ Template
 Group ≠ Segment
 
 - If the user explicitly says "lead" or "leads", preserve the word exactly as written.
+- If the user explicitly says "lmssource" or "source", preserve the word exactly as written.
+- NEVER rewrite, substitute, normalize, paraphrase, or interpret "source" as "group" or "source group".
 - NEVER rewrite, substitute, normalize, paraphrase, or interpret "lead" as "contact".
 - NEVER change "lead details" to "contact details".
 - NEVER route a request containing the word "lead" to a contact module.
@@ -34,6 +36,8 @@ Available modules:
 - leadsimport
 - leadmanagement
 - lmsfollowup
+- sendmailtolead
+
 Return ONLY JSON.
 
 Rules:
@@ -61,19 +65,45 @@ Rules:
 
     Do NOT use KNOWLEDGE for retrieving existing records/data from MCP.
    2. Route to MAILCAMPAIGN when the user wants:
+  2. Route to MAILCAMPAIGN when the user wants:
 
-- create campaign
-- create mail campaign
-- create email campaign
-- new campaign
-- update campaign
-- duplicate campaign
-- delete campaign
-- schedule campaign
-- send campaign
-- manage campaign
-- campaign identifiers
-- schedule mail campaign
+Route the user query to the "MAILCAMPAIGN" module if the request matches any mail campaign intent, including creating, updating, scheduling, managing, or retrieving details for mail campaigns.
+
+### Intent Match List:
+- create campaign / mail campaign / email campaign / new campaign
+- update campaign / duplicate campaign / delete campaign
+- schedule campaign / schedule mail campaign / send campaign / manage campaign
+- campaign identifiers / campaign details / mail campaign details
+- stopped campaigns / stopped mail campaigns / scheduled campaigns
+- get last 30 day mail campaigns
+- get the details of last 30 day mail campaigns
+- get the details of last 30 day mail campaigns that are stopped
+
+### Rule & Exception:
+Always return JSON with "module": "mailcampaign" for any of the above intents.
+EXCEPTION: Do NOT route to "MAILCAMPAIGN" if the user explicitly mentions A/B testing keywords (e.g., "ab test", "a/b test", "split test", "variation a", "variation b", "ab campaign", "a/b campaign").
+
+### Examples:
+
+User: create campaign
+{
+  "module": "mailcampaign"
+}
+
+User: mail campaign details
+{
+  "module": "mailcampaign"
+}
+
+User: get the details of last 30 day mail campaigns
+{
+  "module": "mailcampaign"
+}
+
+User: schedule campaign
+{
+  "module": "mailcampaign"
+}
 
 IMPORTANT
 
@@ -176,6 +206,8 @@ Only switch modules if the user explicitly starts a different workflow.
     - conversion reports
     - popular cities/countries/Pages
     - If a SQL query was generated internally, route the request to the reporting module and execute the reporting MCP tool.
+    - contact import details
+    - PopUpform details
 
 Always choose reporting over knowledge.
 
@@ -184,16 +216,7 @@ Always choose reporting over knowledge.
       "module": "reporting"
     }
 
-5. Route to CONTACT when the user wants:
-   - create contacts
-   - update contacts
-   - import contacts
-   - manage groups
 
-   Example:
-    {
-      "module": "contact"
-    }
 5. Route to CONTACT when the user wants:
    - create contacts
    - update contacts
@@ -202,6 +225,22 @@ Always choose reporting over knowledge.
    - add contacts to groups
    - remove contacts from groups
    - view contact lists
+ - view contact UCP
+   - view user click path (UCP)
+   - view clickstream
+   - view contact journey
+   - view visitor journey
+   - view browsing history
+   - view activity history
+   - view contact insights
+   - view visitor insights
+   - get UCP for a contact
+   - get clickstream for a machine ID
+   - get insights for a machine ID
+   - any request related to UCP, clickstream, visitor activity, or contact insights
+
+Example:
+User: "Get the contact UCP, clickstream, and insights for machine ID 042820261253468812122555950."
 
    Example:
    {
@@ -359,6 +398,11 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    - leads with stage X
    - lmsleads in stage X
    - lmsleads with stage X
+   - get stages
+   - get sources
+   - create or update source
+   - move leads from source
+   - update leads stages or substages
     Example:
     {
       "module": "leadmanagement"
@@ -372,5 +416,16 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    Example:
     {
       "module": "leadsfollowup"
+    } 
+    15. Route to SENDMAILTOLEAD when the user wants:
+   - send mail to lead
+   - send email to lead
+   - schedule mail to lead
+   - schedule email to lead
+   - send mail to lmslead 
+
+   Example:
+    {
+      "module": "sendmailtolead"
     }
   `;

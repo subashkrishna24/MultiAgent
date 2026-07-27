@@ -15,7 +15,7 @@ import { buildIntentContext } from "../utils/context-builder.js";
 import { extractJSON } from "../utils/json.utils.js";
 import { executeMailSpamScoreAgent } from "../agents/mail/mailspamscore.agent.js";
 import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
-import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js"; 
+import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js";
 import { getSession, clearPagingSession } from "../store/session.store.js";
 import { handlePagination } from "../utils/pagination.helper.js";
 
@@ -27,8 +27,9 @@ import {
 import { getDateContext } from "../utils/datecontext.helper.js";
 import { executeContactImportAgent } from "../agents/contact/contactimport.agent.js";
 import { executeLeadsImportAgent } from "../agents/lms/leadsimport.agent.js";
-import { executeLeadManagementAgent } from "../agents/lms/leadmanagment.agent.js"; 
+import { executeLeadManagementAgent } from "../agents/lms/leadmanagment.agent.js";
 import { executeLeadsFollowUpAgent } from "../agents/lms/leadsfollowup.agent.js";
+import { executeSendMailToLeadAgent } from "../agents/lms/sendmailtolead.agent.js";
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -134,6 +135,7 @@ export async function executeWorkflow(payload) {
 
     const toolResponse = await reportTool.invoke({
       getquery: lastUserMessage?.content ?? "",
+      type: 1,
     });
 
     const result = JSON.parse(toolResponse);
@@ -242,7 +244,7 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
-   if (intent.module === "leadmanagement") {
+  if (intent.module === "leadmanagement") {
     response = await executeLeadManagementAgent({
       model: llmModel,
       tools: filteredTools,
@@ -253,6 +255,15 @@ export async function executeWorkflow(payload) {
   }
   if (intent.module === "leadsfollowup") {
     response = await executeLeadsFollowUpAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+  if (intent.module === "sendmailtolead") {
+    response = await executeSendMailToLeadAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,
@@ -273,7 +284,7 @@ export async function executeWorkflow(payload) {
   }
 
   const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
-  if (match) {
+  if (match && intent.module != "contact") {
     recommendedActions = JSON.parse(match[1]);
   }
   const final_cleanMessage = response_msg

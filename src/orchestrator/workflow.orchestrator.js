@@ -158,6 +158,7 @@ export async function executeWorkflow(payload) {
       tools: filteredTools,
       history: recentHistory,
       accountId: accountid,
+      session
     });
   }
 

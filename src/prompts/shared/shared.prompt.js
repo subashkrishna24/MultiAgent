@@ -10,6 +10,8 @@ campaignOffset
 campaignFetchNext 
 lmssourceOffset
 lmssourceFetchNext
+contactOffset
+contactFetchNext
 
 Use these values when fetching the next or previous page of results.
 

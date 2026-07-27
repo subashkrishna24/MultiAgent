@@ -5,12 +5,14 @@ export async function executeContactAgent({
   tools,
   history,
   accountId,
+  session
 }) {
   const agent = createAgent({
     module: "contact",
     model,
     tools,
-    accountId
+    accountId,
+    session
   });
 
   return await agent.invoke({

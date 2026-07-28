@@ -283,8 +283,9 @@ export async function executeWorkflow(payload) {
     workflowCompleted = true;
   }
 
+  var RemoveRecommendations = ["contact", "leadmanagement","leadsfollowup","leadsimport"];
   const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
-  if (match && intent.module != "contact") {
+  if (match && !RemoveRecommendations.includes(intent.module.toLowerCase())) {
     recommendedActions = JSON.parse(match[1]);
   }
   const final_cleanMessage = response_msg

@@ -403,6 +403,8 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    - create or update source
    - move leads from source
    - update leads stages or substages
+   - send or schedule mail to lead
+
     Example:
     {
       "module": "leadmanagement"
@@ -417,15 +419,5 @@ Do NOT switch modules while an A/B Test workflow is in progress.
     {
       "module": "leadsfollowup"
     } 
-    15. Route to SENDMAILTOLEAD when the user wants:
-   - send mail to lead
-   - send email to lead
-   - schedule mail to lead
-   - schedule email to lead
-   - send mail to lmslead 
-
-   Example:
-    {
-      "module": "sendmailtolead"
-    }
+     
   `;

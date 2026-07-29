@@ -37,6 +37,7 @@ Available modules:
 - leadmanagement
 - lmsfollowup
 - sendmailtolead
+- smstemplate
 
 Return ONLY JSON.
 
@@ -428,4 +429,19 @@ Do NOT switch modules while an A/B Test workflow is in progress.
     {
       "module": "sendmailtolead"
     }
+    16. Route to SMSTEMPLATE when the user wants:
+
+   - create sms templates
+   - duplicate sms templates
+   - update sms templates
+   - archive sms templates
+   - view sms templates
+   - list sms templates
+   - manage sms templates 
+
+   Example:
+   {
+     "module": "smstemplate"
+   }
+
   `;

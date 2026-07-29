@@ -38,6 +38,10 @@ export function getSession(machineid) {
       contactImport: null,
 
       LeadsImport: null,
+
+      // Contacts Paging
+      contactOffset: 0,
+      contactFetchNext: 10,
     };
   }
 
@@ -76,4 +80,10 @@ export function resetCampaignPaging(machineid) {
  */
 export function clearPagingSession(machineid) {
   delete sessionStore[machineid];
+}
+
+export function resetContactPaging(machineid) {
+  const session = getSession(machineid);
+
+  session.contactOffset = 0;
 }

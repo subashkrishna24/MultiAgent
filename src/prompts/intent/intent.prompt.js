@@ -209,6 +209,7 @@ Only switch modules if the user explicitly starts a different workflow.
     - If a SQL query was generated internally, route the request to the reporting module and execute the reporting MCP tool.
     - contact import details
     - PopUpform details
+    - show me the campaign response details (mail,sms,webpush, whatsapp, rcs)
 
 Always choose reporting over knowledge.
 
@@ -404,6 +405,8 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    - create or update source
    - move leads from source
    - update leads stages or substages
+   - send or schedule mail to lead
+
     Example:
     {
       "module": "leadmanagement"

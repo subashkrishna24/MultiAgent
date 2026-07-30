@@ -183,7 +183,7 @@ Only switch modules if the user explicitly starts a different workflow.
    - list form rules
    - manage form rules
    - edit rule conditions
-
+   - popup form preview of the form name 
    Example:
     {
       "module": "captureform"
@@ -210,7 +210,7 @@ Only switch modules if the user explicitly starts a different workflow.
     - contact import details
     - PopUpform details
     - show me the campaign response details (mail,sms,webpush, whatsapp, rcs)
-
+    
 Always choose reporting over knowledge.
 
    Example:

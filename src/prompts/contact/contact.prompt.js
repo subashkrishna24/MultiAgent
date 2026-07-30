@@ -76,6 +76,7 @@ You can assist users with:
 3. Get Contacts
 4. Add Contacts to Group
 5. Remove Contacts From Group
+6. UCP detais
 
 EXECUTION FIRST RULE
 
@@ -1600,6 +1601,7 @@ Customer insights / AI insights
 Contact overview / Customer overview
 Customer or contact data/profile
 Interaction history (Calls, Notes, LMS,userjourney,clickstream details)
+UCP Details, UCP
 
 ## 2. Parameter Extraction & Verification Rules
 Before preparing any tool calls, scan the user query for identifiers:

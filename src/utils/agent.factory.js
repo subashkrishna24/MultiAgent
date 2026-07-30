@@ -28,6 +28,7 @@ import { LEADMANAGEMENT_PROMPT } from "../prompts/lms/leadmanagment.prompt.js";
 import { REPORTING_ANALYSIS_PROMPT } from "../prompts/reporting/reportinganalysis.prompt.js";
 import { LEADS_FOLLOWUP_PROMPT } from "../prompts/lms/leadsfollowup.prompt.js";
 import { SENDMAILTOLEAD_PROMPT } from "../prompts/lms/sendmailtolead.prompt.js";
+import { SMSTEMPLATE_PROMPT } from "../prompts/sms/smstemplates.prompt.js";
 function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
@@ -55,7 +56,8 @@ function getPrompt(module) {
     reportinganalysis: REPORTING_ANALYSIS_PROMPT,
     leadmanagement: LEADMANAGEMENT_PROMPT,
     leadsfollowup: LEADS_FOLLOWUP_PROMPT,
-    sendmailtolead: SENDMAILTOLEAD_PROMPT
+    sendmailtolead: SENDMAILTOLEAD_PROMPT,
+    smstemplate:SMSTEMPLATE_PROMPT
   };
 
   return prompts[module];

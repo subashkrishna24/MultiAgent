@@ -37,6 +37,7 @@ Available modules:
 - leadmanagement
 - lmsfollowup
 - sendmailtolead
+- smstemplate
 
 Return ONLY JSON.
 
@@ -182,7 +183,7 @@ Only switch modules if the user explicitly starts a different workflow.
    - list form rules
    - manage form rules
    - edit rule conditions
-
+   - popup form preview of the form name 
    Example:
     {
       "module": "captureform"
@@ -209,7 +210,7 @@ Only switch modules if the user explicitly starts a different workflow.
     - contact import details
     - PopUpform details
     - show me the campaign response details (mail,sms,webpush, whatsapp, rcs)
-
+    
 Always choose reporting over knowledge.
 
    Example:
@@ -420,5 +421,30 @@ Do NOT switch modules while an A/B Test workflow is in progress.
     {
       "module": "leadsfollowup"
     } 
-     
+    15. Route to SENDMAILTOLEAD when the user wants:
+   - send mail to lead
+   - send email to lead
+   - schedule mail to lead
+   - schedule email to lead
+   - send mail to lmslead 
+
+   Example:
+    {
+      "module": "sendmailtolead"
+    }
+    16. Route to SMSTEMPLATE when the user wants:
+
+   - create sms templates
+   - duplicate sms templates
+   - update sms templates
+   - archive sms templates
+   - view sms templates
+   - list sms templates
+   - manage sms templates 
+
+   Example:
+   {
+     "module": "smstemplate"
+   }
+
   `;

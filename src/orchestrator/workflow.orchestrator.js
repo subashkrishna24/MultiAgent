@@ -30,6 +30,7 @@ import { executeLeadsImportAgent } from "../agents/lms/leadsimport.agent.js";
 import { executeLeadManagementAgent } from "../agents/lms/leadmanagment.agent.js";
 import { executeLeadsFollowUpAgent } from "../agents/lms/leadsfollowup.agent.js";
 import { executeSendMailToLeadAgent } from "../agents/lms/sendmailtolead.agent.js";
+import { executeSmsTemplateAgent } from "../agents/sms/smstemplate.agent.js";
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -264,6 +265,15 @@ export async function executeWorkflow(payload) {
   }
   if (intent.module === "sendmailtolead") {
     response = await executeSendMailToLeadAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+    if (intent.module === "smstemplate") {
+    response = await executeSmsTemplateAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,

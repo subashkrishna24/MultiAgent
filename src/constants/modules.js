@@ -24,5 +24,7 @@ export const MODULES = {
   LEADMANAGEMENT: "leadmanagement",
   LEADSFOLLOWUP: "leadsfollowup",
   SENDMAILTOLEAD: "sendmailtolead" ,
-  SMSTEMPLATE:"smstemplate"
+  SMSTEMPLATE:"smstemplate",
+  SENDSMS:"smstest",
+  SMSCAMPAIGN:"smscampaign"
 };

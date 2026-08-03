@@ -446,5 +446,21 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    {
      "module": "smstemplate"
    }
+  
+  17. Route to SMSTEST when the user says:
 
+* send test sms
+* send test sms
+* test sms
+* test sms
+
+IMPORTANT:
+
+If the current conversation is already about sending a test mail,
+all follow-up messages must remain in:
+
+Examples:
+{
+  "module": "smstest"
+}
   `;

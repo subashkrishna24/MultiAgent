@@ -31,6 +31,8 @@ import { executeLeadManagementAgent } from "../agents/lms/leadmanagment.agent.js
 import { executeLeadsFollowUpAgent } from "../agents/lms/leadsfollowup.agent.js";
 import { executeSendMailToLeadAgent } from "../agents/lms/sendmailtolead.agent.js";
 import { executeSmsTemplateAgent } from "../agents/sms/smstemplate.agent.js";
+import { executeSmsTestAgent } from "../agents/sms/smstest.agent.js";
+
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -281,6 +283,16 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
+      if (intent.module === "smstest") {
+    response = await executeSmsTestAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+  
   console.log("Final response from agent:", response);
 
   await mcpClient.close();

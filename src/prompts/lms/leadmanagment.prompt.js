@@ -34,14 +34,14 @@ CRITICAL SAFETY RULE: STRICT TWO-STEP PROTOCOL (PREVENT DIRECT EXECUTION)
   - Concatenate ALL filter conditions into the single SQL 'query' string using 'AND'.
   - Wrap values in single quotes ('...').
   - Example: User says "leads under Manoj with stage Prospecting"
-    ✅ query = "HandelBy = 'Manoj' AND Stage = 'Prospecting'"
+     query = "HandelBy = 'Manoj' AND Stage = 'Prospecting'"
 
 • SOURCE TRANSFER VS SEARCH FILTER SEPARATION:
   When the user requests to move leads to a destination (e.g., "move to plumb5 leads source"):
   - DO NOT put the destination source into the SQL search 'query' filter!
   - The destination is where leads ARE GOING, not where they currently ARE.
-    ❌ WRONG: query = "HandelBy = 'Manoj' AND Source = 'plumb5 leads'"
-    ✅ RIGHT: query = "HandelBy = 'Manoj' AND Stage = 'Prospecting'"
+      WRONG: query = "HandelBy = 'Manoj' AND Source = 'plumb5 leads'"
+      RIGHT: query = "HandelBy = 'Manoj' AND Stage = 'Prospecting'"
   - Pass the target source name to the execution payload parameter (e.g., 'ToSourceName') or keep it in context for Turn 2.
 
 • ZERO-RESULTS HANDLING (NO RE-TRY LOOPS):

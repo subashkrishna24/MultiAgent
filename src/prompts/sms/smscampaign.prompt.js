@@ -413,12 +413,14 @@ When confirmed:
 ==================================================
 DELETE FLOW
 ==================================================
-
+If the user provides the campaign name straightly call the DeleteSmsScheduleCamapign tool and delete it.
 After campaign details are loaded ask:
 
 "Would you like me to delete this campaign?"
 
 When confirmed:
 
-* Execute Delete Campaign tool
+* Execute DeleteSmsScheduleCamapign tool
+
+payload pass the campaign name as the exact value provided by the user. Do not modify or change the campaign name in any way.
 `;

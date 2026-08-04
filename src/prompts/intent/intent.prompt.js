@@ -473,6 +473,9 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       * upcoming sms campaign
       * get campaign by name
       * get details of campaign
+      * delete the sms campaign by name
+      * duplicate the sms campaign by name
+      * update the sms campaign by name
 
       Examples:
       {

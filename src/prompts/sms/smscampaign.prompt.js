@@ -304,4 +304,121 @@ Ask:
 "Please provide the SMS campaign name for which you want to retrieve details."
 If they provide a campaign name, execute Get sms Scheduled Details by campaignname and show results.
 Invoke GetSmsCampaignByName this tool.
+==================================================
+UPDATE FLOW
+==================================================
+
+After campaign details are loaded:
+
+--------------------------------------------------
+SPECIFIC ACTION HANDLING (RESCHEDULE / STOP /RESTART / EDIT)
+--------------------------------------------------
+The parameter "Reschedule" in the payload MUST be mapped strictly to an integer matching the current user context flow. Evaluate the intent carefully and set it according to this table:
+
+| Condition / Flow Type                                      | Reschedule Parameter (Strict Integer Value) |
+|------------------------------------------------------------|---------------------------------------------|
+| Normal generic Update, Edit, Modify, or Change string context | 0                                           |
+| "reschedule" intent flow triggered                          | 1                                           |
+| "stop" or "pause" or "restart" intent flow triggered                      | 2                                           |
+
+STRICT PAYLOAD CONSTRAINT: You are ABSOLUTELY FORBIDDEN from outputting "true", "false", "stop", "edit", or any raw strings for the Reschedule payload property. It MUST be an integer: 0, 1, or 2.
+
+--------------------------------------------------
+If the user's requirement/intent is to "reschedule" the campaign:
+1. Set Reschedule = 1
+2. Ask the user: "At what time do you want to reschedule this campaign? (Template Name: {Template})"
+3. Wait for the new date/time input.
+4. Resolve the date using the SCHEDULE rules.
+5. Show the updated summary, ask for confirmation, and execute UpdateScheduleDetails.
+
+If the user's requirement/intent is to "stop/restart" the campaign:
+1. Set Reschedule = 2
+2. Ask for direct confirmation to stop/pause/restart the campaign execution.
+3. When confirmed, call UpdateScheduleDetails to change the status or execution state as required without making other modifications.
+--------------------------------------------------
+
+If the user says:
+
+* update groups to ...
+* change template to ...
+* change provider name to ...
+* change schedule to ...
+
+Set Reschedule = 0
+Update that field immediately without asking "Which field would you like to update?" Only ask this after a campaign has been selected.
+
+If the user provides a new value directly, update that field immediately without asking again.
+
+Rules:
+
+* Ask only one question at a time.
+* Store modified values immediately.
+* Do not ask for unchanged fields.
+* Apply the same validations as the Create flow.
+
+After modification:
+
+* Show summary.
+* Ask:
+
+"Would you like me to update this campaign?"
+
+When confirmed:
+* Execute UpdateSMSScheduleDetails.
+* Pass the exact strict integer value for Reschedule (0, 1, or 2) derived from the instructions above.
+* Pass only modified fields.
+* Unchanged fields must be null.
+==================================================
+DUPLICATE FLOW
+==================================================
+
+After campaign details are loaded ask:
+
+"What would you like to name the duplicated campaign, or would you like to use the default name?"
+
+If user does not provide a name:
+
+* Use OriginalCampaign_copy
+* Store it as the new CampaignName
+
+Rules:
+
+* If user provides a new name, use it.
+* If user does not provide a new name, use:
+
+   OriginalCampaign_copy
+
+* Store it as the new CampaignName.
+ 
+After duplicate name is collected ask:
+
+"Would you like to duplicate it with the same details or modify any fields?"
+
+If user wants modifications:
+
+* Follow Update Flow.
+
+Show summary.
+
+Ask:
+
+"Would you like me to create this duplicate campaign?"
+
+When confirmed:
+
+* Execute SaveScheduleDetails
+* Use the new CampaignName
+* Use existing values plus modifications
+
+==================================================
+DELETE FLOW
+==================================================
+
+After campaign details are loaded ask:
+
+"Would you like me to delete this campaign?"
+
+When confirmed:
+
+* Execute Delete Campaign tool
 `;

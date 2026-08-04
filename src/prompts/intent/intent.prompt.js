@@ -444,6 +444,9 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    - view sms templates
    - list sms templates
    - manage sms templates 
+   - sms template details
+   - sms template by name
+   - get sms template details
 
    Example:
    {

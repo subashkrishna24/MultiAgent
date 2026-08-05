@@ -34,7 +34,7 @@ When the user requests anything relative to the future (e.g., "upcoming", "sched
 
 3. THE "PAST / HISTORICAL" HORIZON RULE:
 When the user requests historical summaries or synopsis data across the past (e.g., "past", "previous", "historical", "sent", "completed", "old logs"), you must map the time window from the beginning of data collection up until the end of today:
-- Start Date/Time: 2000-01-01 00:00:00 (Use this baseline past date to capture all historic data)
+- Start Date/Time: 2000-01-01 18:30:00 (Use this baseline past date to capture all historic data)
 - End Date/Time: ${today} 23:59:59
 
 4. MANDATORY 24-HOUR TIMESTAMP EXPANSION:
@@ -44,7 +44,7 @@ Never pass a raw YYYY-MM-DD date alone to any tool parameter or query filter. Ev
 
 5. DYNAMIC RANGE MAPPING REFERENCE (USING TODAY: ${today}):
 - "today": Start: ${today} 00:00:00 | End: ${today} 23:59:59
-- "last week": Start: ${lastWeekStartStr} 00:00:00 | End: ${lastWeekEndStr} 23:59:59
+- "last week": Start: ${lastWeekStartStr} 18:30:00 | End: ${lastWeekEndStr} 23:59:59
 
 6. STRING FORMAT CONTROL:
 - All temporal arguments provided to backend execution tools or query parameters must strictly follow the "YYYY-MM-DD HH:mm:ss" structural schema.

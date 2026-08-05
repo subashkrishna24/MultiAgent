@@ -30,6 +30,10 @@ import { executeLeadsImportAgent } from "../agents/lms/leadsimport.agent.js";
 import { executeLeadManagementAgent } from "../agents/lms/leadmanagment.agent.js";
 import { executeLeadsFollowUpAgent } from "../agents/lms/leadsfollowup.agent.js";
 import { executeSendMailToLeadAgent } from "../agents/lms/sendmailtolead.agent.js";
+import { executeSmsTemplateAgent } from "../agents/sms/smstemplate.agent.js";
+import { executeSmsTestAgent } from "../agents/sms/smstest.agent.js";
+import { executeSmsCampaignAgent } from "../agents/sms/smscampaign.agent.js";
+
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -271,9 +275,8 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
-
-if (intent.module === "whatsappcampaign") {
-    response = await executeWhatsAppCampaignAgent({
+    if (intent.module === "smstemplate") {
+    response = await executeSmsTemplateAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,
@@ -282,8 +285,18 @@ if (intent.module === "whatsappcampaign") {
     });
   }
 
-  if (intent.module === "whatsapptemplate") {
-    response = await executeWhatsAppTemplateAgent({
+  if (intent.module === "smstest") {
+    response = await executeSmsTestAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+  
+ if (intent.module === "smscampaign") {
+    response = await executeSmsCampaignAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,
@@ -304,8 +317,9 @@ if (intent.module === "whatsappcampaign") {
     workflowCompleted = true;
   }
 
+  var RemoveRecommendations = ["contact", "leadmanagement","leadsfollowup","leadsimport"];
   const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
-  if (match && intent.module != "contact") {
+  if (match && !RemoveRecommendations.includes(intent.module.toLowerCase())) {
     recommendedActions = JSON.parse(match[1]);
   }
   const final_cleanMessage = response_msg

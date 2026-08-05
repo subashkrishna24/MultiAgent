@@ -35,11 +35,9 @@ import { REPORTING_ANALYSIS_PROMPT } from "../prompts/reporting/reportinganalysi
 import { LEADS_FOLLOWUP_PROMPT } from "../prompts/lms/leadsfollowup.prompt.js";
 
 import { SENDMAILTOLEAD_PROMPT } from "../prompts/lms/sendmailtolead.prompt.js";
-
-import { WHATSAPPCAMPAIGN_PROMPT } from "../prompts/whatsapp/whatsappcampaign.prompt.js";
-
-import { WHATSAPPTEMPLATE_PROMPT } from "../prompts/whatsapp/whatsapptemplate.prompt.js";
-
+import { SMSTEMPLATE_PROMPT } from "../prompts/sms/smstemplates.prompt.js";
+import { SMSTEST_PROMPT } from "../prompts/sms/smstest.prompt.js";
+import { SMSCAMPAIGN_PROMPT } from "../prompts/sms/smscampaign.prompt.js";
 function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
@@ -73,12 +71,10 @@ function getPrompt(module) {
     leadmanagement: LEADMANAGEMENT_PROMPT,
 
     leadsfollowup: LEADS_FOLLOWUP_PROMPT,
-
     sendmailtolead: SENDMAILTOLEAD_PROMPT,
-
-    whatsappcampaign: WHATSAPPCAMPAIGN_PROMPT,
-    
-    whatsapptemplate: WHATSAPPTEMPLATE_PROMPT
+    smstemplate:SMSTEMPLATE_PROMPT,
+    smstest:SMSTEST_PROMPT,
+    smscampaign:SMSCAMPAIGN_PROMPT
   };
 
   return prompts[module];

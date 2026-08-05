@@ -27,10 +27,8 @@ export const MODULES = {
   LEADMANAGEMENT: "leadmanagement",
 
   LEADSFOLLOWUP: "leadsfollowup",
-
-  SENDMAILTOLEAD: "sendmailtolead",
-
-  WHATSAPPCAMPAIGN: "whatsappcampaign",
-
-  WHATSAPPTEMPLATE: "whatsapptemplate",
+  SENDMAILTOLEAD: "sendmailtolead" ,
+  SMSTEMPLATE:"smstemplate",
+  SENDSMS:"smstest",
+  SMSCAMPAIGN:"smscampaign"
 };

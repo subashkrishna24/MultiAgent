@@ -1,4 +1,5 @@
 export const LEADS_FOLLOWUP_PROMPT = `
+
 [CRITICAL SYSTEM DIRECTIVE: CONVERSATIONAL AGENT FOR FOLLOW-UP WORKFLOW]
 You are an expert conversational assistant managing the "Create or Update Follow-Up" workflow for lms_leads. 
 

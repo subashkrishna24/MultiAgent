@@ -3,6 +3,7 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { KNOWLEDGE_PROMPT } from "../prompts/knowledge/knowledge.prompt.js";
 
 import { REPORTING_PROMPT } from "../prompts/reporting/reporting.prompt.js";
+
 import { REPORT_PLANNER_PROMPT } from "../prompts/reporting/reportplanner.prompt.js";
 
 import { CONTACT_PROMPT } from "../prompts/contact/contact.prompt.js";
@@ -22,12 +23,23 @@ import { MAILTEST_PROMPT } from "../prompts/mail/mailtest.prompt.js";
 import { MAILCAMPAIGN_ABTEST_PROMPT } from "../prompts/mail/mailabtestcamapign.prompt.js";
 
 import { SHARED_PROMPT } from "../prompts/shared/shared.prompt.js";
+
 import { CONTACTIMPORT_PROMPT } from "../prompts/contact/contactimport.prompt.js";
+
 import { LEADSIMPORT_PROMPT } from "../prompts/lms/leadsimport.prompt.js";
+
 import { LEADMANAGEMENT_PROMPT } from "../prompts/lms/leadmanagment.prompt.js";
+
 import { REPORTING_ANALYSIS_PROMPT } from "../prompts/reporting/reportinganalysis.prompt.js";
+
 import { LEADS_FOLLOWUP_PROMPT } from "../prompts/lms/leadsfollowup.prompt.js";
+
 import { SENDMAILTOLEAD_PROMPT } from "../prompts/lms/sendmailtolead.prompt.js";
+
+import { WHATSAPPCAMPAIGN_PROMPT } from "../prompts/whatsapp/whatsappcampaign.prompt.js";
+
+import { WHATSAPPTEMPLATE_PROMPT } from "../prompts/whatsapp/whatsapptemplate.prompt.js";
+
 function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
@@ -49,13 +61,24 @@ function getPrompt(module) {
     mailtest: MAILTEST_PROMPT,
 
     mailcampaign_abtest: MAILCAMPAIGN_ABTEST_PROMPT,
+
     contactimport: CONTACTIMPORT_PROMPT,
+
     leadsimport: LEADSIMPORT_PROMPT,
+
     reportplanner: REPORT_PLANNER_PROMPT,
+
     reportinganalysis: REPORTING_ANALYSIS_PROMPT,
+
     leadmanagement: LEADMANAGEMENT_PROMPT,
+
     leadsfollowup: LEADS_FOLLOWUP_PROMPT,
-    sendmailtolead: SENDMAILTOLEAD_PROMPT
+
+    sendmailtolead: SENDMAILTOLEAD_PROMPT,
+
+    whatsappcampaign: WHATSAPPCAMPAIGN_PROMPT,
+    
+    whatsapptemplate: WHATSAPPTEMPLATE_PROMPT
   };
 
   return prompts[module];

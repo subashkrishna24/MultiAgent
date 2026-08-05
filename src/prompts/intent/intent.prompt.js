@@ -37,6 +37,7 @@ Available modules:
 - leadmanagement
 - lmsfollowup
 - sendmailtolead
+- whatsappconfiguration
 
 Return ONLY JSON.
 

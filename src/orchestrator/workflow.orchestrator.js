@@ -271,6 +271,27 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
+
+if (intent.module === "whatsappcampaign") {
+    response = await executeWhatsAppCampaignAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
+  if (intent.module === "whatsapptemplate") {
+    response = await executeWhatsAppTemplateAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
   console.log("Final response from agent:", response);
 
   await mcpClient.close();

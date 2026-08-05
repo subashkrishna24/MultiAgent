@@ -12,7 +12,8 @@ const MODULE_PREFIX = {
   captureform: "For capture form",
   mailspamscore: "For mail spam score",
   mailtest: "For mail test",
-  mailcampaign_abtest: "For mail campaign"
+  mailcampaign_abtest: "For mail campaign",
+  whatsappconfiguration: "For whatsapp configuration"
 };
 
 /**

@@ -234,6 +234,10 @@ The agent's responsibility is only to:
 4. Format the MCP response.
 
 If the user's intent is to retrieve contacts (show, list, search, find, retrieve, display, or get contacts), invoke the GetContacts MCP tool immediately without attempting to answer from your own knowledge.
+If they ask for partiular data with the column as null then gie the column name and value as null.
+eg: emailid ="NULL",phonenumber = "NULL"
+If they ask for column as notnull give the values as not null.
+eg: emailid = "NOTNULL", phonenumber = "NOTNULL"
 
 CONTACT_DTO_SCHEMA:
 

@@ -15,6 +15,7 @@ Group ≠ Segment
 - NEVER change "lead details" to "contact details".
 - NEVER route a request containing the word "lead" to a contact module.
 - NEVER ask follow-up questions using the word "contact" when the user asked about "lead".
+- If the user explicitly says "campaign", ask which channel (mail, sms, webpush, whatsapp, rcs) the campaign is for. Store it an call the respective tool.
 
 Intent precedence:
 - If the request contains the word "lead" or "leads", the intent MUST be LEAD_MANAGEMENT.
@@ -38,6 +39,8 @@ Available modules:
 - lmsfollowup
 - sendmailtolead
 - smstemplate
+- smscampaign
+- smstest
 
 Return ONLY JSON.
 
@@ -441,6 +444,9 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    - view sms templates
    - list sms templates
    - manage sms templates 
+   - sms template details
+   - sms template by name
+   - get sms template details
 
    Example:
    {
@@ -449,18 +455,33 @@ Do NOT switch modules while an A/B Test workflow is in progress.
   
   17. Route to SMSTEST when the user says:
 
-* send test sms
-* send test sms
-* test sms
-* test sms
+      * send test sms
+      * send test sms
+      * test sms
+      * test sms
+      * sms configuration list
+      * sms config details
+      * sms configuration by name
 
-IMPORTANT:
+      Examples:
+      {
+        "module": "smstest"
+      }
 
-If the current conversation is already about sending a test mail,
-all follow-up messages must remain in:
+    18. Route to SMSCAMPAIGN when the user says:
 
-Examples:
-{
-  "module": "smstest"
-}
+      * sms campaign list
+      * sms particular campaign
+      * scheduled sms campaign
+      * upcoming sms campaign
+      * get campaign by name
+      * get details of campaign
+      * delete the sms campaign by name
+      * duplicate the sms campaign by name
+      * update the sms campaign by name
+
+      Examples:
+      {
+        "module": "smscampaign"
+      }
   `;

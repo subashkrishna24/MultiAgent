@@ -19,10 +19,16 @@ export const MODULES = {
   MAILTEST: "mailtest",
   
   MAILCAMPAIGN_ABTEST: "mailcampaign_abtest",
+
   CONTACTIMPORT: "contactimport", 
+
   LEADSIMPORT: "leadsimport",
+
   LEADMANAGEMENT: "leadmanagement",
+
   LEADSFOLLOWUP: "leadsfollowup",
   SENDMAILTOLEAD: "sendmailtolead" ,
-  SMSTEMPLATE:"smstemplate"
+  SMSTEMPLATE:"smstemplate",
+  SENDSMS:"smstest",
+  SMSCAMPAIGN:"smscampaign"
 };

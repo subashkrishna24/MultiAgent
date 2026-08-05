@@ -1,4 +1,4 @@
-export const MAILCAMPAIGN_PROMPT  = () => {
+export const WHATSAPPCAMPAIGN_PROMPT  = () => {
 
 const currentDateTime = new Date().toISOString(); 
 
@@ -725,7 +725,7 @@ When confirmed:
 * Execute SaveScheduleDetails
 * Use the new CampaignName
 * Use existing values plus modifications
-* Do not pass the configurationname as default. pass the existing configurationname value if it was already set in the original campaign.
+
 ==================================================
 DELETE FLOW
 ==================================================

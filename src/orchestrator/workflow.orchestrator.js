@@ -332,5 +332,5 @@ export async function executeWorkflow(payload) {
     toolmessage: report_response,
     workflowcompleted: workflowCompleted,
     actions: recommendedActions,
-  };
+  };  
 }

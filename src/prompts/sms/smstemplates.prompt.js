@@ -156,7 +156,7 @@ IF ANY required field is missing OR if a dynamic flow lacks the exact dynamic ur
 EXECUTION: FRESH CREATION
 --------------------------------------------------
 Only when ALL required fields are fully collected and validated (including dynamic parameter embedding for dynamic flows), display this summary:
-
+fr pagurl pass the ids as the comma seprated list in the pageurl field. eg  [{*[smslink]17*}] if thi is the para then send only 17 number as pageurl field.
 For sms template, here's a summary of the template details:
 * Template Name: {TemplateName}
 * Campaign Identifier: {CampaignIdentifier}

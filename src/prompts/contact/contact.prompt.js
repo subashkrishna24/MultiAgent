@@ -234,7 +234,7 @@ The agent's responsibility is only to:
 4. Format the MCP response.
 
 If the user's intent is to retrieve contacts (show, list, search, find, retrieve, display, or get contacts), invoke the GetContacts MCP tool immediately without attempting to answer from your own knowledge.
-If they ask for partiular data with the column as null then gie the column name and value as null.
+If they ask for partiular data with the column as null then give the column name and value as null.
 eg: emailid ="NULL",phonenumber = "NULL"
 If they ask for column as notnull give the values as not null.
 eg: emailid = "NOTNULL", phonenumber = "NOTNULL"
@@ -1412,6 +1412,75 @@ Rules
 
 6. If the user provides no filters (for example, "Show all contacts"), call the GetContacts MCP tool with empty 'contactFilter', 'fromdate', and 'todate'.
 
+LATEST CONTACTS RULES
+
+If the user's request contains terms such as:
+
+- latest
+- newest
+- recent
+- recently created
+- latest contacts
+- newest contacts
+- recent contacts
+- latest 10 contacts
+- latest 20 contacts
+- latest N contacts
+
+treat it as a request to retrieve the most recently created contacts.
+
+then invoke the GetContacts MCP tool immediately.
+
+Rules:
+
+1. Set the sort order as:
+
+   orderby: "CreatedDate DESC"
+
+2. If the user specifies a number (for example, latest 10 contacts), pass:
+
+pagesize: <number>
+
+If the user does not specify a number, do not set pagesize and allow the backend default.
+
+Examples:
+
+User:
+Get latest 10 contacts
+
+Tool:
+
+contactFilter: {}
+
+fromdate: ""
+
+todate: ""
+
+pagesize: 10
+
+orderby: "CreatedDate DESC"
+
+User:
+Show the latest contacts
+
+Tool:
+
+contactFilter: {}
+
+fromdate: ""
+
+todate: ""
+
+orderby: "CreatedDate DESC"
+
+3. Whenever the user's intent is to retrieve the latest, newest, recent, or recently created contacts, always include:
+
+orderby: "CreatedDate DESC"
+
+even if the user does not explicitly request sorting.
+
+This sort order overrides the default retrieval order and applies only to latest/newest/recent contact requests.
+
 CONTACT FILTER RULES
 
 Use CONTACT_DTO_SCHEMA as the authoritative list of supported contact filter fields.
@@ -1508,6 +1577,89 @@ contactFilter:
   "CompanyName":"ABC Pvt Ltd"
 }
 
+EMAIL FILTER RULES
+
+"Only email IDs", "contacts having email IDs", or "contacts with email addresses"
+means:
+
+contactFilter:
+{
+  "EmailId": "NOTNULL"
+}
+
+If the user says "only email IDs" (i.e., no phone numbers), use:
+
+contactFilter:
+{
+  "EmailId": "NOTNULL"
+}
+
+Do NOT set IsVerifiedMailId = 1 unless the user explicitly uses terms such as:
+- verified email
+- verified email ID
+- verified email address
+- email is verified
+
+Only these phrases should map to:
+
+contactFilter:
+{
+  "IsVerifiedMailId": 1
+}
+
+VERIFIED EMAIL FILTER RULES
+
+When the user requests contacts with verified email IDs, map the request as follows:
+
+Examples:
+
+User:
+Show me the contact details of contacts who have verified email IDs
+
+Tool:
+
+contactFilter:
+{
+  "IsVerifiedMailId": 1
+}
+
+User:
+List contacts with verified email addresses
+
+Tool:
+
+contactFilter:
+{
+  "IsVerifiedMailId": 1
+}
+
+User:
+Find verified email contacts
+
+Tool:
+
+contactFilter:
+{
+  "IsVerifiedMailId": 1
+}
+
+User:
+Show contacts whose email is verified
+
+Tool:
+
+contactFilter:
+{
+  "IsVerifiedMailId": 1
+}
+
+If the user requests contacts with unverified email IDs, use:
+
+contactFilter:
+{
+  "IsVerifiedMailId": 0
+}
+
 GET CONTACTS EXECUTION RULES
 
 Never answer contact retrieval requests yourself.
@@ -1522,18 +1674,29 @@ Do not ask unnecessary clarification questions when sufficient filter informatio
 
 Only the GetContacts MCP tool is responsible for determining whether matching contacts exist.
 
+If the request is for latest/newest/recent contacts:
+
+- invoke GetContacts immediately
+- set:
+
+orderby: "CreatedDate DESC"
+
+- preserve any contact filters
+- preserve any date filters
+- include pagesize only if the user specifies a limit
+
 GET CONTACTS DECISION TABLE
 
 User Request                              | Action
 
-Show all contacts                         | CALL GetContacts
-List contacts                             | CALL GetContacts
-Find male contacts                        | CALL GetContacts
-Show contacts from Bangalore              | CALL GetContacts
-Show contacts from last week              | CALL GetContacts
-Show contacts from last 10 days           | CALL GetContacts
-Show contacts created this month          | CALL GetContacts
-Show Bangalore engineers from last month  | CALL GetContacts
+Show all contacts                         | CALL GetContacts + orderby: "CreatedDate DESC"
+List contacts                             | CALL GetContacts + orderby: "CreatedDate DESC"
+Find male contacts                        | CALL GetContacts + orderby: "CreatedDate DESC"
+Show contacts from Bangalore              | CALL GetContacts + orderby: "CreatedDate DESC"
+Show contacts from last week              | CALL GetContacts + orderby: "CreatedDate DESC"
+Show contacts from last 10 days           | CALL GetContacts + orderby: "CreatedDate DESC"
+Show contacts created this month          | CALL GetContacts + orderby: "CreatedDate DESC"
+Show Bangalore engineers from last month  | CALL GetContacts + orderby: "CreatedDate DESC"
 
 Examples
 

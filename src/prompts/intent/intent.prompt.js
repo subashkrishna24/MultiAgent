@@ -409,6 +409,8 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    - move leads from source
    - update leads stages or substages
    - send or schedule mail to lead
+   - change label for leads
+   - change handledby or user or owner or agent for lmsleads
 
     Example:
     {

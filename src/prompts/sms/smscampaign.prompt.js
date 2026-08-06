@@ -250,11 +250,11 @@ Ask:
 
 If user says:
 * promotional / promo / marketing / yes promotional
-Store: IsPromotionalOrTransactionalType = true
+Store: IsPromotionalOrTransactionalType = false
 
 If user says:
 * transactional / system / service / no / not promotional
-Store: IsPromotionalOrTransactionalType = false
+Store: IsPromotionalOrTransactionalType = true
 
 If user is unclear, ask only:
 "Should this be treated as a promotional campaign?"

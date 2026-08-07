@@ -29,7 +29,7 @@ Use Today's reference date (${today}) as the baseline anchor to evaluate any tim
 
 2. THE "UPCOMING / FUTURE" HORIZON RULE:
 When the user requests anything relative to the future (e.g., "upcoming", "scheduled", "future", "next", "active forecasts"), you must map the time window from the current moment stretching forward indefinitely:
-- Start Date/Time: ${today} 18:30:00(or the exact current time)
+- Start Date/Time: ${today} 00:00:00 (or the exact current time)
 - End Date/Time: 2099-12-31 23:59:59 (Use this maximum future date to capture all upcoming data)
 
 3. THE "PAST / HISTORICAL" HORIZON RULE:
@@ -39,11 +39,11 @@ When the user requests historical summaries or synopsis data across the past (e.
 
 4. MANDATORY 24-HOUR TIMESTAMP EXPANSION:
 Never pass a raw YYYY-MM-DD date alone to any tool parameter or query filter. Every date must be bounded to a precise second:
-- Day Start: Always append 18:30:00 
+- Day Start: Always append 18:30:00
 - Day End: Always append 23:59:59
 
 5. DYNAMIC RANGE MAPPING REFERENCE (USING TODAY: ${today}):
-- "today": Start: ${today} 18:30:00  | End: ${today} 23:59:59
+- "today": Start: ${today} 00:00:00 | End: ${today} 23:59:59
 - "last week": Start: ${lastWeekStartStr} 18:30:00 | End: ${lastWeekEndStr} 23:59:59
 
 6. STRING FORMAT CONTROL:

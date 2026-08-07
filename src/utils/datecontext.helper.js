@@ -39,7 +39,7 @@ When the user requests historical summaries or synopsis data across the past (e.
 
 4. MANDATORY 24-HOUR TIMESTAMP EXPANSION:
 Never pass a raw YYYY-MM-DD date alone to any tool parameter or query filter. Every date must be bounded to a precise second:
-- Day Start: Always append 00:00:00
+- Day Start: Always append 18:30:00
 - Day End: Always append 23:59:59
 
 5. DYNAMIC RANGE MAPPING REFERENCE (USING TODAY: ${today}):

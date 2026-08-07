@@ -38,6 +38,8 @@ import { SENDMAILTOLEAD_PROMPT } from "../prompts/lms/sendmailtolead.prompt.js";
 import { SMSTEMPLATE_PROMPT } from "../prompts/sms/smstemplates.prompt.js";
 import { SMSTEST_PROMPT } from "../prompts/sms/smstest.prompt.js";
 import { SMSCAMPAIGN_PROMPT } from "../prompts/sms/smscampaign.prompt.js";
+import { RCSTEMPLATE_PROMPT } from "../prompts/rcs/rcstemplates.prompt.js";
+
 function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
@@ -74,7 +76,8 @@ function getPrompt(module) {
     sendmailtolead: SENDMAILTOLEAD_PROMPT,
     smstemplate:SMSTEMPLATE_PROMPT,
     smstest:SMSTEST_PROMPT,
-    smscampaign:SMSCAMPAIGN_PROMPT
+    smscampaign:SMSCAMPAIGN_PROMPT,
+    rcstemplate:RCSTEMPLATE_PROMPT
   };
 
   return prompts[module];

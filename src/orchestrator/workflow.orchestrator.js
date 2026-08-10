@@ -33,6 +33,7 @@ import { executeSendMailToLeadAgent } from "../agents/lms/sendmailtolead.agent.j
 import { executeSmsTemplateAgent } from "../agents/sms/smstemplate.agent.js";
 import { executeSmsTestAgent } from "../agents/sms/smstest.agent.js";
 import { executeSmsCampaignAgent } from "../agents/sms/smscampaign.agent.js";
+import { executeRcsTemplateAgent } from "../agents/rcs/rcstemplate.agent.js";
 
 export async function executeWorkflow(payload) {
   const {
@@ -297,6 +298,16 @@ export async function executeWorkflow(payload) {
   
  if (intent.module === "smscampaign") {
     response = await executeSmsCampaignAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
+   if (intent.module === "rcstemplate") {
+    response = await executeRcsTemplateAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,

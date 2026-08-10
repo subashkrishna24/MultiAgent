@@ -41,6 +41,7 @@ Available modules:
 - smstemplate
 - smscampaign
 - smstest
+- rcstemplate
 
 Return ONLY JSON.
 
@@ -488,4 +489,22 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       {
         "module": "smscampaign"
       }
+        
+    19. Route to RCSTEMPLATE when the user wants:
+
+   - create rcs templates
+   - duplicate rcs templates
+   - update rcs templates
+   - archive rcs templates
+   - view rcs templates
+   - list rcs templates
+   - manage rcs templates 
+   - rcs template details
+   - rcs template by name
+   - get rcs template details
+   
+   Example:
+   {
+     "module": "rcstemplate"
+   }
   `;

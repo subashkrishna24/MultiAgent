@@ -792,7 +792,7 @@ Examples:
 - Update form → Update_FormDetails
 - Get display rules → Get_FormDisplayRules
 - Get response settings → GetFormResponse
-- Update form response settings or set form notifications or form notifications → Update_FormResponseSettings
+- Update form response settings or set form notifications or form notifications → Set_FormResponseSettings
 
 Do not fetch form details when they are not required for completing the user's request.
 

@@ -1,7 +1,6 @@
 export function getDateContext() {
 const now = new Date();
 
-```
 // ============================================================
 // DATE FORMATTERS
 // ============================================================
@@ -306,7 +305,6 @@ const nextYearToDateTime = formatDateTime(nextYearEnd);
 // ============================================================
 
 return `
-```
 
 REAL TIME DATE CONTEXT
 

@@ -230,7 +230,7 @@ Always choose reporting over knowledge.
    - add contacts to groups
    - remove contacts from groups
    - view contact lists
- - view contact UCP
+   - view contact UCP
    - view user click path (UCP)
    - view clickstream
    - view contact journey
@@ -260,6 +260,17 @@ User: "Get the contact UCP, clickstream, and insights for machine ID 04282026125
    - list groups
    - manage group details
    - organize contacts into groups
+   - VerifiedEmailGroups details
+   - UnverifiedEmailGroups details
+   - InvalidEmailGroups details
+   - MailSubscribeGroups details
+   - MailUnsubscribeGroups details
+   - SmsSubscribeGroups details
+   - SmsUnsubscribeGroups details
+   - WhatsAppSubscribeGroups details
+   - WhatsAppUnsubscribeGroups details
+   - OnlyPhoneGroups details
+   - OnlyEmailGroups details
 
    Example:
    {

@@ -9,7 +9,6 @@ export async function executeLeadManagementAgent({
   accountId,
   session
 }) {
-
   const agent = createAgent({
     module: "leadmanagement",
     model,

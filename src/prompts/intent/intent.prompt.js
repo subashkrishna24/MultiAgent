@@ -507,4 +507,19 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    {
      "module": "rcstemplate"
    }
+     
+  20. Route to RCSTEST when the user says:
+
+      * send test rcs
+      * send test rcs
+      * test rcs
+      * test rcs
+      * rcs configuration list
+      * rcs config details
+      * rcs configuration by name
+
+      Examples:
+      {
+        "module": "rcstest"
+      }
   `;

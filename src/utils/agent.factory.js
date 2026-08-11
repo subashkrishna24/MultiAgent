@@ -39,6 +39,7 @@ import { SMSTEMPLATE_PROMPT } from "../prompts/sms/smstemplates.prompt.js";
 import { SMSTEST_PROMPT } from "../prompts/sms/smstest.prompt.js";
 import { SMSCAMPAIGN_PROMPT } from "../prompts/sms/smscampaign.prompt.js";
 import { RCSTEMPLATE_PROMPT } from "../prompts/rcs/rcstemplates.prompt.js";
+import { RCSTEST_PROMPT } from "../prompts/rcs/rcstest.prompt.js";
 
 function getPrompt(module) {
   const prompts = {
@@ -77,7 +78,8 @@ function getPrompt(module) {
     smstemplate:SMSTEMPLATE_PROMPT,
     smstest:SMSTEST_PROMPT,
     smscampaign:SMSCAMPAIGN_PROMPT,
-    rcstemplate:RCSTEMPLATE_PROMPT
+    rcstemplate:RCSTEMPLATE_PROMPT,
+    rcstest:RCSTEST_PROMPT
   };
 
   return prompts[module];

@@ -34,6 +34,7 @@ import { executeSmsTemplateAgent } from "../agents/sms/smstemplate.agent.js";
 import { executeSmsTestAgent } from "../agents/sms/smstest.agent.js";
 import { executeSmsCampaignAgent } from "../agents/sms/smscampaign.agent.js";
 import { executeRcsTemplateAgent } from "../agents/rcs/rcstemplate.agent.js";
+import { executeRcsTestAgent } from "../agents/rcs/rcstest.agent.js";
 
 export async function executeWorkflow(payload) {
   const {
@@ -308,6 +309,16 @@ export async function executeWorkflow(payload) {
 
    if (intent.module === "rcstemplate") {
     response = await executeRcsTemplateAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
+    if (intent.module === "rcstest") {
+    response = await executeRcsTestAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,

@@ -30,5 +30,6 @@ export const MODULES = {
   SENDMAILTOLEAD: "sendmailtolead" ,
   SMSTEMPLATE:"smstemplate",
   SENDSMS:"smstest",
-  SMSCAMPAIGN:"smscampaign"
+  SMSCAMPAIGN:"smscampaign",
+  RCSTEMPLATE:"rcstemplate"  
 };

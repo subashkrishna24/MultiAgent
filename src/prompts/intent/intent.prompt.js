@@ -41,6 +41,7 @@ Available modules:
 - smstemplate
 - smscampaign
 - smstest
+- rcstemplate
 
 Return ONLY JSON.
 
@@ -420,6 +421,10 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    - move leads from source
    - update leads stages or substages
    - send or schedule mail to lead
+   - change label for leads
+   - change handledby or user or owner or agent for lmsleads
+   - Add Notes
+   - Bind History
 
     Example:
     {
@@ -494,5 +499,55 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       Examples:
       {
         "module": "smscampaign"
+      }
+        
+    19. Route to RCSTEMPLATE when the user wants:
+
+   - create rcs templates
+   - duplicate rcs templates
+   - update rcs templates
+   - archive rcs templates
+   - view rcs templates
+   - list rcs templates
+   - manage rcs templates 
+   - rcs template details
+   - rcs template by name
+   - get rcs template details
+   
+   Example:
+   {
+     "module": "rcstemplate"
+   }
+     
+  20. Route to RCSTEST when the user says:
+
+      * send test rcs
+      * send test rcs
+      * test rcs
+      * test rcs
+      * rcs configuration list
+      * rcs config details
+      * rcs configuration by name
+
+      Examples:
+      {
+        "module": "rcstest"
+      }
+
+  21. Route to RCSCAMPAIGN when the user says:
+
+      * rcs campaign list
+      * rcs particular campaign
+      * scheduled rcs campaign
+      * upcoming rcs campaign
+      * get campaign by name
+      * get details of campaign
+      * delete the rcs campaign by name
+      * duplicate the rcs campaign by name
+      * update the rcs campaign by name
+
+      Examples:
+      {
+        "module": "rcscampaign"
       }
   `;

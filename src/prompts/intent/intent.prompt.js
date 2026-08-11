@@ -522,4 +522,21 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       {
         "module": "rcstest"
       }
+
+  21. Route to RCSCAMPAIGN when the user says:
+
+      * rcs campaign list
+      * rcs particular campaign
+      * scheduled rcs campaign
+      * upcoming rcs campaign
+      * get campaign by name
+      * get details of campaign
+      * delete the rcs campaign by name
+      * duplicate the rcs campaign by name
+      * update the rcs campaign by name
+
+      Examples:
+      {
+        "module": "rcscampaign"
+      }
   `;

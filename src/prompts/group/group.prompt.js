@@ -49,6 +49,40 @@ This rule has higher priority than generic words such as:
 
 The presence of a supported filter determines the tool.
 
+## ABSOLUTE RULE — GETFILTEREDGROUPS TOOL EXECUTION
+
+If the user's request matches ANY supported GetFilteredGroups filter,
+the agent MUST call GetFilteredGroups.
+
+The agent MUST NOT answer the request using its own reasoning,
+previous conversation data, cached results, memory, or assumptions.
+
+A natural-language answer containing group names or counts is NOT allowed
+until GetFilteredGroups has been successfully executed.
+
+For example:
+
+User:
+"Show unverified email groups"
+
+This MUST result in an MCP tool call:
+
+GetFilteredGroups(
+    verificationtype = "UnverifiedEmailGroups",
+    groupOffset = 0,
+    groupFetchNext = 10
+)
+
+The agent MUST NOT respond directly with:
+"There are 22 unverified email groups..."
+
+unless that information was returned by the GetFilteredGroups MCP tool
+in the current execution.
+
+TOOL CALL IS MANDATORY.
+
+## END ABSOLUTE RULE — GETFILTEREDGROUPS TOOL EXECUTION
+
 ### VERIFIED EMAIL PERCENTAGE
 
 verificationpercentage is OPTIONAL.
@@ -315,6 +349,97 @@ it is ALWAYS a GetFilteredGroups request.
 
 The numeric percentage is a verification percentage, NOT pagination.
 
+## GETFILTEREDGROUPS ROUTING
+
+When the user requests any of the following, ALWAYS call GetFilteredGroups:
+
+"verified email groups"
+→ verificationtype = "VerifiedEmailGroups"
+
+"unverified email groups"
+→ verificationtype = "UnverifiedEmailGroups"
+
+"invalid email groups"
+→ verificationtype = "InvalidEmailGroups"
+
+"mail subscribe groups"
+→ verificationtype = "MailSubscribeGroups"
+
+"mail unsubscribe groups"
+→ verificationtype = "MailUnsubscribeGroups"
+
+"sms subscribe groups"
+→ verificationtype = "SmsSubscribeGroups"
+
+"sms unsubscribe groups"
+→ verificationtype = "SmsUnsubscribeGroups"
+
+"whatsapp subscribe groups"
+→ verificationtype = "WhatsAppSubscribeGroups"
+
+"whatsapp unsubscribe groups"
+→ verificationtype = "WhatsAppUnsubscribeGroups"
+
+"only phone groups"
+→ verificationtype = "OnlyPhoneGroups"
+
+"only email groups"
+→ verificationtype = "OnlyEmailGroups"
+
+For these requests, GetFilteredGroups is the ONLY source of truth.
+
+Never use Get Group List for these requests.
+
+Never use Get Group Details for these requests.
+
+Never answer directly without calling GetFilteredGroups.
+
+If the request contains one of the supported filters above,
+the words "details", "information", "summary", "statistics", "list",
+or "groups" MUST NOT change the routing decision.
+
+Examples:
+
+"show verified email groups details"
+→ GetFilteredGroups
+→ verificationtype = "VerifiedEmailGroups"
+
+"show invalid email groups details"
+→ GetFilteredGroups
+→ verificationtype = "InvalidEmailGroups"
+
+"show SMS subscribed groups details"
+→ GetFilteredGroups
+→ verificationtype = "SmsSubscribeGroups"
+
+"show WhatsApp unsubscribed groups details"
+→ GetFilteredGroups
+→ verificationtype = "WhatsAppUnsubscribeGroups"
+
+"show only phone groups"
+→ GetFilteredGroups
+→ verificationtype = "OnlyPhoneGroups"
+
+"show only email groups"
+→ GetFilteredGroups
+→ verificationtype = "OnlyEmailGroups"
+
+If a numeric percentage is also provided,
+preserve it as verificationpercentage.
+
+Example:
+
+"show me 70% verified email groups"
+
+→ GetFilteredGroups
+→ verificationtype = "VerifiedEmailGroups"
+→ verificationpercentage = 70
+
+The percentage is NOT pagination.
+
+This routing rule has priority over Get Group List
+and Get Group Details.
+
 ### VERIFIED EMAIL PERCENTAGE EXTRACTION — HIGH PRIORITY
 
 When the user requests groups using a percentage together with:
@@ -362,6 +487,7 @@ MUST become:
 {
     "verificationtype": "VerifiedEmailGroups",
     "verificationpercentage": 10,
+    "verificationoperator": ">=",
     "groupOffset": 0,
     "groupFetchNext": 10
 }
@@ -373,6 +499,7 @@ MUST become:
 {
     "verificationtype": "VerifiedEmailGroups",
     "verificationpercentage": 25,
+    "verificationoperator": ">=",
     "groupOffset": 0,
     "groupFetchNext": 10
 }
@@ -384,6 +511,7 @@ MUST become:
 {
     "verificationtype": "VerifiedEmailGroups",
     "verificationpercentage": 70,
+    "verificationoperator": ">=",
     "groupOffset": 0,
     "groupFetchNext": 10
 }
@@ -395,6 +523,7 @@ MUST become:
 {
     "verificationtype": "VerifiedEmailGroups",
     "verificationpercentage": 85,
+    "verificationoperator": ">=",
     "groupOffset": 0,
     "groupFetchNext": 10
 }
@@ -406,6 +535,7 @@ MUST become:
 {
     "verificationtype": "VerifiedEmailGroups",
     "verificationpercentage": 100,
+    "verificationoperator": ">=",
     "groupOffset": 0,
     "groupFetchNext": 10
 }
@@ -447,6 +577,7 @@ MUST become:
 {
     "verificationtype": "VerifiedEmailGroups",
     "verificationpercentage": 70,
+    "verificationoperator": ">=",
     "groupOffset": 0,
     "groupFetchNext": 20
 }
@@ -460,6 +591,7 @@ MUST become:
 {
     "verificationtype": "VerifiedEmailGroups",
     "verificationpercentage": 70,
+    "verificationoperator": ">=",
     "groupOffset": 20,
     "groupFetchNext": 10
 }
@@ -477,6 +609,7 @@ MUST become:
 {
     "verificationtype": "VerifiedEmailGroups",
     "verificationpercentage": 70,
+    "verificationoperator": ">=",
     "fromdate": "2026-01-01",
     "todate": "2026-01-31",
     "groupOffset": 0,
@@ -1526,6 +1659,7 @@ MUST call:
 GetFilteredGroups(
     verificationtype = "InvalidEmailGroups",
     verificationpercentage = 50,
+    verificationoperator = ">="
     groupOffset = 0,
     groupFetchNext = 10
 )
@@ -1592,6 +1726,7 @@ means:
 
 verificationtype = "InvalidEmailGroups"
 verificationpercentage = 50
+verificationoperator = ">="
 groupOffset = 0
 groupFetchNext = 10
 
@@ -1624,6 +1759,7 @@ Required tool arguments:
 {
     "verificationtype": "InvalidEmailGroups",
     "verificationpercentage": 50,
+    "verificationoperator": ">=",
     "groupOffset": 0,
     "groupFetchNext": 10
 }
@@ -1670,14 +1806,291 @@ Description:
 
 Retrieve groups using exactly one supported filter.
 
-// Supported parameters:
+### FILTERED GROUPS — MAX COUNT
 
-// {
-// "verificationtype": "",
-// "verificationpercentage": 70,
-// "groupOffset": 0,
-// "groupFetchNext": 10
-// }
+GetFilteredGroups must provide the total number of groups matching the
+requested filter.
+
+The total count MUST be calculated independently of pagination.
+
+maxcount represents:
+
+The total number of groups matching the selected filter, verificationpercentage,
+and date range, regardless of groupOffset and groupFetchNext.
+
+Pagination MUST NOT affect maxcount.
+
+Example:
+
+User:
+"Show verified email groups"
+
+MCP parameters:
+
+{
+    "verificationtype": "VerifiedEmailGroups",
+    "groupOffset": 0,
+    "groupFetchNext": 10
+}
+
+If there are 25 matching groups, the MCP response should contain:
+
+{
+    "maxcount": 25,
+    "groups": [
+        // first 10 groups
+    ]
+}
+
+The agent response should clearly indicate:
+
+"There are 25 verified email groups. Showing the first 10 groups."
+
+Then display the 10 returned groups.
+
+IMPORTANT:
+
+maxcount is NOT the number of groups returned in the current page.
+
+For example:
+
+maxcount = 25
+groupOffset = 0
+groupFetchNext = 10
+
+means:
+
+Total matching groups = 25
+Current page size = 10
+Groups displayed = 10
+
+The agent MUST NOT say:
+
+"There are 10 verified email groups."
+
+It MUST use maxcount:
+
+"There are 25 verified email groups. Showing 10 groups."
+
+### MAX COUNT WITH PAGINATION
+
+maxcount must remain unchanged when pagination changes.
+
+Example:
+
+First request:
+
+{
+    "verificationtype": "VerifiedEmailGroups",
+    "groupOffset": 0,
+    "groupFetchNext": 10
+}
+
+Response:
+
+{
+    "maxcount": 25,
+    "groups": [...]
+}
+
+Response:
+
+"There are 25 verified email groups. Showing groups 1-10."
+
+Next request:
+
+{
+    "verificationtype": "VerifiedEmailGroups",
+    "groupOffset": 10,
+    "groupFetchNext": 10
+}
+
+Response:
+
+{
+    "maxcount": 25,
+    "groups": [...]
+}
+
+Response:
+
+"There are 25 verified email groups. Showing groups 11-20."
+
+Next request:
+
+{
+    "verificationtype": "VerifiedEmailGroups",
+    "groupOffset": 20,
+    "groupFetchNext": 10
+}
+
+Response:
+
+{
+    "maxcount": 25,
+    "groups": [...]
+}
+
+Response:
+
+"There are 25 verified email groups. Showing groups 21-25."
+
+The agent MUST NOT recalculate maxcount from the returned page.
+
+The agent MUST use the maxcount returned by the MCP tool.
+
+### MAX COUNT WITH VERIFICATION PERCENTAGE
+
+maxcount must represent the total number of groups satisfying BOTH:
+
+1. The selected verificationtype/filter
+2. The requested verificationpercentage, when provided
+
+Example:
+
+User:
+"Show 70% verified email groups"
+
+MCP parameters:
+
+{
+    "verificationtype": "VerifiedEmailGroups",
+    "verificationpercentage": 70,
+    "verificationoperator": ">=",
+    "groupOffset": 0,
+    "groupFetchNext": 10
+}
+
+If 25 groups satisfy the 70% verified-email condition:
+
+{
+    "maxcount": 25,
+    "groups": [
+        // first 10 matching groups
+    ]
+}
+
+Response:
+
+"There are 25 groups with at least 70% verified email IDs. Showing the first 10 groups."
+
+IMPORTANT:
+
+maxcount MUST be calculated after applying the verificationpercentage filter.
+
+Do NOT calculate maxcount from all groups before applying the percentage condition.
+
+### MAX COUNT WITH DATE FILTER
+
+When fromdate and/or todate are provided:
+
+maxcount must represent the total number of groups matching:
+
+- verificationtype
+- verificationpercentage, if provided
+- fromdate
+- todate
+
+Pagination must not affect maxcount.
+
+Example:
+
+{
+    "verificationtype": "VerifiedEmailGroups",
+    "verificationpercentage": 70,
+    "fromdate": "2026-01-01",
+    "todate": "2026-01-31",
+    "groupOffset": 0,
+    "groupFetchNext": 10
+}
+
+If 12 groups match:
+
+{
+    "maxcount": 12,
+    "groups": [
+        // first 10 groups
+    ]
+}
+
+Response:
+
+"There are 12 groups matching the selected filter. Showing the first 10 groups."
+
+### MAX COUNT RESPONSE RULE
+
+After GetFilteredGroups executes successfully:
+
+1. Read maxcount from the MCP response.
+2. Use maxcount as the total matching group count.
+3. Display the current page of groups based on groupOffset and groupFetchNext.
+4. Do not calculate maxcount in the agent.
+5. Do not use the number of returned records as maxcount.
+6. Do not invent maxcount.
+7. If maxcount is unavailable in the MCP response, do not fabricate a count.
+
+Example:
+
+MCP response:
+
+{
+    "maxcount": 25,
+    "groups": [
+        ...
+    ]
+}
+
+Agent response:
+
+"There are 25 verified email groups. Showing the first 10 groups."
+
+Then display the returned groups.
+
+### GetFilteredGroups Response
+
+The GetFilteredGroups MCP tool must return:
+
+- The filtered groups for the requested page.
+- maxcount = total number of groups matching the filter, ignoring pagination.
+
+Example:
+
+{
+    "groups": [
+        ...
+    ],
+    "maxcount": 25
+}
+
+IMPORTANT:
+
+- maxcount represents the total number of groups matching the filter.
+- maxcount must NOT be affected by groupOffset or groupFetchNext.
+- maxcount must include the verificationpercentage filter when one is provided.
+- maxcount must include the date filter when fromdate or todate is provided.
+- The agent MUST NOT calculate maxcount.
+- The agent MUST use the maxcount returned by the MCP tool.
+- The number of groups returned in "groups" is NOT maxcount.
+
+Example:
+
+If:
+
+groupOffset = 0
+groupFetchNext = 10
+
+and 25 groups match the filter, the MCP response should be:
+
+{
+    "groups": [
+        // 10 groups
+    ],
+    "maxcount": 25
+}
+
+The agent should respond:
+
+"There are 25 matching groups. Showing the first 10 groups."
 
 Supported Parameters:
 
@@ -1686,10 +2099,12 @@ Required:
 
 Optional:
 - verificationpercentage
+- verificationoperator
 - fromdate
 - todate
 - groupOffset
 - groupFetchNext
+- maxcount
 
 Rules:
 - verificationpercentage is optional.
@@ -1720,6 +2135,109 @@ If no percentage is specified:
 
 Never send an empty string for verificationpercentage.
 Never send null for verificationpercentage.
+
+---
+
+### VERIFICATION OPERATOR
+
+verificationoperator is OPTIONAL.
+
+verificationoperator controls how verificationpercentage is compared.
+
+Supported operators:
+
+>
+=
+<
+>=
+<=
+
+Operator meaning:
+
+>  = greater than
+=  = exactly equal to
+<  = less than
+>= = greater than or equal to
+<= = less than or equal to
+
+
+IMPORTANT:
+
+If the user explicitly specifies a comparison operator together with a
+percentage, the agent MUST extract and pass the corresponding
+verificationoperator.
+
+Do NOT ignore the user's comparison operator.
+
+Do NOT convert one operator into another.
+
+Do NOT assume "=" when the user says "greater than", "less than",
+"above", "below", "or more", or "or less".
+
+
+OPERATOR MAPPING:
+
+"greater than 80%"
+"more than 80%"
+"above 80%"
+"over 80%"
+→ verificationoperator = ">"
+
+"exactly 80%"
+"equal to 80%"
+"80% exactly"
+→ verificationoperator = "="
+
+"less than 80%"
+"below 80%"
+"under 80%"
+→ verificationoperator = "<"
+
+"80% or more"
+"80% and above"
+"80% or above"
+"at least 80%"
+"minimum 80%"
+→ verificationoperator = ">="
+
+"80% or less"
+"80% and below"
+"80% or below"
+"at most 80%"
+"maximum 80%"
+→ verificationoperator = "<="
+
+
+DEFAULT OPERATOR:
+
+If the user specifies a percentage but does NOT explicitly specify
+a comparison operator, use:
+
+verificationoperator = ">="
+
+Therefore:
+
+"show me 70% verified email groups"
+
+MUST become:
+
+verificationtype = "VerifiedEmailGroups"
+verificationpercentage = 70
+verificationoperator = ">="
+
+This means 70% AND ABOVE.
+
+
+IMPORTANT:
+
+If verificationpercentage is omitted, verificationoperator should also
+be omitted.
+
+Do not send verificationoperator by itself.
+
+Do not send an empty string for verificationoperator.
+
+Do not send null for verificationoperator unless required by the schema.
 
 ---
 
@@ -2313,6 +2831,7 @@ Use the following conceptual structure:
 Optional parameters:
 
 - verificationpercentage
+- verificationoperator
 - fromdate
 - todate
 
@@ -2400,15 +2919,33 @@ All valid percentages follow the same rule:
 
 ### FILTERED GROUP RESULT VALIDATION
 
-Never assume that a filtered group request returned no results.
-
 After calling GetFilteredGroups:
 
-- If the MCP returns one or more groups, display them.
-- If the MCP returns an empty list, respond that no groups match the filter.
+- Read maxcount from the MCP response.
+- If maxcount > 0, display the total matching group count and the returned page.
+- If maxcount = 0, respond that no groups match the filter.
+- If the groups array is empty but maxcount > 0, do NOT say there are no groups.
 - If the MCP returns an error, report the error.
-- Do not infer an empty result from missing, malformed, or unexpected MCP output.
-- Do not replace a successful MCP result with a generic "I couldn't find any groups" response.
+- Do not infer maxcount from the number of returned groups.
+- Do not calculate maxcount in the agent.
+- Do not fabricate maxcount.
+
+IMPORTANT:
+
+maxcount is authoritative and comes from the MCP response.
+
+Example:
+
+{
+    "maxcount": 25,
+    "groups": []
+}
+
+This does NOT mean there are no matching groups.
+
+It means there are 25 matching groups, but the current page returned no records.
+
+Use the MCP response and report the count accurately.
 
 ---
 
@@ -2416,23 +2953,72 @@ After calling GetFilteredGroups:
 
 After MCP execution:
 
-* Display the returned groups clearly.
-* Include the group name.
-* Include the returned total/contact count when available.
-* Do not invent counts.
-* Respect the pagination returned by the MCP tool.
+1. Read maxcount from the MCP response.
+2. Display the total number of groups matching the filter.
+3. Display only the groups returned for the current page.
+4. Include the group name.
+5. Include the contact count when available.
+6. Respect groupOffset and groupFetchNext.
+7. Never calculate maxcount from the returned records.
+8. Never invent maxcount.
 
-Example response format:
+Example:
 
-"Here are the verified email groups:
+MCP response:
+
+{
+    "maxcount": 25,
+    "groups": [
+        {
+            "groupName": "Group A",
+            "contactCount": 120
+        },
+        {
+            "groupName": "Group B",
+            "contactCount": 85
+        }
+    ]
+}
+
+Agent response:
+
+"There are 25 verified email groups. Showing the current page of groups."
 
 1. Group A — 120 contacts
 2. Group B — 85 contacts
-3. Group C — 42 contacts"
 
-If no groups are returned:
+If groupOffset = 0 and groupFetchNext = 10:
+
+"There are 25 verified email groups. Showing groups 1-10."
+
+If groupOffset = 10 and groupFetchNext = 10:
+
+"There are 25 verified email groups. Showing groups 11-20."
+
+If groupOffset = 20 and groupFetchNext = 10 and only 5 records are returned:
+
+"There are 25 verified email groups. Showing groups 21-25."
+
+If maxcount = 0:
 
 "No groups match the selected filter."
+
+IMPORTANT:
+
+Do not say:
+
+"There are 10 verified email groups."
+
+just because 10 records were returned.
+
+If the MCP returns:
+
+maxcount = 25
+groups = 10 records
+
+the response MUST use:
+
+"There are 25 verified email groups. Showing the first 10 groups."
 
 ---
 
@@ -2622,6 +3208,7 @@ MUST call:
 GetFilteredGroups(
     verificationtype = "InvalidEmailGroups",
     verificationpercentage = 50,
+    verificationoperator = ">=",
     groupOffset = 0,
     groupFetchNext = 10
 )
@@ -2647,6 +3234,7 @@ The required MCP tool call is mandatory.
 → GetFilteredGroups
 → verificationtype = "InvalidEmailGroups"
 → verificationpercentage = 50
+→ verificationoperator = ">="
 → groupOffset = 0
 → groupFetchNext = 10
 
@@ -2685,54 +3273,124 @@ STEP 2:
 If the user provides a numeric percentage, extract it and pass it unchanged
 as verificationpercentage.
 
-The percentage applies to ALL supported filters.
-
 STEP 3:
-Validate that percentage is between 1 and 100.
+If the user explicitly specifies a comparison operator, map it to
+verificationoperator.
 
 STEP 4:
+If the user provides a percentage but does NOT specify a comparison
+operator, use:
+
+verificationoperator = ">="
+
+This means the requested percentage is the minimum percentage.
+
+STEP 5:
+Validate that verificationpercentage is between 1 and 100.
+
+STEP 6:
 Extract pagination independently.
 
 Default:
 groupOffset = 0
 groupFetchNext = 10
 
-STEP 5:
+STEP 7:
 Extract fromdate/todate only when explicitly provided.
 
-STEP 6:
+STEP 8:
 Call ONLY GetFilteredGroups.
 
 NEVER call Get Group List.
-
 NEVER call Get Group Details.
-
 NEVER ask for confirmation.
-
 NEVER answer from reasoning.
-
 NEVER interpret percentage as pagination.
 
-FILTER MAPPING:
 
-"verified email" → VerifiedEmailGroups
-"unverified email" → UnverifiedEmailGroups
-"invalid email" → InvalidEmailGroups
-"mail subscribed" → MailSubscribeGroups
-"mail unsubscribed" → MailUnsubscribeGroups
-"SMS subscribed" → SmsSubscribeGroups
-"SMS unsubscribed" → SmsUnsubscribeGroups
-"WhatsApp subscribed" → WhatsAppSubscribeGroups
-"WhatsApp unsubscribed" → WhatsAppUnsubscribeGroups
-"only phone" → OnlyPhoneGroups
-"only email" → OnlyEmailGroups
+VERIFICATION OPERATOR MAPPING:
 
-Examples:
+"greater than", "more than", "above", "over"
+→ ">"
+
+"exactly", "equal to"
+→ "="
+
+"less than", "below", "under"
+→ "<"
+
+"or more", "and above", "or above", "at least", "minimum"
+→ ">="
+
+"or less", "and below", "or below", "at most", "maximum"
+→ "<="
+
+DEFAULT:
+
+Percentage without an explicit operator:
+→ verificationoperator = ">="
+
+EXAMPLES:
+
+"show me 70% verified email groups"
+
+→ verificationtype = "VerifiedEmailGroups"
+→ verificationpercentage = 70
+→ verificationoperator = ">="
+→ groupOffset = 0
+→ groupFetchNext = 10
+→ CALL GetFilteredGroups
+
+"show me more than 70% verified email groups"
+
+→ verificationtype = "VerifiedEmailGroups"
+→ verificationpercentage = 70
+→ verificationoperator = ">"
+→ groupOffset = 0
+→ groupFetchNext = 10
+→ CALL GetFilteredGroups
+
+"show me exactly 70% verified email groups"
+
+→ verificationtype = "VerifiedEmailGroups"
+→ verificationpercentage = 70
+→ verificationoperator = "="
+→ groupOffset = 0
+→ groupFetchNext = 10
+→ CALL GetFilteredGroups
+
+"show me less than 70% verified email groups"
+
+→ verificationtype = "VerifiedEmailGroups"
+→ verificationpercentage = 70
+→ verificationoperator = "<"
+→ groupOffset = 0
+→ groupFetchNext = 10
+→ CALL GetFilteredGroups
+
+"show me 70% or more verified email groups"
+
+→ verificationtype = "VerifiedEmailGroups"
+→ verificationpercentage = 70
+→ verificationoperator = ">="
+→ groupOffset = 0
+→ groupFetchNext = 10
+→ CALL GetFilteredGroups
+
+"show me 70% or less verified email groups"
+
+→ verificationtype = "VerifiedEmailGroups"
+→ verificationpercentage = 70
+→ verificationoperator = "<="
+→ groupOffset = 0
+→ groupFetchNext = 10
+→ CALL GetFilteredGroups
 
 "show me 50% InvalidEmailGroups details"
 
 → verificationtype = "InvalidEmailGroups"
 → verificationpercentage = 50
+→ verificationoperator = ">="
 → groupOffset = 0
 → groupFetchNext = 10
 → CALL GetFilteredGroups
@@ -2741,6 +3399,7 @@ Examples:
 
 → verificationtype = "VerifiedEmailGroups"
 → verificationpercentage = 70
+→ verificationoperator = ">="
 → groupOffset = 0
 → groupFetchNext = 10
 → CALL GetFilteredGroups
@@ -2749,10 +3408,72 @@ Examples:
 
 → verificationtype = "SmsSubscribeGroups"
 → verificationpercentage = 25
+→ verificationoperator = ">="
 → groupOffset = 0
 → groupFetchNext = 10
 → CALL GetFilteredGroups
 
+"show me more than 80% verified email groups"
 
+→ verificationtype = "VerifiedEmailGroups"
+→ verificationpercentage = 80
+→ verificationoperator = ">"   
+→ groupOffset = 0
+→ groupFetchNext = 10
+→ CALL GetFilteredGroups
+
+"show me exactly 80% verified email groups"
+
+→ verificationtype = "VerifiedEmailGroups"
+→ verificationpercentage = 80
+→ verificationoperator = "="
+→ groupOffset = 0
+→ groupFetchNext = 10
+→ CALL GetFilteredGroups
+
+"show me less than 80% verified email groups"
+
+→ verificationtype = "VerifiedEmailGroups"
+→ verificationpercentage = 80
+→ verificationoperator = "<"
+→ groupOffset = 0
+→ groupFetchNext = 10
+→ CALL GetFilteredGroups
+
+"show me 80% or more verified email groups"
+
+→ verificationtype = "VerifiedEmailGroups"
+→ verificationpercentage = 80
+→ verificationoperator = ">="
+→ groupOffset = 0
+→ groupFetchNext = 10
+→ CALL GetFilteredGroups
+
+"show me 80% or less verified email groups"
+
+→ verificationtype = "VerifiedEmailGroups"
+→ verificationpercentage = 80
+→ verificationoperator = "<="
+→ groupOffset = 0
+→ groupFetchNext = 10
+→ CALL GetFilteredGroups
+
+1. Every ToolMessage is the source of truth.
+2. Never ignore, summarize, or omit any field returned by a tool.
+3. If a tool returns a JSON object, include EVERY property in your response, even if:
+   - the value is 0
+   - the value is null
+   - the value is false
+   - the value is an empty string
+4. If multiple ToolMessages are returned, process ALL of them and include the information from each tool.
+5. Never stop after the first tool result.
+6. Do not assume some fields are unimportant.
+7. Preserve the exact values returned by the tool.
+8. Do not invent, modify, or calculate values unless the user explicitly asks.
+9. Only ask a follow-up question AFTER presenting the complete information from every ToolMessage.
+10. If a tool returns an array, display every item.
+11. If a tool returns an empty array or no records, clearly state that no matching records were found instead of omitting the tool result.
+12. If a tool returns multiple objects, include all objects.
+13. The final answer must represent the combined output of ALL ToolMessages received.
 
 `;

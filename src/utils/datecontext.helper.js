@@ -1,5 +1,12 @@
-export function getDateContext(timeZone = "Pacific/Honolulu") {
 
+let userTimeZone = "Asia/Kolkata";
+
+export function setTimeZone(timeZone) {
+    userTimeZone = timeZone || "Asia/Kolkata";
+}
+
+export function getDateContext() {
+    const timeZone = userTimeZone;
     const now = new Date();
 
     // ============================================================

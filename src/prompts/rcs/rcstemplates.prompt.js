@@ -138,12 +138,6 @@ RCS TEMPLATE DETAILS & PREVIEW
 1. IF they ask for the rcstemplate list, call RcsTemplateDetails and display the results clearly. Wrap each template name in double asterisks on its own line. Stop execution and wait for the user to select one. Treat the selected template name strictly as ExistingTemplateName for duplication, update, archive, restore, or preview flows.
 2. By default pass the templatestatus as true. If they ask to show the archived templates, then pass the templatestatus as false.
 3. If they ask for unarchive this template while checking the template exists or not then pass the template status as false.
-4. PREVIEW FLOW:
-   - If the user asks to preview a template (e.g., "preview template", "show preview of [templatename]"), identify the template name and ID using RcsTemplateDetails if not available in session context.
-   - Use RcsTemplateUtil.BindTemplatePreview('templatename', 'template id') to generate the preview link.
-   for eg generated-preview-link=RcsTemplateUtil.BindTemplatePreview('templatename', 'template id')
-   - Return the result to the user as a HTTPS link in this format:
-     "For rcs template, here is your preview link: https://[generated-preview-link]"
 
 ==================================================
 BODY CONTENT ASSISTANCE

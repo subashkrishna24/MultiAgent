@@ -19,7 +19,7 @@ import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapig
 import { getSession, clearPagingSession } from "../store/session.store.js";
 import { handlePagination } from "../utils/pagination.helper.js";
 import {  prepareUserDetails,  cleanReportEntry,  cleanMergedResults,} from "../utils/shared.helper.js";
-import { getDateContext } from "../utils/datecontext.helper.js";
+import {  setTimeZone,getDateContext } from "../utils/datecontext.helper.js";
 import { executeContactImportAgent } from "../agents/contact/contactimport.agent.js";
 import { executeLeadsImportAgent } from "../agents/lms/leadsimport.agent.js";
 import { executeLeadManagementAgent } from "../agents/lms/leadmanagment.agent.js";
@@ -44,7 +44,7 @@ export async function executeWorkflow(payload) {
     userdetails,
     machineid,
   } = payload;
-
+   setTimeZone(userdetails?.timeZone);
   if (history.length === 1) {
     clearPagingSession(machineid);
   }

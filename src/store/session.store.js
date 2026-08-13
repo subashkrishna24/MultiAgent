@@ -42,6 +42,10 @@ export function getSession(machineid) {
       // Contacts Paging
       contactOffset: 0,
       contactFetchNext: 10,
+
+      // realtime Paging
+      realtimeOffset: 0,
+      realtimeFetchNext: 10,
     };
   }
 
@@ -55,6 +59,15 @@ export function resetTemplatePaging(machineid) {
   const session = getSession(machineid);
 
   session.templateOffset = 0;
+}
+
+/**
+ * Reset Realtime Paging
+ */
+export function resetRealtimePaging(machineid) {
+  const session = getSession(machineid);
+
+  session.realtimeOffset = 0;
 }
 
 /**

@@ -42,6 +42,8 @@ import { RCSTEMPLATE_PROMPT } from "../prompts/rcs/rcstemplates.prompt.js";
 import { RCSTEST_PROMPT } from "../prompts/rcs/rcstest.prompt.js";
 import { RCSCAMPAIGN_PROMPT } from "../prompts/rcs/rcscampaign.prompt.js";
 
+import { REALTIME_PROMPT } from "../prompts/analytics/realtimedata.prompt.js";
+
 function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
@@ -81,7 +83,8 @@ function getPrompt(module) {
     smscampaign: SMSCAMPAIGN_PROMPT,
     rcstemplate: RCSTEMPLATE_PROMPT,
     rcstest: RCSTEST_PROMPT,
-    rcscampaign: RCSCAMPAIGN_PROMPT
+    rcscampaign: RCSCAMPAIGN_PROMPT,
+    realtime: REALTIME_PROMPT
   };
 
   return prompts[module];

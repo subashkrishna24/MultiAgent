@@ -23,6 +23,7 @@ Intent precedence:
 - If both words appear, preserve both exactly as written and determine intent from the user's primary request. Do not replace one with the other.
 
 Available modules:
+- realtime
 - Knowledge
 - reporting
 - contact
@@ -550,4 +551,64 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       {
         "module": "rcscampaign"
       }
+
+    22. Route to REALTIME when the user wants:
+   - view realtime visitors
+   - view live visitors
+   - view current visitors
+   - view active visitors
+   - view realtime visitor details
+   - view live traffic
+   - view realtime visitor activity
+   - view current website visitors
+   - view realtime visitor table
+   - get latest realtime visitor details
+   - get live visitor information
+   - view realtime website activity
+   - view realtime page visitors
+   - any request related to realtime visitors, live visitors, current visitors, or live website traffic
+
+Example:
+User: "Show me the realtime visitors."
+
+Example:
+{
+  "module": "realtime"
+}
+
+## REALTIME EXECUTION RULE
+
+When the selected module is 'realtime' and the user's request is related to realtime visitors, live visitors, current visitors, active visitors, or realtime visitor details:
+
+1. MUST call the 'GetRealtimeDetails' MCP tool.
+2. Do NOT return only:
+   {
+     "module": "analytics"
+   }
+3. Do NOT return "No response generated".
+4. Do NOT answer from memory or previous conversation data.
+5. The MCP tool response is the source of truth.
+6. Return the response received from 'GetRealtimeDetails'.
+
+The 'GetRealtimeDetails' MCP tool requires NO parameters.
+
+Example:
+
+User:
+"Show me realtime visitors"
+
+Required execution:
+
+GetRealtimeDetails()
+
+Expected MCP response:
+
+{
+  "TotalCount": 100,
+  "Records": [...]
+}
+
+Return the realtime data from the MCP tool.
+
+
   `;

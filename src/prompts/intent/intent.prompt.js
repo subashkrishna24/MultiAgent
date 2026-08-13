@@ -231,7 +231,7 @@ Always choose reporting over knowledge.
    - add contacts to groups
    - remove contacts from groups
    - view contact lists
- - view contact UCP
+   - view contact UCP
    - view user click path (UCP)
    - view clickstream
    - view contact journey
@@ -261,6 +261,17 @@ User: "Get the contact UCP, clickstream, and insights for machine ID 04282026125
    - list groups
    - manage group details
    - organize contacts into groups
+   - VerifiedEmailGroups details
+   - UnverifiedEmailGroups details
+   - InvalidEmailGroups details
+   - MailSubscribeGroups details
+   - MailUnsubscribeGroups details
+   - SmsSubscribeGroups details
+   - SmsUnsubscribeGroups details
+   - WhatsAppSubscribeGroups details
+   - WhatsAppUnsubscribeGroups details
+   - OnlyPhoneGroups details
+   - OnlyEmailGroups details
 
    Example:
    {
@@ -507,4 +518,36 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    {
      "module": "rcstemplate"
    }
+     
+  20. Route to RCSTEST when the user says:
+
+      * send test rcs
+      * send test rcs
+      * test rcs
+      * test rcs
+      * rcs configuration list
+      * rcs config details
+      * rcs configuration by name
+
+      Examples:
+      {
+        "module": "rcstest"
+      }
+
+  21. Route to RCSCAMPAIGN when the user says:
+
+      * rcs campaign list
+      * rcs particular campaign
+      * scheduled rcs campaign
+      * upcoming rcs campaign
+      * get campaign by name
+      * get details of campaign
+      * delete the rcs campaign by name
+      * duplicate the rcs campaign by name
+      * update the rcs campaign by name
+
+      Examples:
+      {
+        "module": "rcscampaign"
+      }
   `;

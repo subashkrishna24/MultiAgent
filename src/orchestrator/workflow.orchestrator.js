@@ -18,12 +18,7 @@ import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
 import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js";
 import { getSession, clearPagingSession } from "../store/session.store.js";
 import { handlePagination } from "../utils/pagination.helper.js";
-
-import {
-  prepareUserDetails,
-  cleanReportEntry,
-  cleanMergedResults,
-} from "../utils/shared.helper.js";
+import {  prepareUserDetails,  cleanReportEntry,  cleanMergedResults,} from "../utils/shared.helper.js";
 import { getDateContext } from "../utils/datecontext.helper.js";
 import { executeContactImportAgent } from "../agents/contact/contactimport.agent.js";
 import { executeLeadsImportAgent } from "../agents/lms/leadsimport.agent.js";
@@ -34,6 +29,8 @@ import { executeSmsTemplateAgent } from "../agents/sms/smstemplate.agent.js";
 import { executeSmsTestAgent } from "../agents/sms/smstest.agent.js";
 import { executeSmsCampaignAgent } from "../agents/sms/smscampaign.agent.js";
 import { executeRcsTemplateAgent } from "../agents/rcs/rcstemplate.agent.js";
+import { executeRcsTestAgent } from "../agents/rcs/rcstest.agent.js";
+import { executeRcsCampaignAgent } from "../agents/rcs/rcscampaign.agent.js";
 
 export async function executeWorkflow(payload) {
   const {
@@ -276,7 +273,7 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
-    if (intent.module === "smstemplate") {
+  if (intent.module === "smstemplate") {
     response = await executeSmsTemplateAgent({
       model: llmModel,
       tools: filteredTools,
@@ -295,8 +292,8 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
-  
- if (intent.module === "smscampaign") {
+
+  if (intent.module === "smscampaign") {
     response = await executeSmsCampaignAgent({
       model: llmModel,
       tools: filteredTools,
@@ -306,8 +303,28 @@ export async function executeWorkflow(payload) {
     });
   }
 
-   if (intent.module === "rcstemplate") {
+  if (intent.module === "rcstemplate") {
     response = await executeRcsTemplateAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
+  if (intent.module === "rcstest") {
+    response = await executeRcsTestAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
+  if (intent.module === "rcscampaign") {
+    response = await executeRcsCampaignAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,
@@ -328,7 +345,7 @@ export async function executeWorkflow(payload) {
     workflowCompleted = true;
   }
 
-  var RemoveRecommendations = ["contact", "leadmanagement","leadsfollowup","leadsimport"];
+  var RemoveRecommendations = ["contact", "leadmanagement", "leadsfollowup", "leadsimport"];
   const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
   if (match && !RemoveRecommendations.includes(intent.module.toLowerCase())) {
     recommendedActions = JSON.parse(match[1]);
@@ -343,5 +360,5 @@ export async function executeWorkflow(payload) {
     toolmessage: report_response,
     workflowcompleted: workflowCompleted,
     actions: recommendedActions,
-  };  
+  };
 }

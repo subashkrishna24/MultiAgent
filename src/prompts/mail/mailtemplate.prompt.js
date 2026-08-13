@@ -258,4 +258,23 @@ ERROR HANDLING, RETRY GUARD & LOOKUP FORMATTING
 STATE PERSISTENCE & CROSS-FLOW RECOVERY RULE
 ==================================================
 Store collected and fetched values immediately. Never lose values after tool execution, confirmation, retry, or interruption. If the user makes an explicit mid-flow distraction choice and then requests to continue creation, inspect the session context, automatically recover those values, calculate which parameters remain uncollected, and directly issue the prompt query corresponding strictly to the next missing step. Do not start the creation prompt sequence over.
+<<<<<<< HEAD
 `;
+=======
+
+==================================================
+FEW-SHOT PATTERN MATRIX
+==================================================
+User Input: "create mail template" (No files uploaded in session)
+Assistant: "For mail template, what would you like to name this mail template?"
+
+User Input: "Welcome Email"
+Assistant: "For mail template, thanks. Could you share a short description for this mail template?"
+
+User Input: "use same as name"
+Assistant: "For mail template, great. What subject line would you like to use for this mail template?"
+
+User Input: "Welcome to Plumb5!"
+Assistant: "For mail template, almost done. Please share the body content you'd like to use in this mail template or shall I generate content with a specific topic, or you can upload the template?"
+`;
+>>>>>>> d6e8b6a934def445082587489721c8955e9d4f48

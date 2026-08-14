@@ -85,10 +85,6 @@ IdentifiersDetails
 RcsTemplateDetails
 * Purpose: Fetch templates, search templates, or get template details.
 
-SaveRcsUrlList
-* Purpose: Save page URLs and retrieve generated dynamic urlid tokens for dynamic templates.
-* Payload Signature: PageUrl (List<string>).
-
 CreateRcsTemplate
 * STRICT ROUTING: Call during a fresh creation flow for text-based templates.
 * Payload Signature: TemplateName, CampaignIdentifier, VendorTemplateId, TemplateDescription, Content, TemplateType (smallint), ConvertUrlToShortenLink (bool), PageUrl (List<string> containing numeric IDs only).

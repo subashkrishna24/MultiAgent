@@ -16,7 +16,7 @@ Group ≠ Segment
 - NEVER route a request containing the word "lead" to a contact module.
 - NEVER ask follow-up questions using the word "contact" when the user asked about "lead".
 - If the user explicitly says "campaign", ask which channel (mail, sms, webpush, whatsapp, rcs) the campaign is for. Store it an call the respective tool.
-
+- If the user says extra field list or lms extra field list or contact extra field route to the module contact
 Intent precedence:
 - If the request contains the word "lead" or "leads", the intent MUST be LEAD_MANAGEMENT.
 - If the request contains the word "contact" or "contacts", the intent MUST be CONTACT_MANAGEMENT.
@@ -61,7 +61,7 @@ Rules:
   - asks "Do you support X?"
   - asks setup/configuration questions
   - If a SQL query was generated internally, route the request to the reporting module and execute the reporting MCP tool.
-   
+  - Do not route to knowledge when it comes for dynamic field or lms extrafield or contact extrafield 
     Example:
     {
       "module": "knowledge"
@@ -245,6 +245,7 @@ Always choose reporting over knowledge.
    - get clickstream for a machine ID
    - get insights for a machine ID
    - any request related to UCP, clickstream, visitor activity, or contact insights
+   - Extra Field List or custom field details or dynamic fields
 
 Example:
 User: "Get the contact UCP, clickstream, and insights for machine ID 042820261253468812122555950."

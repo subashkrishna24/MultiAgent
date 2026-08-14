@@ -18,5 +18,6 @@ export const MODULES = {
   SMSTEMPLATE:"smstemplate",
   SENDSMS:"smstest",
   SMSCAMPAIGN:"smscampaign",
-  RCSTEMPLATE:"rcstemplate"  
+  RCSTEMPLATE:"rcstemplate" ,
+  REALTIME:"realtime"
 };

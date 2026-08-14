@@ -31,6 +31,7 @@ import { executeSmsCampaignAgent } from "../agents/sms/smscampaign.agent.js";
 import { executeRcsTemplateAgent } from "../agents/rcs/rcstemplate.agent.js";
 import { executeRcsTestAgent } from "../agents/rcs/rcstest.agent.js";
 import { executeRcsCampaignAgent } from "../agents/rcs/rcscampaign.agent.js";
+import { executeRealTimeAgent } from "../agents/analytics/realtime.agent.js";
 
 export async function executeWorkflow(payload) {
   const {
@@ -325,6 +326,16 @@ export async function executeWorkflow(payload) {
 
   if (intent.module === "rcscampaign") {
     response = await executeRcsCampaignAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
+    if (intent.module === "realtime") {
+    response = await executeRealTimeAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,

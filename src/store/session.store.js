@@ -42,6 +42,8 @@ export function getSession(machineid) {
       // Contacts Paging
       contactOffset: 0,
       contactFetchNext: 10,
+      IsAgentWorkflow: false,
+      agenticWorkflowHandled: false,
     };
   }
 

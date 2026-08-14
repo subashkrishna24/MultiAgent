@@ -16,7 +16,7 @@ Group ≠ Segment
 - NEVER route a request containing the word "lead" to a contact module.
 - NEVER ask follow-up questions using the word "contact" when the user asked about "lead".
 - If the user explicitly says "campaign", ask which channel (mail, sms, webpush, whatsapp, rcs) the campaign is for. Store it an call the respective tool.
-- If the user says extra field list or lms extra field list or contact extra field route to the module contact
+- If the user says extra field list or lms extra field list or contact extra field or dynamic field route to the module contact
 Intent precedence:
 - If the request contains the word "lead" or "leads", the intent MUST be LEAD_MANAGEMENT.
 - If the request contains the word "contact" or "contacts", the intent MUST be CONTACT_MANAGEMENT.

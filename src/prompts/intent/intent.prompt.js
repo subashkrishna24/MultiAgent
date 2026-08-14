@@ -552,63 +552,243 @@ Do NOT switch modules while an A/B Test workflow is in progress.
         "module": "rcscampaign"
       }
 
-    22. Route to REALTIME when the user wants:
-   - view realtime visitors
-   - view live visitors
-   - view current visitors
-   - view active visitors
-   - view realtime visitor details
-   - view live traffic
-   - view realtime visitor activity
-   - view current website visitors
-   - view realtime visitor table
-   - get latest realtime visitor details
-   - get live visitor information
-   - view realtime website activity
-   - view realtime page visitors
-   - any request related to realtime visitors, live visitors, current visitors, or live website traffic
+  22. Route to REALTIME when the user wants:
 
-Example:
-User: "Show me the realtime visitors."
+      If the user asks for any of the following types of realtime information,
+      route the request to the realtime module.
 
-Example:
-{
-  "module": "realtime"
-}
+      ## REALTIME VISITOR REQUESTS
 
-## REALTIME EXECUTION RULE
+      ### Realtime Visitors
+      - Show me realtime visitors
+      - Show realtime visitors
+      - Get realtime visitors
+      - Who is visiting the website right now?
+      - Who is on my website right now?
+      - Show me who is currently on my website
+      - Show visitors currently on the website
+      - Show visitors who are online right now
 
-When the selected module is 'realtime' and the user's request is related to realtime visitors, live visitors, current visitors, active visitors, or realtime visitor details:
+      ### Live Visitors
+      - Show me live visitors
+      - Show live visitors
+      - Get live visitors
+      - Give me live visitor details
+      - Who are the live visitors?
+      - Who is visiting my website now?
+      - Show me people visiting my website now
+      - Who is online on my website?
 
-1. MUST call the 'GetRealtimeDetails' MCP tool.
-2. Do NOT return only:
-   {
-     "module": "analytics"
-   }
-3. Do NOT return "No response generated".
-4. Do NOT answer from memory or previous conversation data.
-5. The MCP tool response is the source of truth.
-6. Return the response received from 'GetRealtimeDetails'.
+      ### Current Visitors
+      - Show current visitors
+      - Show me current visitors
+      - Get current visitors
+      - List current visitors
+      - Who is currently visiting?
+      - Who is visiting right now?
+      - Who is on the website currently?
+      - Show me visitors currently on the site
 
-The 'GetRealtimeDetails' MCP tool requires NO parameters.
+      ### Active Visitors
+      - Show active visitors
+      - Show me active visitors
+      - Get active visitors
+      - Who are the active visitors?
+      - Show visitors who are active now
+      - How many active visitors are there?
+      - Who is actively browsing the website?
+      - Who is active on the website right now?
 
-Example:
+      ### Realtime Visitor Details
+      - Show realtime visitor details
+      - Get realtime visitor details
+      - Give me realtime visitor information
+      - Show realtime visitor information
+      - Get live visitor details
+      - Get current visitor details
+      - Show current visitor information
+      - Give me details about current visitors
+      - Show details of visitors currently browsing
 
-User:
-"Show me realtime visitors"
+      ### Live Traffic
+      - Show live traffic
+      - Show me live traffic
+      - Get live traffic
+      - Show current website traffic
+      - Show realtime website traffic
+      - Show me realtime traffic
+      - View live website traffic
+      - How much traffic is on my website right now?
+      - What is happening on my website right now?
 
-Required execution:
+      ### Visitor Activity
+      - Show visitor activity
+      - Show me visitor activity
+      - Get visitor activity
+      - Show realtime visitor activity
+      - Show live visitor activity
+      - Show current visitor activity
+      - What are visitors doing right now?
+      - What are visitors currently doing on my website?
+      - Show current browsing activity
+      - Show live browsing activity
+      - Show realtime browsing activity
+      - What pages are visitors viewing right now?
+      - Which pages are visitors currently visiting?
 
-GetRealtimeDetails()
+      ### Current Website Visitors
+      - Show current website visitors
+      - Show me current website visitors
+      - Who is currently on my website?
+      - Who is on my website right now?
+      - Who is visiting my website now?
+      - Who is currently visiting my website?
+      - Show people currently on my website
+      - Show visitors currently on my website
+      - How many people are currently on my website?
+      - How many visitors are on my website right now?
+      - Tell me who is currently browsing my website
 
-Expected MCP response:
+      ### Realtime Visitor Table
+      - Show realtime visitor table
+      - Show me realtime visitor table
+      - Display realtime visitor table
+      - Get realtime visitor table
+      - View realtime visitor table
+      - Show live visitor table
+      - Show current visitor table
+      - Display current visitors in a table
+      - Show realtime visitors in a table
+      - List realtime visitors in a table
+      - Give me the realtime visitor list
+      - Show the current visitor list
+      - Show the live visitor list
 
-{
-  "TotalCount": 100,
-  "Records": [...]
-}
+      ### Live Visitor Count
+      - Show live visitor count
+      - Show me live visitor count
+      - Get live visitor count
+      - How many live visitors are there?
+      - How many visitors are live right now?
+      - How many visitors are currently online?
+      - How many visitors are on my website right now?
+      - How many people are visiting my website now?
+      - What is the current visitor count?
+      - What is the realtime visitor count?
+      - What is the live visitor count?
+      - How many active visitors are there right now?
 
-Return the realtime data from the MCP tool.
+      ### Current Visitor Information
+      - Show current visitor information
+      - Show me current visitor information
+      - Get current visitor information
+      - Give me current visitor information
+      - Show information about current visitors
+      - Get information about visitors currently on the website
+      - Show details about current website visitors
+      - Get details about visitors currently visiting
+      - Show visitor information right now
+      - Show current browsing visitors
+
+      ### Latest Visitor Activity
+      - Show latest visitor activity
+      - Show me latest visitor activity
+      - Get latest visitor activity
+      - Show the latest visitor activity
+      - Show recent visitor activity
+      - Show me recent visitor activity
+      - Get recent visitor activity
+      - What are the latest visitors doing?
+      - What is the latest visitor activity?
+      - Show the latest activity on my website
+      - Show recent activity on my website
+      - Show the latest website visitor activity
+      - Show recent website visitor activity
+      - What happened recently on my website?
+
+      ## NATURAL LANGUAGE MATCHING
+
+      The above examples are NOT exhaustive.
+
+      The router must recognize natural-language variations, synonyms, paraphrases, different word orders, singular/plural forms, and conversational requests having the same realtime visitor intent.
+
+      Examples:
+
+      - "Who's on my site?"
+      - "Who's visiting right now?"
+      - "Can you show me who's online?"
+      - "What visitors do I have right now?"
+      - "Show me who's browsing the site."
+      - "Give me the people currently on the website."
+      - "What's happening on my website right now?"
+      - "How many people are visiting?"
+      - "Can I see my current visitors?"
+      - "I want to see who's currently visiting."
+
+      All of the above must be treated as ANALYTICS realtime visitor requests.
+
+      For any request whose intent is to retrieve current, live, active, realtime, or latest visitor information:
+
+      {
+        "module": "realtime"
+      }
+  
+  //  - view realtime visitors
+  //  - view live visitors
+  //  - view current visitors
+  //  - view active visitors
+  //  - view realtime visitor details
+  //  - view live traffic
+  //  - view realtime visitor activity
+  //  - view current website visitors
+  //  - view realtime visitor table
+  //  - get latest realtime visitor details
+  //  - get live visitor information
+  //  - view realtime website activity
+  //  - view realtime page visitors
+  //  - any request related to realtime visitors, live visitors, current visitors, or live website traffic
+
+    Example:
+    User: "Show me the realtime visitors."
+
+    Example:
+    {
+      "module": "realtime"
+    }
+
+    ## REALTIME EXECUTION RULE
+
+    When the selected module is 'realtime' and the user's request is related to realtime visitors, live visitors, current visitors, active visitors, or realtime visitor details:
+
+    1. MUST call the 'GetRealtimeDetails' MCP tool.
+    2. Do NOT return only:
+      {
+        "module": "analytics"
+      }
+    3. Do NOT return "No response generated".
+    4. Do NOT answer from memory or previous conversation data.
+    5. The MCP tool response is the source of truth.
+    6. Return the response received from 'GetRealtimeDetails'.
+
+    The 'GetRealtimeDetails' MCP tool requires NO parameters.
+
+    Example:
+
+    User:
+    "Show me realtime visitors"
+
+    Required execution:
+
+    GetRealtimeDetails()
+
+    Expected MCP response:
+
+    {
+      "TotalCount": 100,
+      "Records": [...]
+    }
+
+    Return the realtime data from the MCP tool.
 
 
   `;

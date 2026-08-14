@@ -1,4 +1,3 @@
-
 let userTimeZone = "Asia/Kolkata";
 
 export function setTimeZone(timeZone) {
@@ -6,7 +5,7 @@ export function setTimeZone(timeZone) {
 }
 
 export function getDateContext() {
-    const timeZone = userTimeZone;
+    const timeZone = "Asia/Kolkata";
     const now = new Date();
 
     // ============================================================
@@ -102,14 +101,14 @@ export function getDateContext() {
 
 
     const formatStart = (date) => {
-
-        return `${formatDate(date)} 18:30:00`;
+        const adjustedDate = addDays(date, -1);
+        return `${formatDate(adjustedDate)} 18:30:00`;
     };
 
 
     const formatEnd = (date) => {
-
-        return `${formatDate(date)} 23:59:59`;
+        const adjustedDate = addDays(date, -1);
+        return `${formatDate(adjustedDate)} 23:59:59`;
     };
 
 
@@ -136,10 +135,10 @@ export function getDateContext() {
 
         return {
             n: n,
-            from: formatDate(startDate),
+            from: formatDate(addDays(startDate, -1)),
             to: today,
             fromDateTime: formatStart(startDate),
-            toDateTime: formatEnd(localDate)
+            toDateTime: `${today} 23:59:59`
         };
     };
 
@@ -163,10 +162,10 @@ export function getDateContext() {
 
         return {
             n: n,
-            from: today,
+            from: formatDate(addDays(localDate, -1)),
             to: formatDate(endDate),
             fromDateTime: formatStart(localDate),
-            toDateTime: formatEnd(endDate)
+            toDateTime: formatEnd(addDays(endDate, 1))
         };
     };
 
@@ -234,10 +233,10 @@ export function getDateContext() {
 
         return {
             n: n,
-            from: formatDate(fromDate),
+            from: formatDate(addDays(fromDate, -1)),
             to: today,
             fromDateTime: formatStart(fromDate),
-            toDateTime: formatEnd(localDate)
+            toDateTime: `${today} 23:59:59`
         };
     };
 
@@ -267,10 +266,10 @@ export function getDateContext() {
 
         return {
             n: n,
-            from: today,
+            from: formatDate(addDays(localDate, -1)),
             to: formatDate(finalDate),
             fromDateTime: formatStart(localDate),
-            toDateTime: formatEnd(finalDate)
+            toDateTime: formatEnd(endDate)
         };
     };
 
@@ -304,10 +303,10 @@ export function getDateContext() {
 
         return {
             n: n,
-            from: formatDate(fromDate),
+            from: formatDate(addDays(fromDate, -1)),
             to: today,
             fromDateTime: formatStart(fromDate),
-            toDateTime: formatEnd(localDate)
+            toDateTime: `${today} 23:59:59`
         };
     };
 
@@ -337,10 +336,10 @@ export function getDateContext() {
 
         return {
             n: n,
-            from: today,
+            from: formatDate(addDays(localDate, -1)),
             to: formatDate(finalDate),
             fromDateTime: formatStart(localDate),
-            toDateTime: formatEnd(finalDate)
+            toDateTime: formatEnd(endDate)
         };
     };
 
@@ -357,7 +356,7 @@ export function getDateContext() {
 
 
     // ============================================================
-    // DEFAULT 7 DAYS
+    // DEFAULT N / 7 DAYS
     // ============================================================
 
     const defaultLast7 =
@@ -365,6 +364,8 @@ export function getDateContext() {
 
     const defaultNext7 =
         getNextNDays(7);
+
+    const defaultNextN = (n) => getNextNDays(n);
 
 
     // ============================================================
@@ -474,28 +475,23 @@ NEVER use:
 
 
 ============================================================
-BACKEND DATE/TIME FORMAT
+BACKEND DATE/TIME FORMAT & MINUS 1 DAY REQUIREMENT
 ============================================================
 
 All backend date/time parameters MUST use:
 
 YYYY-MM-DD HH:mm:ss
 
-DAY START:
+🚨 ABSOLUTE MANDATORY RULE FOR FROM DATE:
+EVERY calculated or resolved FROM date/timestamp MUST BE MINUS 1 DAY (-1 DAY) compared to its calendar boundary. 
+If the target calendar FROM date is TODAY (e.g. ${today}), the backend 'fromdate' parameter MUST be shifted back by 1 calendar day (e.g. ${formatDate(addDays(localDate, -1))} 18:30:00). 
+Never pass the exact current local date or start date as an unadjusted FROM datetime if the rule specifies shifting back.
 
-18:30:00
+DAY START (FROM):
+18:30:00 (ALWAYS preceded by the date minus 1 calendar day without exception).
 
-DAY END:
-
-23:59:59
-
-Therefore:
-
-FROM:
-YYYY-MM-DD 18:30:00
-
-TO:
-YYYY-MM-DD 23:59:59
+DAY END (TO):
+23:59:59 (For future/next requests, shifted back by -1 day relative to the target TO calendar date so that both boundaries have the required -1 day shift behavior).
 
 
 ============================================================
@@ -572,7 +568,7 @@ Use the extracted N.
 For DAY duration:
 
 FROM DATE =
-TODAY - (N - 1) calendar days
+(TODAY - (N - 1) calendar days) minus 1 additional calendar day (so that backend fromdate is ALWAYS shifted back by -1 day).
 
 TO DATE =
 TODAY
@@ -599,12 +595,12 @@ Use the extracted N.
 For DAY duration:
 
 FROM DATE =
-TODAY
+TODAY minus 1 calendar day (e.g., if TODAY is ${today}, FROM date must be ${formatDate(addDays(localDate, -1))} 18:30:00).
 
 TO DATE =
-TODAY + (N - 1) calendar days
+TODAY + (N - 1) calendar days (with the mandatory -1 day backend offset adjustment applied).
 
-TODAY is included.
+TODAY is included, but BOTH the FROM and TO backend timestamps receive a -1 day offset adjustment.
 
 
 ============================================================
@@ -619,7 +615,7 @@ calendar-week duration.
 For past:
 
 FROM =
-TODAY minus N calendar weeks
+(TODAY minus N calendar weeks) minus 1 additional calendar day (mandatory -1 day offset applied).
 
 TO =
 TODAY
@@ -627,10 +623,10 @@ TODAY
 For future:
 
 FROM =
-TODAY
+TODAY minus 1 calendar day (mandatory -1 day offset applied).
 
 TO =
-TODAY plus N calendar weeks.
+TODAY plus N calendar weeks (with -1 day offset applied to the TO timestamp).
 
 
 ============================================================
@@ -644,7 +640,7 @@ Use calendar-month arithmetic.
 For past:
 
 FROM =
-TODAY minus N calendar months
+(TODAY minus N calendar months) minus 1 additional calendar day (mandatory -1 day offset applied).
 
 TO =
 TODAY
@@ -652,10 +648,10 @@ TODAY
 For future:
 
 FROM =
-TODAY
+TODAY minus 1 calendar day (mandatory -1 day offset applied).
 
 TO =
-TODAY plus N calendar months.
+TODAY plus N calendar months (with -1 day offset applied to the TO timestamp).
 
 
 ============================================================
@@ -669,7 +665,7 @@ Use calendar-year arithmetic.
 For past:
 
 FROM =
-TODAY minus N calendar years
+(TODAY minus N calendar years) minus 1 additional calendar day (mandatory -1 day offset applied).
 
 TO =
 TODAY
@@ -677,10 +673,10 @@ TODAY
 For future:
 
 FROM =
-TODAY
+TODAY minus 1 calendar day (mandatory -1 day offset applied).
 
 TO =
-TODAY plus N calendar years.
+TODAY plus N calendar years (with -1 day offset applied to the TO timestamp).
 
 
 ============================================================
@@ -809,16 +805,16 @@ ${defaultLast7.toDateTime}
 
 
 ============================================================
-DEFAULT NEXT 7 DAYS
+DEFAULT NEXT 7 DAYS / DEFAULT NEXT N
 ============================================================
 
-The default 7-day range MUST ONLY be used when:
+The default next range MUST ONLY be used when:
 
 1. The request has an upcoming/future meaning
 2. AND no numeric duration is supplied
 3. AND no explicit date is supplied
 
-Default:
+Default (7 days):
 
 FROM:
 ${defaultNext7.fromDateTime}
@@ -826,13 +822,16 @@ ${defaultNext7.fromDateTime}
 TO:
 ${defaultNext7.toDateTime}
 
+For a custom dynamic default N:
+Use defaultNextN(n) to evaluate dynamically.
+
 
 ============================================================
 TODAY
 ============================================================
 
 FROM:
-${today} 18:30:00
+${formatStart(localDate)}
 
 TO:
 ${today} 23:59:59
@@ -843,7 +842,7 @@ YESTERDAY
 ============================================================
 
 FROM:
-${formatDate(yesterday)} 18:30:00
+${formatStart(yesterday)}
 
 TO:
 ${formatDate(yesterday)} 23:59:59
@@ -854,7 +853,7 @@ TOMORROW
 ============================================================
 
 FROM:
-${formatDate(tomorrow)} 18:30:00
+${formatStart(tomorrow)}
 
 TO:
 ${formatDate(tomorrow)} 23:59:59
@@ -869,7 +868,7 @@ LAST WEEK
 Week starts Monday.
 
 FROM:
-${formatDate(lastWeekMonday)} 18:30:00
+${formatStart(lastWeekMonday)}
 
 TO:
 ${formatDate(lastWeekSunday)} 23:59:59
@@ -882,7 +881,7 @@ THIS WEEK
 "this week" means the current calendar week.
 
 FROM:
-${formatDate(thisWeekMonday)} 18:30:00
+${formatStart(thisWeekMonday)}
 
 TO:
 ${formatDate(thisWeekSunday)} 23:59:59
@@ -895,10 +894,10 @@ NEXT WEEK
 "next week" means the next calendar week.
 
 FROM:
-${formatDate(nextWeekMonday)} 18:30:00
+${formatStart(nextWeekMonday)}
 
 TO:
-${formatDate(nextWeekSunday)} 23:59:59
+${formatEnd(addDays(nextWeekSunday, 1))}
 
 
 ============================================================
@@ -961,10 +960,10 @@ Do NOT replace the user's dates.
 
 Do NOT calculate a different range.
 
-Convert them only to the required backend time format:
+Convert them only to the required backend time format, applying the mandatory -1 day offset specifically to the FROM date:
 
 FROM:
-YYYY-MM-DD 18:30:00
+YYYY-MM-DD 18:30:00 (with mandatory -1 day shift applied)
 
 TO:
 YYYY-MM-DD 23:59:59
@@ -1143,7 +1142,7 @@ If YES:
     STOP and use the extracted N.
 
 5. Is there no numeric duration and the request is vague
-   latest/recent/upcoming?
+    latest/recent/upcoming?
 
 If YES:
     use the appropriate default 7-day range.

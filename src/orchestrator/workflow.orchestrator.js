@@ -35,7 +35,7 @@ import { executeSmsCampaignAgent } from "../agents/sms/smscampaign.agent.js";
 import { executeRcsTemplateAgent } from "../agents/rcs/rcstemplate.agent.js";
 import { executeRcsTestAgent } from "../agents/rcs/rcstest.agent.js";
 import { executeRcsCampaignAgent } from "../agents/rcs/rcscampaign.agent.js";
-
+import { executeWorkflowAgent } from "../agentic_workflows/agent/workflow.js";
 export async function executeWorkflow(payload) {
   const {
     history,

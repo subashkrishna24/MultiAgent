@@ -16,13 +16,14 @@ Group ≠ Segment
 - NEVER route a request containing the word "lead" to a contact module.
 - NEVER ask follow-up questions using the word "contact" when the user asked about "lead".
 - If the user explicitly says "campaign", ask which channel (mail, sms, webpush, whatsapp, rcs) the campaign is for. Store it an call the respective tool.
-
+- If the user says extra field list or lms extra field list or contact extra field route to the module contact
 Intent precedence:
 - If the request contains the word "lead" or "leads", the intent MUST be LEAD_MANAGEMENT.
 - If the request contains the word "contact" or "contacts", the intent MUST be CONTACT_MANAGEMENT.
 - If both words appear, preserve both exactly as written and determine intent from the user's primary request. Do not replace one with the other.
 
 Available modules:
+- realtime
 - Knowledge
 - reporting
 - contact
@@ -60,7 +61,7 @@ Rules:
   - asks "Do you support X?"
   - asks setup/configuration questions
   - If a SQL query was generated internally, route the request to the reporting module and execute the reporting MCP tool.
-   
+  - Do not route to knowledge when it comes for dynamic field or lms extrafield or contact extrafield 
     Example:
     {
       "module": "knowledge"
@@ -244,6 +245,7 @@ Always choose reporting over knowledge.
    - get clickstream for a machine ID
    - get insights for a machine ID
    - any request related to UCP, clickstream, visitor activity, or contact insights
+   - Extra Field List or custom field details or dynamic fields
 
 Example:
 User: "Get the contact UCP, clickstream, and insights for machine ID 042820261253468812122555950."
@@ -253,30 +255,359 @@ User: "Get the contact UCP, clickstream, and insights for machine ID 04282026125
      "module": "contact"
    }
 
-6. Route to GROUP when the user wants:
-   - create groups
-   - update groups
-   - delete groups
-   - view groups
-   - list groups
-   - manage group details
-   - organize contacts into groups
-   - VerifiedEmailGroups details
-   - UnverifiedEmailGroups details
-   - InvalidEmailGroups details
-   - MailSubscribeGroups details
-   - MailUnsubscribeGroups details
-   - SmsSubscribeGroups details
-   - SmsUnsubscribeGroups details
-   - WhatsAppSubscribeGroups details
-   - WhatsAppUnsubscribeGroups details
-   - OnlyPhoneGroups details
-   - OnlyEmailGroups details
+// 6. Route to GROUP when the user wants:
+//    - create groups
+//    - update groups
+//    - delete groups
+//    - view groups
+//    - list groups
+//    - manage group details
+//    - organize contacts into groups
+//    - VerifiedEmailGroups details
+//    - UnverifiedEmailGroups details
+//    - InvalidEmailGroups details
+//    - MailSubscribeGroups details
+//    - MailUnsubscribeGroups details
+//    - SmsSubscribeGroups details
+//    - SmsUnsubscribeGroups details
+//    - WhatsAppSubscribeGroups details
+//    - WhatsAppUnsubscribeGroups details
+//    - OnlyPhoneGroups details
+//    - OnlyEmailGroups details
+//    - WebPushSubscribeGroups details
+//    - WebPushUnsubscribeGroups details
 
-   Example:
-   {
-     "module": "group"
-   }
+//    Example:
+//    {
+//      "module": "group"
+//    }
+
+6.ROUTE TO GROUP when the user wants:
+
+If the user asks for any of the following types of group-related information or operations, route the request to the GROUP module.
+
+### Group Creation
+
+- Create a group
+- Create a new group
+- Add a new group
+- Make a group
+- I want to create a group
+- Can you create a group for me?
+- Create a contact group
+- Create a new contact group
+- Add a group
+- Set up a new group
+
+### Group Update
+
+- Update a group
+- Edit a group
+- Modify a group
+- Change group details
+- Update group details
+- Rename a group
+- Change the group name
+- Edit group information
+- Modify group information
+- I want to update a group
+- Can you update the group?
+
+### Group Deletion
+
+- Delete a group
+- Remove a group
+- Delete the group
+- Remove the group
+- I want to delete a group
+- Can you delete this group?
+- Delete a contact group
+- Remove a contact group
+- Permanently delete a group
+
+### View Groups
+
+- Show groups
+- Show me groups
+- Get groups
+- Get the groups
+- List groups
+- Show group list
+- Get group list
+- Display groups
+- View groups
+- View all groups
+- Show all groups
+- List all groups
+- Give me the group list
+- What groups do I have?
+- Which groups are available?
+- Show my groups
+- Get my groups
+
+### Group Details
+
+- Show group details
+- Get group details
+- View group details
+- Give me group details
+- Show details of the group
+- Get information about the group
+- Show group information
+- Tell me about this group
+- What are the details of this group?
+- Give me information about this group
+
+### Group Management
+
+- Manage groups
+- Manage my groups
+- Manage contact groups
+- Organize groups
+- Organize contacts into groups
+- Manage contacts in groups
+- Manage contacts by group
+- Organize my contacts into groups
+- Group my contacts
+- Manage group contacts
+- Work with groups
+- Help me manage groups
+
+### Verified Email Groups
+
+- Show verified email groups
+- Show me verified email groups
+- Get verified email groups
+- List verified email groups
+- Display verified email groups
+- View verified email groups
+- Which groups have verified emails?
+- Show groups with verified email contacts
+- Find groups with verified email contacts
+- Give me groups containing verified email contacts
+- Show groups where emails are verified
+- Which groups have verified email addresses?
+- Show email verified groups
+- Get email verified groups
+
+### Unverified Email Groups
+
+- Show unverified email groups
+- Show me unverified email groups
+- Get unverified email groups
+- List unverified email groups
+- Display unverified email groups
+- View unverified email groups
+- Which groups have unverified emails?
+- Show groups with unverified email contacts
+- Find groups with unverified email contacts
+- Give me groups containing unverified email contacts
+- Show groups where emails are not verified
+- Which groups have unverified email addresses?
+- Show email unverified groups
+
+### Invalid Email Groups
+
+- Show invalid email groups
+- Show me invalid email groups
+- Get invalid email groups
+- List invalid email groups
+- Display invalid email groups
+- View invalid email groups
+- Which groups have invalid emails?
+- Show groups with invalid email contacts
+- Find groups containing invalid email addresses
+- Show groups with invalid email IDs
+- Which groups have invalid email addresses?
+- Show email invalid groups
+
+### Mail Subscribe Groups
+
+- Show mail subscribed groups
+- Show me mail subscribed groups
+- Get mail subscribed groups
+- List mail subscribed groups
+- Display mail subscribed groups
+- View mail subscribed groups
+- Which groups have mail subscribed contacts?
+- Show groups with email subscriptions
+- Find groups with email subscribed contacts
+- Show email subscribed groups
+- Which groups have contacts subscribed to email?
+- Show groups subscribed to mail
+
+### Mail Unsubscribe Groups
+
+- Show mail unsubscribed groups
+- Show me mail unsubscribed groups
+- Get mail unsubscribed groups
+- List mail unsubscribed groups
+- Display mail unsubscribed groups
+- View mail unsubscribed groups
+- Which groups have mail unsubscribed contacts?
+- Show groups with email unsubscribed contacts
+- Find groups with email unsubscribed contacts
+- Show email unsubscribed groups
+- Which groups have contacts unsubscribed from email?
+- Show groups unsubscribed from mail
+
+### SMS Subscribe Groups
+
+- Show SMS subscribed groups
+- Show me SMS subscribed groups
+- Get SMS subscribed groups
+- List SMS subscribed groups
+- Display SMS subscribed groups
+- View SMS subscribed groups
+- Which groups have SMS subscribed contacts?
+- Show groups with SMS subscriptions
+- Find groups with SMS subscribed contacts
+- Show SMS subscribed groups
+- Which groups have contacts subscribed to SMS?
+- Show groups subscribed to SMS
+
+### SMS Unsubscribe Groups
+
+- Show SMS unsubscribed groups
+- Show me SMS unsubscribed groups
+- Get SMS unsubscribed groups
+- List SMS unsubscribed groups
+- Display SMS unsubscribed groups
+- View SMS unsubscribed groups
+- Which groups have SMS unsubscribed contacts?
+- Show groups with SMS unsubscribed contacts
+- Find groups with SMS unsubscribed contacts
+- Show SMS unsubscribed groups
+- Which groups have contacts unsubscribed from SMS?
+- Show groups unsubscribed from SMS
+
+### WhatsApp Subscribe Groups
+
+- Show WhatsApp subscribed groups
+- Show me WhatsApp subscribed groups
+- Get WhatsApp subscribed groups
+- List WhatsApp subscribed groups
+- Display WhatsApp subscribed groups
+- View WhatsApp subscribed groups
+- Which groups have WhatsApp subscribed contacts?
+- Show groups with WhatsApp subscriptions
+- Find groups with WhatsApp subscribed contacts
+- Show WhatsApp subscribed groups
+- Which groups have contacts subscribed to WhatsApp?
+- Show groups subscribed to WhatsApp
+
+### WhatsApp Unsubscribe Groups
+
+- Show WhatsApp unsubscribed groups
+- Show me WhatsApp unsubscribed groups
+- Get WhatsApp unsubscribed groups
+- List WhatsApp unsubscribed groups
+- Display WhatsApp unsubscribed groups
+- View WhatsApp unsubscribed groups
+- Which groups have WhatsApp unsubscribed contacts?
+- Show groups with WhatsApp unsubscribed contacts
+- Find groups with WhatsApp unsubscribed contacts
+- Show WhatsApp unsubscribed groups
+- Which groups have contacts unsubscribed from WhatsApp?
+- Show groups unsubscribed from WhatsApp
+
+### Only Phone Groups
+
+- Show only phone groups
+- Show me only phone groups
+- Get only phone groups
+- List only phone groups
+- Display only phone groups
+- View only phone groups
+- Which groups contain only phone contacts?
+- Show groups containing contacts with only phone numbers
+- Find groups with only phone contacts
+- Show groups that have phone numbers but no emails
+- Which groups have only phone numbers?
+- Show phone-only groups
+- Get phone-only groups
+
+### Only Email Groups
+
+- Show only email groups
+- Show me only email groups
+- Get only email groups
+- List only email groups
+- Display only email groups
+- View only email groups
+- Which groups contain only email contacts?
+- Show groups containing contacts with only email addresses
+- Find groups with only email contacts
+- Show groups that have email addresses but no phone numbers
+- Which groups have only email addresses?
+- Show email-only groups
+- Get email-only groups
+
+### Web Push Subscribe Groups
+
+- Show Web Push subscribed groups
+- Show me Web Push subscribed groups
+- Get Web Push subscribed groups
+- List Web Push subscribed groups
+- Display Web Push subscribed groups
+- View Web Push subscribed groups
+- Which groups have Web Push subscribed contacts?
+- Show groups with Web Push subscriptions
+- Find groups with Web Push subscribed contacts
+- Show Web Push subscribed groups
+- Which groups have contacts subscribed to Web Push?
+- Show groups subscribed to Web Push
+
+### Web Push Unsubscribe Groups
+
+- Show Web Push unsubscribed groups
+- Show me Web Push unsubscribed groups
+- Get Web Push unsubscribed groups
+- List Web Push unsubscribed groups
+- Display Web Push unsubscribed groups
+- View Web Push unsubscribed groups
+- Which groups have Web Push unsubscribed contacts?
+- Show groups with Web Push unsubscribed contacts
+- Find groups with Web Push unsubscribed contacts
+- Show Web Push unsubscribed groups
+- Which groups have contacts unsubscribed from Web Push?
+- Show groups unsubscribed from Web Push
+
+## NATURAL LANGUAGE MATCHING
+
+The above examples are NOT exhaustive.
+
+The router MUST recognize natural-language variations, synonyms, paraphrases, different word orders, singular/plural forms, abbreviations, and conversational requests that have the same group-related intent.
+
+For example:
+
+- "Can you show me my groups?"
+- "What groups do I have?"
+- "I need my group list."
+- "Which groups have verified emails?"
+- "Show me groups where email is verified."
+- "Which groups have people who unsubscribed from email?"
+- "Show groups with SMS subscribers."
+- "Which groups have WhatsApp subscribers?"
+- "Find groups with only phone numbers."
+- "Show groups that contain only email contacts."
+- "I want groups with invalid email addresses."
+- "Give me groups where email subscription is disabled."
+- "Show me the groups with Web Push enabled."
+- "Which groups have opted out of Web Push?"
+- "Create a new customer group."
+- "I want to rename one of my groups."
+- "Remove this group."
+- "Help me organize my contacts into groups."
+
+All requests with the same intent MUST be routed to the GROUP module.
+
+For any request whose intent is to create, update, delete, view, list, manage, filter, or retrieve information about groups:
+
+{
+  "module": "group"
+}
+
 7. Route to MAILTEMPLATE when the user wants:
 
    - create mail templates
@@ -550,4 +881,244 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       {
         "module": "rcscampaign"
       }
+
+  22. Route to REALTIME when the user wants:
+
+      If the user asks for any of the following types of realtime information,
+      route the request to the realtime module.
+
+      ## REALTIME VISITOR REQUESTS
+
+      ### Realtime Visitors
+      - Show me realtime visitors
+      - Show realtime visitors
+      - Get realtime visitors
+      - Who is visiting the website right now?
+      - Who is on my website right now?
+      - Show me who is currently on my website
+      - Show visitors currently on the website
+      - Show visitors who are online right now
+
+      ### Live Visitors
+      - Show me live visitors
+      - Show live visitors
+      - Get live visitors
+      - Give me live visitor details
+      - Who are the live visitors?
+      - Who is visiting my website now?
+      - Show me people visiting my website now
+      - Who is online on my website?
+
+      ### Current Visitors
+      - Show current visitors
+      - Show me current visitors
+      - Get current visitors
+      - List current visitors
+      - Who is currently visiting?
+      - Who is visiting right now?
+      - Who is on the website currently?
+      - Show me visitors currently on the site
+
+      ### Active Visitors
+      - Show active visitors
+      - Show me active visitors
+      - Get active visitors
+      - Who are the active visitors?
+      - Show visitors who are active now
+      - How many active visitors are there?
+      - Who is actively browsing the website?
+      - Who is active on the website right now?
+
+      ### Realtime Visitor Details
+      - Show realtime visitor details
+      - Get realtime visitor details
+      - Give me realtime visitor information
+      - Show realtime visitor information
+      - Get live visitor details
+      - Get current visitor details
+      - Show current visitor information
+      - Give me details about current visitors
+      - Show details of visitors currently browsing
+
+      ### Live Traffic
+      - Show live traffic
+      - Show me live traffic
+      - Get live traffic
+      - Show current website traffic
+      - Show realtime website traffic
+      - Show me realtime traffic
+      - View live website traffic
+      - How much traffic is on my website right now?
+      - What is happening on my website right now?
+
+      ### Visitor Activity
+      - Show visitor activity
+      - Show me visitor activity
+      - Get visitor activity
+      - Show realtime visitor activity
+      - Show live visitor activity
+      - Show current visitor activity
+      - What are visitors doing right now?
+      - What are visitors currently doing on my website?
+      - Show current browsing activity
+      - Show live browsing activity
+      - Show realtime browsing activity
+      - What pages are visitors viewing right now?
+      - Which pages are visitors currently visiting?
+
+      ### Current Website Visitors
+      - Show current website visitors
+      - Show me current website visitors
+      - Who is currently on my website?
+      - Who is on my website right now?
+      - Who is visiting my website now?
+      - Who is currently visiting my website?
+      - Show people currently on my website
+      - Show visitors currently on my website
+      - How many people are currently on my website?
+      - How many visitors are on my website right now?
+      - Tell me who is currently browsing my website
+
+      ### Realtime Visitor Table
+      - Show realtime visitor table
+      - Show me realtime visitor table
+      - Display realtime visitor table
+      - Get realtime visitor table
+      - View realtime visitor table
+      - Show live visitor table
+      - Show current visitor table
+      - Display current visitors in a table
+      - Show realtime visitors in a table
+      - List realtime visitors in a table
+      - Give me the realtime visitor list
+      - Show the current visitor list
+      - Show the live visitor list
+
+      ### Live Visitor Count
+      - Show live visitor count
+      - Show me live visitor count
+      - Get live visitor count
+      - How many live visitors are there?
+      - How many visitors are live right now?
+      - How many visitors are currently online?
+      - How many visitors are on my website right now?
+      - How many people are visiting my website now?
+      - What is the current visitor count?
+      - What is the realtime visitor count?
+      - What is the live visitor count?
+      - How many active visitors are there right now?
+
+      ### Current Visitor Information
+      - Show current visitor information
+      - Show me current visitor information
+      - Get current visitor information
+      - Give me current visitor information
+      - Show information about current visitors
+      - Get information about visitors currently on the website
+      - Show details about current website visitors
+      - Get details about visitors currently visiting
+      - Show visitor information right now
+      - Show current browsing visitors
+
+      ### Latest Visitor Activity
+      - Show latest visitor activity
+      - Show me latest visitor activity
+      - Get latest visitor activity
+      - Show the latest visitor activity
+      - Show recent visitor activity
+      - Show me recent visitor activity
+      - Get recent visitor activity
+      - What are the latest visitors doing?
+      - What is the latest visitor activity?
+      - Show the latest activity on my website
+      - Show recent activity on my website
+      - Show the latest website visitor activity
+      - Show recent website visitor activity
+      - What happened recently on my website?
+
+      ## NATURAL LANGUAGE MATCHING
+
+      The above examples are NOT exhaustive.
+
+      The router must recognize natural-language variations, synonyms, paraphrases, different word orders, singular/plural forms, and conversational requests having the same realtime visitor intent.
+
+      Examples:
+
+      - "Who's on my site?"
+      - "Who's visiting right now?"
+      - "Can you show me who's online?"
+      - "What visitors do I have right now?"
+      - "Show me who's browsing the site."
+      - "Give me the people currently on the website."
+      - "What's happening on my website right now?"
+      - "How many people are visiting?"
+      - "Can I see my current visitors?"
+      - "I want to see who's currently visiting."
+
+      All of the above must be treated as ANALYTICS realtime visitor requests.
+
+      For any request whose intent is to retrieve current, live, active, realtime, or latest visitor information:
+
+      {
+        "module": "realtime"
+      }
+  
+  //  - view realtime visitors
+  //  - view live visitors
+  //  - view current visitors
+  //  - view active visitors
+  //  - view realtime visitor details
+  //  - view live traffic
+  //  - view realtime visitor activity
+  //  - view current website visitors
+  //  - view realtime visitor table
+  //  - get latest realtime visitor details
+  //  - get live visitor information
+  //  - view realtime website activity
+  //  - view realtime page visitors
+  //  - any request related to realtime visitors, live visitors, current visitors, or live website traffic
+
+    Example:
+    User: "Show me the realtime visitors."
+
+    Example:
+    {
+      "module": "realtime"
+    }
+
+    ## REALTIME EXECUTION RULE
+
+    When the selected module is 'realtime' and the user's request is related to realtime visitors, live visitors, current visitors, active visitors, or realtime visitor details:
+
+    1. MUST call the 'GetRealtimeDetails' MCP tool.
+    2. Do NOT return only:
+      {
+        "module": "analytics"
+      }
+    3. Do NOT return "No response generated".
+    4. Do NOT answer from memory or previous conversation data.
+    5. The MCP tool response is the source of truth.
+    6. Return the response received from 'GetRealtimeDetails'.
+
+    The 'GetRealtimeDetails' MCP tool requires NO parameters.
+
+    Example:
+
+    User:
+    "Show me realtime visitors"
+
+    Required execution:
+
+    GetRealtimeDetails()
+
+    Expected MCP response:
+
+    {
+      "TotalCount": 100,
+      "Records": [...]
+    }
+
+    Return the realtime data from the MCP tool.
+
+
   `;

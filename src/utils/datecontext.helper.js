@@ -1,878 +1,1182 @@
-export function getDateContext() {
-const now = new Date();
+let userTimeZone = "Asia/Kolkata";
 
-// ============================================================
-// DATE FORMATTERS
-// ============================================================
-
-const formatDate = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
-};
-
-const formatDateTime = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const seconds = String(date.getSeconds()).padStart(2, "0");
-
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-};
-
-// ============================================================
-// CURRENT DATE / TIME
-// ============================================================
-
-const today = formatDate(now);
-const currentYear = now.getFullYear();
-const currentDateTime = formatDateTime(now);
-
-// ============================================================
-// CURRENT BUSINESS DAY
-//
-// Business day:
-// 18:30:00 -> next day 18:29:59
-//
-// This is used for TODAY and PAST ranges.
-// ============================================================
-
-const todayBusinessStart = new Date(now);
-todayBusinessStart.setHours(18, 30, 0, 0);
-
-let businessDayStart;
-
-if (now >= todayBusinessStart) {
-    businessDayStart = new Date(todayBusinessStart);
-} else {
-    businessDayStart = new Date(todayBusinessStart);
-    businessDayStart.setDate(businessDayStart.getDate() - 1);
+export function setTimeZone(timeZone) {
+    userTimeZone = timeZone || "Asia/Kolkata";
 }
 
-const businessDayEnd = new Date(businessDayStart);
-businessDayEnd.setDate(businessDayEnd.getDate() + 1);
-businessDayEnd.setSeconds(-1);
+export function getDateContext() {
+    const timeZone = "Asia/Kolkata";
+    const now = new Date();
 
-const todayFromDateTime = formatDateTime(businessDayStart);
-const todayToDateTime = formatDateTime(businessDayEnd);
+    // ============================================================
+    // CURRENT LOCAL DATE/TIME
+    // ============================================================
 
-// ============================================================
-// FUTURE DATE ANCHOR
-//
-// IMPORTANT:
-// Future ranges MUST NOT use businessDayStart.
-//
-// Future ranges always start from TODAY'S CALENDAR DATE
-// at 18:30:00.
-//
-// This prevents Next 7 Days from sometimes starting on
-// yesterday when the current time is before 18:30.
-// ============================================================
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+    });
 
-const futureDayStart = new Date(now);
-futureDayStart.setHours(18, 30, 0, 0);
+    const parts = formatter.formatToParts(now);
 
-const futureDayStartDateTime = formatDateTime(futureDayStart);
+    const getPart = (type) =>
+        parts.find(p => p.type === type)?.value || "00";
 
-// ============================================================
-// LAST 2 DAYS
-// ============================================================
+    const year = Number(getPart("year"));
+    const month = Number(getPart("month"));
+    const day = Number(getPart("day"));
 
-const last2DaysStart = new Date(businessDayStart);
-last2DaysStart.setDate(last2DaysStart.getDate() - 1);
+    const currentTime =
+        `${getPart("hour")}:${getPart("minute")}:${getPart("second")}`;
 
-const last2DaysFromDateTime = formatDateTime(last2DaysStart);
-const last2DaysToDateTime = formatDateTime(businessDayEnd);
+    const today =
+        `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-// ============================================================
-// LAST 7 DAYS
-//
-// Exactly 7 business-day periods ending at the
-// current business-day end.
-// ============================================================
 
-const last7DaysStart = new Date(businessDayStart);
-last7DaysStart.setDate(last7DaysStart.getDate() - 7);
+    // ============================================================
+    // LOCAL CALENDAR DATE
+    // ============================================================
 
-const last7DaysFromDateTime = formatDateTime(last7DaysStart);
-const last7DaysToDateTime = formatDateTime(businessDayEnd);
+    const localDate = new Date(
+        year,
+        month - 1,
+        day
+    );
 
-// ============================================================
-// LAST 30 DAYS
-// ============================================================
 
-const last30DaysStart = new Date(businessDayStart);
-last30DaysStart.setDate(last30DaysStart.getDate() - 30);
+    // ============================================================
+    // DATE HELPERS
+    // ============================================================
 
-const last30DaysFromDateTime = formatDateTime(last30DaysStart);
-const last30DaysToDateTime = formatDateTime(businessDayEnd);
+    const addDays = (date, days) => {
 
-// ============================================================
-// LAST WEEK
-// ============================================================
+        const result = new Date(date);
 
-const lastWeekStart = new Date(businessDayStart);
-lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+        result.setDate(
+            result.getDate() + days
+        );
 
-const lastWeekEnd = new Date(businessDayEnd);
+        return result;
+    };
 
-const lastWeekFromDateTime = formatDateTime(lastWeekStart);
-const lastWeekToDateTime = formatDateTime(lastWeekEnd);
 
-// ============================================================
-// LAST MONTH
-//
-// Previous calendar month using business-day boundaries.
-// ============================================================
+    const addMonths = (date, months) => {
 
-const lastMonthStart = new Date(
-    currentYear,
-    now.getMonth() - 1,
-    1,
-    18,
-    30,
-    0,
-    0
-);
+        const result = new Date(date);
 
-const lastMonthEnd = new Date(
-    currentYear,
-    now.getMonth(),
-    1,
-    18,
-    29,
-    59,
-    999
-);
+        result.setMonth(
+            result.getMonth() + months
+        );
 
-const lastMonthFromDateTime = formatDateTime(lastMonthStart);
-const lastMonthToDateTime = formatDateTime(lastMonthEnd);
+        return result;
+    };
 
-// ============================================================
-// LAST YEAR
-//
-// Previous calendar year using business-day boundaries.
-// ============================================================
 
-const lastYearStart = new Date(
-    currentYear - 1,
-    0,
-    1,
-    18,
-    30,
-    0,
-    0
-);
+    const addYears = (date, years) => {
 
-const lastYearEnd = new Date(
-    currentYear,
-    0,
-    1,
-    18,
-    29,
-    59,
-    999
-);
+        const result = new Date(date);
 
-const lastYearFromDateTime = formatDateTime(lastYearStart);
-const lastYearToDateTime = formatDateTime(lastYearEnd);
+        result.setFullYear(
+            result.getFullYear() + years
+        );
 
-// ============================================================
-// NEXT 2 DAYS
-//
-// Future ranges ALWAYS start from today's calendar date
-// at 18:30:00.
-// ============================================================
+        return result;
+    };
 
-const next2DaysStart = new Date(futureDayStart);
 
-const next2DaysEnd = new Date(futureDayStart);
-next2DaysEnd.setDate(next2DaysEnd.getDate() + 2);
-next2DaysEnd.setSeconds(-1);
+    const formatDate = (date) => {
 
-const next2DaysFromDateTime = formatDateTime(next2DaysStart);
-const next2DaysToDateTime = formatDateTime(next2DaysEnd);
+        return [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, "0"),
+            String(date.getDate()).padStart(2, "0")
+        ].join("-");
+    };
 
-// ============================================================
-// NEXT 7 DAYS
-//
-// CRITICAL:
-// MUST ALWAYS start from TODAY at 18:30:00.
-//
-// MUST NOT use businessDayStart.
-// ============================================================
 
-const next7DaysStart = new Date(futureDayStart);
+    const formatStart = (date) => {
+        const adjustedDate = addDays(date, -1);
+        return `${formatDate(adjustedDate)} 18:30:00`;
+    };
 
-const next7DaysEnd = new Date(futureDayStart);
-next7DaysEnd.setDate(next7DaysEnd.getDate() + 7);
-next7DaysEnd.setSeconds(-1);
 
-const next7DaysFromDateTime = formatDateTime(next7DaysStart);
-const next7DaysToDateTime = formatDateTime(next7DaysEnd);
+    const formatEnd = (date) => {
+        const adjustedDate = addDays(date, -1);
+        return `${formatDate(adjustedDate)} 23:59:59`;
+    };
 
-// ============================================================
-// NEXT 30 DAYS
-// ============================================================
 
-const next30DaysStart = new Date(futureDayStart);
+    // ============================================================
+    // DYNAMIC N-DAY CALCULATION
+    // ============================================================
 
-const next30DaysEnd = new Date(futureDayStart);
-next30DaysEnd.setDate(next30DaysEnd.getDate() + 30);
-next30DaysEnd.setSeconds(-1);
+    const getLastNDays = (n) => {
 
-const next30DaysFromDateTime = formatDateTime(next30DaysStart);
-const next30DaysToDateTime = formatDateTime(next30DaysEnd);
+        n = Number(n);
 
-// ============================================================
-// NEXT WEEK
-//
-// Starts after the current Next 7 Days period.
-// ============================================================
+        if (
+            !Number.isInteger(n) ||
+            n <= 0
+        ) {
+            return null;
+        }
 
-const nextWeekStart = new Date(futureDayStart);
-nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+        const startDate =
+            addDays(
+                localDate,
+                -(n - 1)
+            );
 
-const nextWeekEnd = new Date(nextWeekStart);
-nextWeekEnd.setDate(nextWeekEnd.getDate() + 7);
-nextWeekEnd.setSeconds(-1);
+        return {
+            n: n,
+            from: formatDate(addDays(startDate, -1)),
+            to: today,
+            fromDateTime: formatStart(startDate),
+            toDateTime: `${today} 23:59:59`
+        };
+    };
 
-const nextWeekFromDateTime = formatDateTime(nextWeekStart);
-const nextWeekToDateTime = formatDateTime(nextWeekEnd);
 
-// ============================================================
-// NEXT MONTH
-//
-// Next calendar month using business-day boundaries.
-// ============================================================
+    const getNextNDays = (n) => {
 
-const nextMonthStart = new Date(
-    currentYear,
-    now.getMonth() + 1,
-    1,
-    18,
-    30,
-    0,
-    0
-);
+        n = Number(n);
 
-const nextMonthEnd = new Date(
-    currentYear,
-    now.getMonth() + 2,
-    1,
-    18,
-    29,
-    59,
-    999
-);
+        if (
+            !Number.isInteger(n) ||
+            n <= 0
+        ) {
+            return null;
+        }
 
-const nextMonthFromDateTime = formatDateTime(nextMonthStart);
-const nextMonthToDateTime = formatDateTime(nextMonthEnd);
+        const endDate =
+            addDays(
+                localDate,
+                n - 1
+            );
 
-// ============================================================
-// NEXT YEAR
-// ============================================================
+        return {
+            n: n,
+            from: formatDate(addDays(localDate, -1)),
+            to: formatDate(endDate),
+            fromDateTime: formatStart(localDate),
+            toDateTime: formatEnd(addDays(endDate, 1))
+        };
+    };
 
-const nextYearStart = new Date(
-    currentYear + 1,
-    0,
-    1,
-    18,
-    30,
-    0,
-    0
-);
 
-const nextYearEnd = new Date(
-    currentYear + 2,
-    0,
-    1,
-    18,
-    29,
-    59,
-    999
-);
+    // ============================================================
+    // DYNAMIC N-WEEK CALCULATION
+    // ============================================================
 
-const nextYearFromDateTime = formatDateTime(nextYearStart);
-const nextYearToDateTime = formatDateTime(nextYearEnd);
+    const getLastNWeeks = (n) => {
 
-// ============================================================
-// RETURN DATE CONTEXT
-// ============================================================
+        n = Number(n);
 
-return `
+        if (
+            !Number.isInteger(n) ||
+            n <= 0
+        ) {
+            return null;
+        }
 
-REAL TIME DATE CONTEXT
+        return getLastNDays(n * 7);
+    };
 
-Today:
+
+    const getNextNWeeks = (n) => {
+
+        n = Number(n);
+
+        if (
+            !Number.isInteger(n) ||
+            n <= 0
+        ) {
+            return null;
+        }
+
+        return getNextNDays(n * 7);
+    };
+
+
+    // ============================================================
+    // DYNAMIC N-MONTH CALCULATION
+    // ============================================================
+
+    const getLastNMonths = (n) => {
+
+        n = Number(n);
+
+        if (
+            !Number.isInteger(n) ||
+            n <= 0
+        ) {
+            return null;
+        }
+
+        const startDate =
+            addMonths(
+                localDate,
+                -n
+            );
+
+        const fromDate =
+            addDays(
+                startDate,
+                1
+            );
+
+        return {
+            n: n,
+            from: formatDate(addDays(fromDate, -1)),
+            to: today,
+            fromDateTime: formatStart(fromDate),
+            toDateTime: `${today} 23:59:59`
+        };
+    };
+
+
+    const getNextNMonths = (n) => {
+
+        n = Number(n);
+
+        if (
+            !Number.isInteger(n) ||
+            n <= 0
+        ) {
+            return null;
+        }
+
+        const endDate =
+            addMonths(
+                localDate,
+                n
+            );
+
+        const finalDate =
+            addDays(
+                endDate,
+                -1
+            );
+
+        return {
+            n: n,
+            from: formatDate(addDays(localDate, -1)),
+            to: formatDate(finalDate),
+            fromDateTime: formatStart(localDate),
+            toDateTime: formatEnd(endDate)
+        };
+    };
+
+
+    // ============================================================
+    // DYNAMIC N-YEAR CALCULATION
+    // ============================================================
+
+    const getLastNYears = (n) => {
+
+        n = Number(n);
+
+        if (
+            !Number.isInteger(n) ||
+            n <= 0
+        ) {
+            return null;
+        }
+
+        const startDate =
+            addYears(
+                localDate,
+                -n
+            );
+
+        const fromDate =
+            addDays(
+                startDate,
+                1
+            );
+
+        return {
+            n: n,
+            from: formatDate(addDays(fromDate, -1)),
+            to: today,
+            fromDateTime: formatStart(fromDate),
+            toDateTime: `${today} 23:59:59`
+        };
+    };
+
+
+    const getNextNYears = (n) => {
+
+        n = Number(n);
+
+        if (
+            !Number.isInteger(n) ||
+            n <= 0
+        ) {
+            return null;
+        }
+
+        const endDate =
+            addYears(
+                localDate,
+                n
+            );
+
+        const finalDate =
+            addDays(
+                endDate,
+                -1
+            );
+
+        return {
+            n: n,
+            from: formatDate(addDays(localDate, -1)),
+            to: formatDate(finalDate),
+            fromDateTime: formatStart(localDate),
+            toDateTime: formatEnd(endDate)
+        };
+    };
+
+
+    // ============================================================
+    // BASIC DATES
+    // ============================================================
+
+    const yesterday =
+        addDays(localDate, -1);
+
+    const tomorrow =
+        addDays(localDate, 1);
+
+
+    // ============================================================
+    // DEFAULT N / 7 DAYS
+    // ============================================================
+
+    const defaultLast7 =
+        getLastNDays(7);
+
+    const defaultNext7 =
+        getNextNDays(7);
+
+    const defaultNextN = (n) => getNextNDays(n);
+
+
+    // ============================================================
+    // WEEK CALCULATIONS
+    // ============================================================
+
+    const dayOfWeek =
+        localDate.getDay();
+
+    const mondayOffset =
+        dayOfWeek === 0
+            ? -6
+            : 1 - dayOfWeek;
+
+
+    const thisWeekMonday =
+        addDays(
+            localDate,
+            mondayOffset
+        );
+
+
+    const thisWeekSunday =
+        addDays(
+            thisWeekMonday,
+            6
+        );
+
+
+    const lastWeekMonday =
+        addDays(
+            thisWeekMonday,
+            -7
+        );
+
+
+    const lastWeekSunday =
+        addDays(
+            thisWeekMonday,
+            -1
+        );
+
+
+    const nextWeekMonday =
+        addDays(
+            thisWeekMonday,
+            7
+        );
+
+
+    const nextWeekSunday =
+        addDays(
+            nextWeekMonday,
+            6
+        );
+
+
+    // ============================================================
+    // RETURN PROMPT CONTEXT
+    // ============================================================
+
+    return `
+
+REAL TIME DATE/TIME CONTEXT
+===========================
+
+TIMEZONE:
+${timeZone}
+
+CURRENT LOCAL DATE:
 ${today}
 
-Current Year:
-${currentYear}
+CURRENT LOCAL TIME:
+${currentTime}
 
-Current DateTime:
-${currentDateTime}
+CURRENT YEAR:
+${year}
 
-Timezone:
-Asia/Kolkata
 
 ============================================================
-BUSINESS DAY DEFINITION
-=======================
+AUTHORITATIVE DATE SOURCE
+============================================================
 
-The application business day is NOT:
+All relative date calculations MUST use:
 
-00:00:00 -> 23:59:59
+TIMEZONE:
+${timeZone}
 
-The application business day ALWAYS runs:
+CURRENT LOCAL DATE:
+${today}
 
-18:30:00 -> 18:29:59 of the following calendar day.
+CURRENT LOCAL TIME:
+${currentTime}
 
-Current Business Day:
+These values are the ONLY authoritative date/time reference.
 
-FromDateTime:
-${todayFromDateTime}
+NEVER use:
 
-ToDateTime:
-${todayToDateTime}
+- UTC date
+- server date
+- IIS date
+- SQL Server date
+- database date
+- LLM/system date
+- conversation timestamp
+- browser/server timezone
+
 
 ============================================================
-DATE CONTEXT IS THE SINGLE SOURCE OF TRUTH
-==========================================
-
-The generated date values in this DATE CONTEXT are the
-SINGLE SOURCE OF TRUTH.
-
-The AI MUST use these generated values exactly.
-
-The AI MUST NOT independently calculate dates.
-
-The AI MUST NOT modify, shift, round, convert, or reinterpret
-the generated FromDateTime or ToDateTime.
-
-The AI MUST NOT convert these values to UTC.
-
-The AI MUST NOT change business-day boundaries to midnight.
-
-The AI MUST NOT independently add or subtract days.
-
+BACKEND DATE/TIME FORMAT & MINUS 1 DAY REQUIREMENT
 ============================================================
-DATE FORMAT
-===========
 
-Every backend date/time parameter MUST use:
+All backend date/time parameters MUST use:
 
 YYYY-MM-DD HH:mm:ss
 
-Never send a raw YYYY-MM-DD date.
+🚨 ABSOLUTE MANDATORY RULE FOR FROM DATE:
+EVERY calculated or resolved FROM date/timestamp MUST BE MINUS 1 DAY (-1 DAY) compared to its calendar boundary. 
+If the target calendar FROM date is TODAY (e.g. ${today}), the backend 'fromdate' parameter MUST be shifted back by 1 calendar day (e.g. ${formatDate(addDays(localDate, -1))} 18:30:00). 
+Never pass the exact current local date or start date as an unadjusted FROM datetime if the rule specifies shifting back.
 
-Never send a date without time.
+DAY START (FROM):
+18:30:00 (ALWAYS preceded by the date minus 1 calendar day without exception).
 
-Never send ISO format containing T.
+DAY END (TO):
+23:59:59 (For future/next requests, shifted back by -1 day relative to the target TO calendar date so that both boundaries have the required -1 day shift behavior).
 
-All backend temporal parameters MUST contain both date
-and time.
-
-============================================================
-TIME EXPRESSION PRIORITY
-========================
-
-Resolve time expressions using this priority:
-
-1. Explicit user-specified date or time range
-2. TODAY
-3. LAST relative range
-4. NEXT relative range
-5. UPCOMING / FUTURE
-6. HISTORICAL / PAST
-
-An explicit user-specified range ALWAYS overrides the
-default interpretation of latest, recent, current,
-synopsis, summary, or overview.
 
 ============================================================
-LATEST / RECENT / CURRENT / SYNOPSIS
-====================================
+DYNAMIC TEMPORAL DURATION
+============================================================
 
-When no explicit time range is provided, these expressions
-MUST be interpreted as TODAY:
+Temporal durations MUST be resolved dynamically from the
+USER'S ACTUAL REQUEST.
+
+The system MUST detect a numeric value associated with a
+temporal unit.
+
+Supported temporal units include:
+
+day
+days
+week
+weeks
+month
+months
+year
+years
+
+The numeric value MUST be treated as dynamic.
+
+There is NO predefined list of valid numbers.
+
+Do NOT hardcode possible values.
+
+Do NOT enumerate possible values.
+
+Do NOT restrict the duration to commonly used values.
+
+Do NOT require a specific number.
+
+ANY positive integer supplied by the user is valid.
+
+
+============================================================
+DYNAMIC N EXTRACTION
+============================================================
+
+When the user's request contains:
+
+<number> + temporal unit
+
+extract the numeric value as N.
+
+The surrounding natural-language wording does NOT need to
+match a predefined sentence.
+
+The system must identify the temporal meaning from the
+user's natural language.
+
+
+============================================================
+PAST / RECENT DYNAMIC RANGE
+============================================================
+
+If the user's temporal intent means:
+
+past
+previous
+recent
+latest
+historical
+before
+last
+
+AND a numeric duration is supplied:
+
+Use the extracted N.
+
+For DAY duration:
+
+FROM DATE =
+(TODAY - (N - 1) calendar days) minus 1 additional calendar day (so that backend fromdate is ALWAYS shifted back by -1 day).
+
+TO DATE =
+TODAY
+
+TODAY is included.
+
+
+============================================================
+FUTURE / UPCOMING DYNAMIC RANGE
+============================================================
+
+If the user's temporal intent means:
+
+next
+upcoming
+future
+coming
+scheduled
+
+AND a numeric duration is supplied:
+
+Use the extracted N.
+
+For DAY duration:
+
+FROM DATE =
+TODAY minus 1 calendar day (e.g., if TODAY is ${today}, FROM date must be ${formatDate(addDays(localDate, -1))} 18:30:00).
+
+TO DATE =
+TODAY + (N - 1) calendar days (with the mandatory -1 day backend offset adjustment applied).
+
+TODAY is included, but BOTH the FROM and TO backend timestamps receive a -1 day offset adjustment.
+
+
+============================================================
+WEEK DURATION
+============================================================
+
+If the user provides a numeric week duration:
+
+Convert the dynamic N weeks into the corresponding
+calendar-week duration.
+
+For past:
+
+FROM =
+(TODAY minus N calendar weeks) minus 1 additional calendar day (mandatory -1 day offset applied).
+
+TO =
+TODAY
+
+For future:
+
+FROM =
+TODAY minus 1 calendar day (mandatory -1 day offset applied).
+
+TO =
+TODAY plus N calendar weeks (with -1 day offset applied to the TO timestamp).
+
+
+============================================================
+MONTH DURATION
+============================================================
+
+If the user provides a numeric month duration:
+
+Use calendar-month arithmetic.
+
+For past:
+
+FROM =
+(TODAY minus N calendar months) minus 1 additional calendar day (mandatory -1 day offset applied).
+
+TO =
+TODAY
+
+For future:
+
+FROM =
+TODAY minus 1 calendar day (mandatory -1 day offset applied).
+
+TO =
+TODAY plus N calendar months (with -1 day offset applied to the TO timestamp).
+
+
+============================================================
+YEAR DURATION
+============================================================
+
+If the user provides a numeric year duration:
+
+Use calendar-year arithmetic.
+
+For past:
+
+FROM =
+(TODAY minus N calendar years) minus 1 additional calendar day (mandatory -1 day offset applied).
+
+TO =
+TODAY
+
+For future:
+
+FROM =
+TODAY minus 1 calendar day (mandatory -1 day offset applied).
+
+TO =
+TODAY plus N calendar years (with -1 day offset applied to the TO timestamp).
+
+
+============================================================
+IMPORTANT — DO NOT REQUIRE FIXED PHRASES
+============================================================
+
+Do NOT require the user to say exactly:
+
+"last N days"
+
+The temporal duration may appear anywhere in the user's
+natural-language request.
+
+Identify:
+
+1. Numeric value
+2. Temporal unit
+3. Temporal direction/meaning
+
+Then calculate the date range.
+
+For example, the user may naturally express a duration
+using words such as:
+
+last
+past
+previous
+recent
+latest
+over
+within
+for
+during
+next
+upcoming
+coming
+future
+
+These are semantic indicators, not a fixed phrase list.
+
+The actual number MUST always be extracted dynamically.
+
+
+============================================================
+VAGUE LATEST / RECENT REQUEST
+============================================================
+
+The following indicate a recent/latest intent:
 
 latest
 recent
 recently
 newest
 most recent
-current
-current details
-current status
-latest created
-recently created
-latest leads
-recent leads
-latest records
-recent records
-latest follow-ups
-recent follow-ups
-latest activity
-recent activity
-latest updates
-recent updates
+lately
 latest details
 recent details
-latest status
-recent status
-synopsis
+latest records
+recent records
+latest data
+recent data
 latest synopsis
 recent synopsis
-summary
 latest summary
 recent summary
-overview
-latest overview
-recent overview
+latest activity
+recent activity
+recently created
+recently added
 
-Use:
+If a numeric duration is present:
 
-FromDateTime:
-${todayFromDateTime}
+USE THE NUMERIC DURATION.
 
-ToDateTime:
-${todayToDateTime}
+If NO numeric duration and NO explicit date is present:
 
-============================================================
-LATEST CREATED DATA
-===================
+USE DEFAULT LAST 7 CALENDAR DAYS.
 
-When latest, recent, newest, or most recent created
-records are requested without an explicit range:
-
-Use the CURRENT BUSINESS DAY.
-
-FromDateTime:
-${todayFromDateTime}
-
-ToDateTime:
-${todayToDateTime}
-
-If ordering is applicable, use the relevant Created
-Date/Time field in descending order.
 
 ============================================================
-SYNOPSIS / SUMMARY / OVERVIEW
-=============================
+VAGUE UPCOMING REQUEST
+============================================================
 
-When synopsis, summary, overview, current status,
-or current details are requested without an explicit
-time range:
+The following indicate future/upcoming intent:
 
-Use the CURRENT BUSINESS DAY.
+upcoming
+future
+coming
+coming up
+next
+scheduled
+upcoming records
+future records
+upcoming details
+upcoming synopsis
+future synopsis
+upcoming summary
+future summary
 
-FromDateTime:
-${todayFromDateTime}
+If a numeric duration is present:
 
-ToDateTime:
-${todayToDateTime}
+USE THE NUMERIC DURATION.
 
-Do NOT interpret these requests as historical or
-all-time requests.
+If NO numeric duration and NO explicit date is present:
+
+USE DEFAULT NEXT 7 CALENDAR DAYS.
+
 
 ============================================================
-EXPLICIT RANGE OVERRIDE
-=======================
+DEFAULT LAST 7 DAYS
+============================================================
 
-If latest, recent, recently, newest, most recent,
-current, synopsis, summary, overview, or similar
-expressions are combined with an explicit time range:
+The default 7-day range MUST ONLY be used when:
 
-The explicit range MUST be used.
+1. The request has a recent/latest/past meaning
+2. AND no numeric duration is supplied
+3. AND no explicit date is supplied
 
-The default TODAY interpretation MUST NOT override
-the explicit range.
+Default:
+
+FROM:
+${defaultLast7.fromDateTime}
+
+TO:
+${defaultLast7.toDateTime}
+
+
+============================================================
+DEFAULT NEXT 7 DAYS / DEFAULT NEXT N
+============================================================
+
+The default next range MUST ONLY be used when:
+
+1. The request has an upcoming/future meaning
+2. AND no numeric duration is supplied
+3. AND no explicit date is supplied
+
+Default (7 days):
+
+FROM:
+${defaultNext7.fromDateTime}
+
+TO:
+${defaultNext7.toDateTime}
+
+For a custom dynamic default N:
+Use defaultNextN(n) to evaluate dynamically.
+
 
 ============================================================
 TODAY
-=====
+============================================================
 
-When the user explicitly requests today or an equivalent
-current-day expression:
+FROM:
+${formatStart(localDate)}
 
-Use:
+TO:
+${today} 23:59:59
 
-FromDateTime:
-${todayFromDateTime}
-
-ToDateTime:
-${todayToDateTime}
-
-Today means the CURRENT BUSINESS DAY.
-
-Do NOT use:
-
-00:00:00 -> 23:59:59
-
-unless the user explicitly requests a calendar day.
 
 ============================================================
-LAST 2 DAYS
-===========
+YESTERDAY
+============================================================
 
-"Last 2 Days" means exactly 2 business-day periods
-ending at the current business-day end.
+FROM:
+${formatStart(yesterday)}
 
-FromDateTime:
-${last2DaysFromDateTime}
+TO:
+${formatDate(yesterday)} 23:59:59
 
-ToDateTime:
-${last2DaysToDateTime}
 
 ============================================================
-LAST 7 DAYS
-===========
-
-"Last 7 Days" means exactly 7 business-day periods
-ending at the current business-day end.
-
-FromDateTime:
-${last7DaysFromDateTime}
-
-ToDateTime:
-${last7DaysToDateTime}
-
-The range MUST be calculated from:
-
-businessDayStart - 7 days
-
-through:
-
-businessDayEnd
-
-The AI MUST use the generated values.
-
+TOMORROW
 ============================================================
-LAST 30 DAYS
-============
 
-"Last 30 Days" means exactly 30 business-day periods
-ending at the current business-day end.
+FROM:
+${formatStart(tomorrow)}
 
-FromDateTime:
-${last30DaysFromDateTime}
+TO:
+${formatDate(tomorrow)} 23:59:59
 
-ToDateTime:
-${last30DaysToDateTime}
 
 ============================================================
 LAST WEEK
-=========
+============================================================
 
-"Last Week" uses the previous 7-business-day period.
+"last week" means the previous calendar week.
 
-FromDateTime:
-${lastWeekFromDateTime}
+Week starts Monday.
 
-ToDateTime:
-${lastWeekToDateTime}
+FROM:
+${formatStart(lastWeekMonday)}
+
+TO:
+${formatDate(lastWeekSunday)} 23:59:59
+
 
 ============================================================
-LAST MONTH
-==========
-
-"Last Month" means the previous calendar month using
-business-day boundaries.
-
-FromDateTime:
-${lastMonthFromDateTime}
-
-ToDateTime:
-${lastMonthToDateTime}
-
+THIS WEEK
 ============================================================
-LAST YEAR
-=========
 
-"Last Year" means the previous calendar year using
-business-day boundaries.
+"this week" means the current calendar week.
 
-FromDateTime:
-${lastYearFromDateTime}
+FROM:
+${formatStart(thisWeekMonday)}
 
-ToDateTime:
-${lastYearToDateTime}
+TO:
+${formatDate(thisWeekSunday)} 23:59:59
 
-============================================================
-FUTURE RANGE ANCHOR
-===================
-
-CRITICAL RULE:
-
-ALL future relative ranges MUST start from:
-
-TODAY at 18:30:00
-
-The future range start MUST use:
-
-${futureDayStartDateTime}
-
-The future range start MUST NOT use:
-
-businessDayStart
-
-This rule prevents future ranges from moving to the
-previous calendar date when the current time is before
-18:30.
-
-============================================================
-NEXT 2 DAYS
-===========
-
-"Next 2 Days" means exactly 2 future business-day periods.
-
-FromDateTime:
-${next2DaysFromDateTime}
-
-ToDateTime:
-${next2DaysToDateTime}
-
-The start MUST be today's calendar date at 18:30:00.
-
-============================================================
-NEXT 7 DAYS
-===========
-
-"Next 7 Days" means exactly 7 future business-day periods.
-
-FromDateTime:
-${next7DaysFromDateTime}
-
-ToDateTime:
-${next7DaysToDateTime}
-
-The FromDateTime MUST ALWAYS be today's calendar date
-at 18:30:00.
-
-The FromDateTime MUST NEVER be based on businessDayStart.
-
-The FromDateTime MUST NEVER move to yesterday.
-
-The FromDateTime MUST NEVER depend on whether the current
-time is before or after 18:30.
-
-The AI MUST use the generated next7DaysFromDateTime exactly.
-
-============================================================
-NEXT 30 DAYS
-============
-
-"Next 30 Days" means exactly 30 future business-day periods.
-
-FromDateTime:
-${next30DaysFromDateTime}
-
-ToDateTime:
-${next30DaysToDateTime}
-
-The start MUST be today's calendar date at 18:30:00.
 
 ============================================================
 NEXT WEEK
-=========
+============================================================
 
-"Next Week" means the 7-business-day period immediately
-following the current Next 7 Days period.
+"next week" means the next calendar week.
 
-FromDateTime:
-${nextWeekFromDateTime}
+FROM:
+${formatStart(nextWeekMonday)}
 
-ToDateTime:
-${nextWeekToDateTime}
+TO:
+${formatEnd(addDays(nextWeekSunday, 1))}
+
 
 ============================================================
-NEXT MONTH
-==========
+GENERIC LEAD DETAILS
+============================================================
 
-"Next Month" means the next calendar month using
-business-day boundaries.
+If the user asks:
 
-FromDateTime:
-${nextMonthFromDateTime}
+show leads
+show lead details
+show lead information
+list leads
+show me the lead details
+show latest lead details
+show recent lead details
 
-ToDateTime:
-${nextMonthToDateTime}
+and no date, numeric duration, or explicit historical
+range is supplied:
+
+USE DEFAULT LAST 7 CALENDAR DAYS.
+
+Do NOT perform an unlimited all-time search.
+
 
 ============================================================
-NEXT YEAR
-=========
-
-"Next Year" means the next calendar year using
-business-day boundaries.
-
-FromDateTime:
-${nextYearFromDateTime}
-
-ToDateTime:
-${nextYearToDateTime}
-
+GENERIC SYNOPSIS / SUMMARY
 ============================================================
-UPCOMING / FUTURE
-=================
 
-When the user requests upcoming, future, scheduled,
-planned, or similar future data without specifying
-a duration:
+If the user asks for:
 
-FromDateTime:
-${futureDayStartDateTime}
-
-ToDateTime:
-2099-12-31 23:59:59
-
-The start MUST be today's calendar date at 18:30:00.
-
-Do NOT use businessDayStart.
-
-============================================================
-HISTORICAL / PAST
-=================
-
-Use the historical range ONLY when the user explicitly
-requests historical, history, past, old, all-history,
-complete history, or all-time data.
-
-FromDateTime:
-
-2000-01-01 18:30:00
-
-ToDateTime:
-
-${todayToDateTime}
-
-The historical range MUST NOT be used for:
-
-latest
-recent
-recently
-newest
-most recent
-current
 synopsis
 summary
 overview
-latest created
-recent created
+report
+activity
+data
+details
+
+and no date or duration is supplied:
+
+USE DEFAULT LAST 7 CALENDAR DAYS for historical/recent
+information.
+
+If the semantic meaning is future/upcoming:
+
+USE DEFAULT NEXT 7 CALENDAR DAYS.
+
 
 ============================================================
-CALENDAR DAY EXCEPTION
-======================
+EXPLICIT DATE RANGE
+============================================================
 
-Use calendar-day boundaries ONLY when the user explicitly
-requests calendar-day boundaries.
+If the user explicitly provides FROM and TO dates:
 
-Otherwise ALWAYS use the application's business-day
-boundary:
+USE THE USER'S EXACT DATES.
 
-18:30:00 -> 18:29:59 next day.
+Do NOT apply the default 7-day rule.
+
+Do NOT replace the user's dates.
+
+Do NOT calculate a different range.
+
+Convert them only to the required backend time format, applying the mandatory -1 day offset specifically to the FROM date:
+
+FROM:
+YYYY-MM-DD 18:30:00 (with mandatory -1 day shift applied)
+
+TO:
+YYYY-MM-DD 23:59:59
+
 
 ============================================================
-BACKEND EXECUTION RULE
-======================
+DATE RESOLUTION PRIORITY
+============================================================
 
-Before calling a backend tool:
+Resolve temporal information using this priority:
 
-1. Identify the user's time expression.
-2. Check whether an explicit range was provided.
-3. If an explicit range exists, use that range.
-4. If latest/recent/current/synopsis/summary/overview
-   is used without an explicit range, use TODAY.
-5. For TODAY, use the generated current business-day values.
-6. For PAST ranges, use the generated past-range values.
-7. For FUTURE ranges, use the generated future-range values.
-8. Pass the generated FromDateTime and ToDateTime exactly.
-9. Never independently calculate another date.
+1. Explicit FROM/TO date range
+2. Explicit date
+3. Explicit numeric temporal duration
+4. Explicit relative period
+5. Vague latest/recent/upcoming meaning
+6. Default 7-day range
+
 
 ============================================================
-MANDATORY FROMDATE / TODATE RULE
-================================
+N AND MAXCOUNT ARE DIFFERENT
+============================================================
 
-When a backend tool requires FromDateTime and ToDateTime:
+A numeric value used for record count MUST NOT be confused
+with a numeric temporal duration.
 
-ALWAYS provide both.
+If the user asks for a number of LEADS:
 
-Never provide:
+that number is MaxCount.
 
-null
+If the user asks for a number of DAYS/WEEKS/MONTHS/YEARS:
 
-empty string
+that number is a temporal duration.
 
-undefined
+If both are present, preserve both independently.
 
-YYYY-MM-DD only
-
-an independently calculated date.
-
-The values MUST come from the generated DATE CONTEXT.
 
 ============================================================
-FINAL STRICT RULES
-==================
+GETLEADSDETAILS
+============================================================
 
-1. Generated date values are the SINGLE SOURCE OF TRUTH.
+Whenever a temporal range is resolved:
 
-2. Business day is:
-   18:30:00 -> 18:29:59 next day.
+The EXACT calculated values MUST be passed to:
 
-3. Latest defaults to TODAY.
+GetLeadsDetails
 
-4. Recent defaults to TODAY.
+using:
 
-5. Recently defaults to TODAY.
+filterlead.fromdate
+filterlead.todate
 
-6. Newest defaults to TODAY.
+Format:
 
-7. Most recent defaults to TODAY.
+YYYY-MM-DD HH:mm:ss
 
-8. Current defaults to TODAY.
 
-9. Synopsis defaults to TODAY.
+============================================================
+MANDATORY RESPONSE DATE RANGE
+============================================================
 
-10. Summary defaults to TODAY.
+Whenever a date/time filter is applied, the final response
+MUST display the resolved date range.
 
-11. Overview defaults to TODAY.
+Use:
 
-12. Latest Created defaults to TODAY.
+Time horizon:
+<resolved temporal meaning>
 
-13. Explicit ranges ALWAYS override these defaults.
+Date range:
+<exact fromdate> to <exact todate>
 
-14. Historical data is ONLY selected when explicitly requested.
+The displayed range MUST be exactly the same range that was
+sent to GetLeadsDetails.
 
-15. Never use 2000-01-01 for latest, recent, current,
-    synopsis, summary, or overview.
+Never omit the date range for:
 
-16. Never use 2001-01-01 as a default date.
+latest
+recent
+newest
+upcoming
+future
+next
+past
+previous
+synopsis
+summary
+activity
+details
+reports
+or any other request where a temporal filter was applied.
 
-17. Never leave mandatory FromDateTime or ToDateTime empty.
 
-18. All backend dates MUST use:
-    YYYY-MM-DD HH:mm:ss
+============================================================
+LATEST SORTING
+============================================================
 
-19. Past ranges use the CURRENT BUSINESS DAY as their
-    ending anchor.
+For:
 
-20. Future ranges use TODAY'S CALENDAR DATE at 18:30:00
-    as their starting anchor.
+latest
+recent
+newest
+most recent
 
-21. Next 7 Days MUST ALWAYS start from TODAY at 18:30:00.
+results MUST be sorted newest first using the appropriate
+backend sorting mechanism.
 
-22. Next 7 Days MUST NEVER use businessDayStart.
+Do NOT place ORDER BY inside the SQL query.
 
-23. Next 7 Days MUST NEVER move to yesterday.
+Keep filtering and sorting separate.
 
-24. The AI MUST NOT independently calculate or modify
-    generated date values.
 
-25. The generated DATE CONTEXT MUST be followed exactly.
-    `;
-    }
+============================================================
+FILTER PRESERVATION
+============================================================
+
+Always preserve all existing user filters.
+
+Example:
+
+If the user asks for recent leads assigned to a specific
+person, preserve the assignment filter AND apply the
+resolved temporal range.
+
+Do not remove existing filters when applying date logic.
+
+
+============================================================
+ALL-TIME REQUEST
+============================================================
+
+Only perform an all-time/unbounded search when the user
+explicitly requests something such as:
+
+all leads
+all records
+entire history
+complete history
+all-time
+from the beginning
+
+A vague request such as:
+
+latest leads
+recent leads
+latest synopsis
+recent activity
+
+MUST NOT be treated as all-time.
+
+
+============================================================
+FINAL TEMPORAL VALIDATION
+============================================================
+
+Before calling the backend, verify:
+
+1. Did the user provide an explicit date?
+
+If YES:
+    use the explicit date.
+
+2. Did the user provide a numeric temporal duration?
+
+If YES:
+    dynamically extract the numeric value.
+
+3. Is the duration numeric value being used as N?
+
+If YES:
+    calculate the range using N.
+
+4. Is N being replaced by a default?
+
+If YES:
+    STOP and use the extracted N.
+
+5. Is there no numeric duration and the request is vague
+    latest/recent/upcoming?
+
+If YES:
+    use the appropriate default 7-day range.
+
+6. Was the exact range passed to GetLeadsDetails?
+
+7. Is the exact same range displayed in the response?
+
+If any answer is NO, correct the temporal resolution before
+executing the request.
+
+
+============================================================
+ABSOLUTE RULE
+============================================================
+
+The system MUST dynamically understand temporal durations.
+
+Do NOT hardcode numeric duration values.
+
+Do NOT whitelist numeric durations.
+
+Do NOT enumerate numeric examples.
+
+Do NOT require specific duration phrases.
+
+Extract the numeric value from the user's natural language.
+
+Any valid positive integer associated with a temporal unit
+must be treated as a dynamic duration.
+
+The default 7-day range is ONLY a fallback when no explicit
+duration or date is provided.
+
+END OF DATE/TIME CONTEXT.
+`;
+}

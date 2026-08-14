@@ -35,7 +35,7 @@ import { executeSmsCampaignAgent } from "../agents/sms/smscampaign.agent.js";
 import { executeRcsTemplateAgent } from "../agents/rcs/rcstemplate.agent.js";
 import { executeRcsTestAgent } from "../agents/rcs/rcstest.agent.js";
 import { executeRcsCampaignAgent } from "../agents/rcs/rcscampaign.agent.js";
-import { executeWorkflowAgent } from "../agentic_workflows/agent/workflow.js";
+
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -48,7 +48,7 @@ export async function executeWorkflow(payload) {
     machineid,
     isagentworkflow,
   } = payload;
-
+  setTimeZone(userdetails?.timeZone);
   if (history.length === 1) {
     clearPagingSession(machineid);
   }
@@ -379,6 +379,16 @@ export async function executeWorkflow(payload) {
 
   if (intent.module === "rcscampaign") {
     response = await executeRcsCampaignAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
+  if (intent.module === "realtime") {
+    response = await executeRealTimeAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,

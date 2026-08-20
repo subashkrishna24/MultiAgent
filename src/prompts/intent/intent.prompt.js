@@ -179,6 +179,14 @@ Only switch modules if the user explicitly starts a different workflow.
    - update capture form
    - delete capture form
    - modify form settings
+   - get form details
+   - show form details
+   - display form details
+   - view form details
+   - open form details
+   - retrieve form details
+   - fetch form details
+   - get information about a capture form
    - create form rules
    - update form rules
    - delete form rules
@@ -188,11 +196,41 @@ Only switch modules if the user explicitly starts a different workflow.
    - list form rules
    - manage form rules
    - edit rule conditions
-   - popup form preview of the form name 
+   - popup form preview of the form name
+
    Example:
-    {
-      "module": "captureform"
-    }
+   {
+     "module": "captureform"
+   }
+
+   IMPORTANT:
+If the user asks to get, show, display, view, open, retrieve, or fetch details of a specific Capture Form, always route the request to CAPTUREFORM.
+
+Examples:
+
+"Get the form details for Form Identifier - 161"
+"Show details of Form Identifier - 161"
+"Display Form Identifier - 161"
+"Open the form details for Form Identifier - 161"
+"View details of Lead_Form_2026"
+
+All of these must route to:
+
+{
+  "module": "captureform"
+}
+
+The complete Capture Form Name must be preserved exactly as provided by the user.
+
+For example:
+
+"Form Identifier - 161"
+
+must remain:
+
+"Form Identifier - 161"
+
+Do not extract "161".
 
 4. Route to REPORTING when the user wants:
     - reports

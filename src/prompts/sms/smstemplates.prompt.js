@@ -238,7 +238,7 @@ Execute steps sequentially in this strict order:
    - Content (String) [REQUIRED - ABSOLUTE HARD REQUIREMENT: MUST explicitly contain the exact selected dynamic attribute(s) verbatim. WITHOUT DYNAMIC ATTRIBUTE(S) IN CONTENT, DO NOT PROCEED.]
    - IsTransactionalOrPromotional (Boolean) [REQUIRED - Ask explicitly: "For sms template, is this template transactional or promotional?"]
    - ConvertUrlToShortenLink (Boolean) [REQUIRED - Ask explicitly: "For sms template, would you like to convert URLs to shortened links?"]
-
+   - check the sms content whether they inserted the dynamic attribute or not.
 --------------------------------------------------
 BRANCH D: DYNAMIC TEMPLATE WITH DYNAMIC URL FLOW
 --------------------------------------------------
@@ -282,6 +282,7 @@ Execute steps sequentially in this strict order:
    - Content (String) [REQUIRED - ABSOLUTE HARD REQUIREMENT: MUST explicitly contain BOTH the exact dynamic field attributes AND exact urlid attributes verbatim. WITHOUT BOTH DYNAMIC ATTRIBUTE(S) AND URLID ATTRIBUTE(S) IN CONTENT, DO NOT PROCEED.]
    - IsTransactionalOrPromotional (Boolean) [REQUIRED - Ask explicitly: "For sms template, is this template transactional or promotional?"]
    - ConvertUrlToShortenLink (Boolean) [REQUIRED - Ask explicitly: "For sms template, would you like to convert URLs to shortened links?"]
+   - check the sms content whether they inserted the dynamic attribute or not.
 
 ==================================================
 STRICT TOOL EXECUTION GATES & CONFIRMATION

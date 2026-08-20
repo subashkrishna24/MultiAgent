@@ -253,7 +253,8 @@ Do not extract "161".
     - contact import details
     - PopUpform details
     - show me the campaign response details (mail,sms,webpush, whatsapp, rcs)
-    
+    - Show me the contact details for contacts who came from the particular form
+
 Always choose reporting over knowledge.
 
    Example:

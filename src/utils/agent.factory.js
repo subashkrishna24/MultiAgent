@@ -44,6 +44,8 @@ import { RCSCAMPAIGN_PROMPT } from "../prompts/rcs/rcscampaign.prompt.js";
 
 import { REALTIME_PROMPT } from "../prompts/analytics/realtimedata.prompt.js";
 
+import { WHATSAPPTEMPLATE_PROMPT } from "../prompts/whatsapp/whatsapptemplate.prompt.js";
+
 function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
@@ -84,7 +86,8 @@ function getPrompt(module) {
     rcstemplate: RCSTEMPLATE_PROMPT,
     rcstest: RCSTEST_PROMPT,
     rcscampaign: RCSCAMPAIGN_PROMPT,
-    realtime: REALTIME_PROMPT
+    realtime: REALTIME_PROMPT,
+    whatsapptemplate:WHATSAPPTEMPLATE_PROMPT
   };
 
   return prompts[module];

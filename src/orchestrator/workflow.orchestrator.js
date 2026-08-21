@@ -36,6 +36,7 @@ import { executeRcsTemplateAgent } from "../agents/rcs/rcstemplate.agent.js";
 import { executeRcsTestAgent } from "../agents/rcs/rcstest.agent.js";
 import { executeRcsCampaignAgent } from "../agents/rcs/rcscampaign.agent.js";
 import { executeWorkflowAgent } from "../agentic_workflows/agent/workflow.js";
+import{executeWhatsAppTemplateAgent} from "../agents/whatsapp/whatsapptemplate.agent.js"
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -397,6 +398,15 @@ export async function executeWorkflow(payload) {
     });
   }
 
+   if (intent.module === "whatsapptemplate") {
+    response = await executeWhatsAppTemplateAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
   console.log("Final response from agent:", response);
 
   await mcpClient.close();

@@ -1159,5 +1159,21 @@ Do NOT switch modules while an A/B Test workflow is in progress.
 
     Return the realtime data from the MCP tool.
 
+ 23. Route to WhatsAppTEMPLATE when the user wants:
 
+   - create whatsapp templates
+   - duplicate whatsapp templates
+   - update whatsapp templates
+   - archive whatsapp templates
+   - view whatsapp templates
+   - list whatsapp templates
+   - manage whatsapp templates 
+   - whatsapp template details
+   - whatsapp template by name
+   - get whatsapp template details
+   
+   Example:
+   {
+     "module": "whatsapptemplate"
+   }
   `;

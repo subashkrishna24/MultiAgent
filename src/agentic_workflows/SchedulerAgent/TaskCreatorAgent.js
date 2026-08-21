@@ -1,33 +1,47 @@
-import { getllmModel } from "../../services/llm.service.js";
-import { userdetails } from "../prompts/userdetails.js";
-import { extractJSON } from "../../utils/json.utils.js";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { toolcalling } from "../prompts/toolcalling.js";
+import { MODULES } from "../../constants/modules.js";
+import { getPrompt } from "../../utils/agent.factory.js";
+import { SHARED_PROMPT } from "../../prompts/shared/shared.prompt.js";
 
-export async function createTaskFromUserQuery(
-  userQuery,
+export async function executeAutomationSchedulerAgent({
+  filteredTools,
   llmModel,
-  userId = "123",
-) {
-  const prompt = userdetails
-    .replace("<user-id>", userId)
-    .replaceAll("<current-time>", new Date().toISOString());
+  accountId,
+  taskJson,
+  module,
+}) {
+  const today = new Date().toISOString().split("T")[0];
 
-  const res = await llmModel.invoke([
-    { role: "system", content: prompt },
-    { role: "user", content: userQuery },
-  ]);
+  const systemPrompt = toolcalling
+    .replace("{{today}}", today)
+    .replace("{{account_id}}", accountId)
+    .replace("{{task_json}}", JSON.stringify(taskJson, null, 2));
 
-  const raw =
-    typeof res.content === "string"
-      ? res.content
-      : (res.content?.[0]?.text ?? "");
+  let commonPrompt = "";
 
-  try {
-    return extractJSON(raw);
-  } catch {
-    try {
-      return JSON.parse(raw);
-    } catch {
-      throw new Error("Task Creator returned invalid JSON");
-    }
-  }
+  const prompt = `
+${commonPrompt}
+
+${getPrompt(module)}
+
+${systemPrompt}
+`;
+
+  const agent = createReactAgent({
+    llm: llmModel,
+    tools: filteredTools,
+    prompt,
+  });
+
+  const response = await agent.invoke({
+    messages: [
+      {
+        role: "user",
+        content: "Execute the automation task.",
+      },
+    ],
+  });
+
+  return response;
 }

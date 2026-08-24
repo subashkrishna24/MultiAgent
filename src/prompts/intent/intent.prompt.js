@@ -1176,4 +1176,19 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    {
      "module": "whatsapptemplate"
    }
+    
+   24. Route to WHATSAPPTEST when the user says:
+
+      * send test whatsapp
+      * send test whatsapp
+      * test whatsapp
+      * test whatsapp
+      * whatsapp configuration list
+      * whatsapp config details
+      * whatsapp configuration by name
+
+      Examples:
+      {
+        "module": "whatsapptest"
+      }
   `;

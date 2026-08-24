@@ -164,7 +164,7 @@ Collect all mandatory fields sequentially in this strict order:
 1. TemplateName (String) [REQUIRED]
 2. CampaignIdentifier (String) [REQUIRED]
 3. TemplateDescription (String) [REQUIRED]
-4. Transactional, Promotional, or OTP (0 for promotional, 1 for transactional, 2 for OTP) [REQUIRED]
+4. Transactional, Promotional, or OTP [REQUIRED]
 5. TemplateContentType (String) [REQUIRED] -> Allowed values: "itemtext", "image", "carousel", "itemvideo"
    - IMAGE CONTENT TYPE RULE: If TemplateContentType is "image", sequentially ask ONLY for missing card parameters:
      a. Card Title -> Store in "Card1_Title".

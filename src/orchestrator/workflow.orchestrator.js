@@ -37,6 +37,8 @@ import { executeRcsTestAgent } from "../agents/rcs/rcstest.agent.js";
 import { executeRcsCampaignAgent } from "../agents/rcs/rcscampaign.agent.js";
 import { executeWorkflowAgent } from "../agentic_workflows/agent/workflow.js";
 import{executeWhatsAppTemplateAgent} from "../agents/whatsapp/whatsapptemplate.agent.js"
+import {executeWhatsAppTestAgent} from "../agents/whatsapp/whatsapptest.agent.js"
+import {executeWhatsAppCampaignAgent} from "../agents/whatsapp/whatsappcampaign.agent.js"
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -407,6 +409,28 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
+
+   if (intent.module === "whatsapptest") {
+    response = await executeWhatsAppTestAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
+     if (intent.module === "whatsappcampaign") {
+    response = await executeWhatsAppCampaignAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
+
   console.log("Final response from agent:", response);
 
   await mcpClient.close();

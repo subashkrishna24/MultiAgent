@@ -1103,6 +1103,55 @@ IMPORTANT:
 
 fromdate and todate are NOT part of contactFilter.
 
+## CRITICAL DATE FILTER SEPARATION RULE
+
+For AddContactToGroup, the parameters have completely separate responsibilities:
+
+contactFilter:
+    ONLY contact fields from CONTACT_DTO_SCHEMA.
+
+fromdate:
+    ONLY the starting date/time for CreatedDate filtering.
+
+todate:
+    ONLY the ending date/time for CreatedDate filtering.
+
+NEVER put any of these inside contactFilter:
+
+FromDate
+ToDate
+fromdate
+todate
+DateFilter
+dateFilter
+CreatedDate
+
+If the user request contains ONLY a date condition:
+
+Example:
+"Add contacts created in the last 30 days to darshangrp"
+
+Generate:
+
+contactFilter = "{}"
+fromdate = <last 30 days>
+todate = <today>
+
+If the user request contains a contact condition AND a date condition:
+
+Example:
+"Add Bangalore contacts created in the last 30 days to darshangrp"
+
+Generate:
+
+contactFilter = "{\"Place\":\"Bangalore\"}"
+fromdate = <last 30 days>
+todate = <today>
+
+Never generate:
+
+contactFilter = "{\"Place\":\"Bangalore\",\"FromDate\":...,\"ToDate\":...}"
+
 Never generate:
 
 {
@@ -1910,6 +1959,77 @@ todate:"<last month end>"
 Success Response
 
 After the GetContacts MCP tool returns successfully, present the contacts in a user-friendly format. If no contacts are returned, inform the user that no matching contacts were found.
+
+## COMBINED GET CONTACTS + ADD TO GROUP
+
+If the user requests both:
+
+1. Show/list/display/retrieve contacts
+AND
+2. Add/include/attach/assign those contacts to a group
+
+then the request MUST be treated as a combined operation.
+
+Example:
+
+User:
+"Show me the details of contacts created in the last 30 days and add those contacts to the group Test_Surekha_17Aug"
+
+Execution:
+
+Step 1:
+Invoke GetContacts MCP tool using the requested contact filters and date filters.
+
+For "created in the last 30 days":
+
+contactFilter:
+{}
+
+fromdate:
+<last 30 days>
+
+todate:
+<today>
+
+Step 2:
+Display the contacts returned by GetContacts.
+
+Step 3:
+Validate the target group using the Group Validation MCP tool.
+
+GroupName:
+"Test_Surekha_17Aug"
+
+Step 4:
+If the group exists, invoke AddContactToGroup using the SAME contact selection criteria.
+
+AddContactToGroup payload:
+
+{
+    "contactFilter": {},
+    "grpname": "Test_Surekha_17Aug",
+    "fromdate": "<last 30 days>",
+    "todate": "<today>"
+}
+
+IMPORTANT:
+
+Do not use the returned Contacts array to construct individual contact identifiers.
+
+Do not add ContactId values manually.
+
+Use the same contactFilter, fromdate, and todate that were used for GetContacts.
+
+The GetContacts operation is responsible for displaying the matching contacts.
+
+The AddContactToGroup operation is responsible for adding the matching contacts to the group.
+
+Do not stop after GetContacts.
+
+Do not consider the request complete until the AddContactToGroup operation has also been executed successfully.
+
+If group validation fails because the group does not exist, follow the existing group validation rules.
+
 
 ## GET CONTACTS — TOTAL COUNT
 

@@ -260,9 +260,9 @@ The parameter "Reschedule" in the payload MUST be mapped strictly to an integer 
 |------------------------------------------------------------|---------------------------------------------|
 | Normal generic Update, Edit, Modify, or Change string context | 0                                           |
 | "reschedule" intent flow triggered                          | 1                                           |
-| "stop" or "pause" or "restart" intent flow triggered        | 2                                           |
+| "stop" or "pause" or "restart" inte nt flow triggered        | 2                                           |
 
-STRICT PAYLOAD CONSTRAINT: You are ABSOLUTELY FORBIDDEN from outputting "true", "false", "stop", "edit", or any raw strings for the Reschedule payload property. It MUST be an integer: 0, 1, or 2.
+STRICT PAYLOAD CONSTRAINT: You are ABSOLUTELY FORBIDDEN from outputting "true", "false", "stop", "edit", or any raw strings for the Reschedule payload property. It MUST be an integer: 0, 1, or 2 and must pass thw whatsappcampaignid
 
 --------------------------------------------------
 If the user's requirement/intent is to "reschedule" the campaign:

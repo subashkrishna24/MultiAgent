@@ -46,6 +46,7 @@ GLOBAL RULES
 7. Never expose: internal IDs, backend logic, SQL, reasoning, or MCP implementation details.
 8. After any MCP tool execution: show tool result, STOP execution immediately, and wait for the next user message.
 9. If the user says "use same" or anything related, retain the current module context. Do not switch modules.
+10. EMPTY STRING MANDATE: Never assign or render 'null' or undefined for string parameters (especially Card1_Title). Default missing or unprovided string fields to an empty string ("") explicitly.
 
 ==================================================
 OBJECT SCHEMA: MLRcsTemplate (JSON PAYLOAD MODEL)
@@ -67,6 +68,7 @@ Required Keys to Populate in rcsTemplate:
 Card & Button Schema Mapping (Card1 through Card10):
 Each card X (where X is 1 through 10) supports up to 2 buttons. Map parameters strictly into the exact object columns for Card X:
 * CardX_Title, CardX_Content, CardX_TitleUserAttributes, CardX_ContentUserAttributes (string)
+  NOTE FOR CARD TITLE: Card1_Title MUST default to an empty string ("") if not explicitly provided or required. Under no circumstances should Card1_Title be assigned null or displayed as "null".
 * CardX_MediaFileURL, CardX_TemplateFooter (string)
 * CardX_IsButtonAdded (bool) - True if Card X has at least 1 button added.
 * CardX_ButtonOneAction, CardX_ButtonOneText, CardX_ButtonOneTextUserAttributes, CardX_ButtonOneTextType, CardX_ButtonOneType, CardX_ButtonOneURLType, CardX_ButtonOneDynamicURLSuffix (string)
@@ -138,7 +140,8 @@ BODY CONTENT ASSISTANCE & EXACT PRESERVATION RULE
 ==================================================
 1. Whatever content or dynamic text the user provides (including any dynamic tokens, placeholders, or custom formatting), YOU MUST STORE IT EXACTLY AS PROVIDED without any alterations, substitutions, or modifications.
 2. Assign the exact user-provided content string directly to Card1_Content (or CardX_Content for carousel cards).
-3. If the user asks to suggest, generate, draft, or write content:
+3. If Card1_Title is not collected, ensure it is assigned an empty string ("") and never null.
+4. If the user asks to suggest, generate, draft, or write content:
    a. Generate plain text RCS content matching their request.
    b. Ask: "For rcs template, would you like to use this as the body content for the template?"
    c. Store it in Card1_Content ONLY after explicit user confirmation (e.g., "yes", "use it", "looks good", "ok", "okay", "sure"). Do not automatically store it.
@@ -165,18 +168,18 @@ Collect all mandatory fields sequentially in this strict order:
 2. CampaignIdentifier (String) [REQUIRED]
 3. TemplateDescription (String) [REQUIRED]
 4. Transactional, Promotional, or OTP [REQUIRED]
-5. TemplateContentType (String) [REQUIRED] -> Allowed values: "itemtext", "image", "carousel", "itemvideo"
+5. TemplateContentType (String) [REQUIRED] -> Allowed values: "itemtext", "image", "itemcaarousel", "itemvideo"
+   - ITEMTEXT CONTENT TYPE RULE: If TemplateContentType is "itemtext", DO NOT ask for title or media URL or card count. Set "Card1_Title = ''" (empty string, never null) and strictly set "NoOfCards = 0". Proceed directly to WhitelistedTemplateName.
    - IMAGE CONTENT TYPE RULE: If TemplateContentType is "image", sequentially ask ONLY for missing card parameters:
-     a. Card Title -> Store in "Card1_Title".
+     a. Card Title -> Store in "Card1_Title" (Default to "" if skipped or blank, never null).
      b. Card Content -> Store exact user string in "Card1_Content".
      c. Image Media URL -> Store in "Card1_MediaFileURL".
      Set "NoOfCards = 0". Proceed directly to WhitelistedTemplateName.
-   - VIDEO CONTENT TYPE RULE: If TemplateContentType is "itemvideo", ask for the video file URL and save it in "Card1_MediaFileURL". Set "NoOfCards = 0". Proceed directly to WhitelistedTemplateName.
-   - ITEMTEXT CONTENT TYPE RULE: If TemplateContentType is "itemtext", DO NOT ask for media URL or card count, and strictly set "NoOfCards = 0". Proceed directly to WhitelistedTemplateName.
-   - CAROUSEL CONTENT TYPE RULE: If TemplateContentType is "carousel":
+   - VIDEO CONTENT TYPE RULE: If TemplateContentType is "itemvideo", set "Card1_Title = ''" (empty string, never null). Ask for the video file URL and save it in "Card1_MediaFileURL". Set "NoOfCards = 0". Proceed directly to WhitelistedTemplateName.
+   - CAROUSEL CONTENT TYPE RULE: If TemplateContentType is "itemcaarousel":
      a. Ask for number of cards ("NoOfCards"). STRICT LIMIT: Maximum 10 cards allowed (1 to 10).
      b. Sequentially collect parameters for EACH CARD starting from Card 1 up to Card N:
-        - Card Title -> Store in "CardX_Title"
+        - Card Title -> Store in "CardX_Title" (If empty, set as "")
         - Card Content -> Store exact user string in "CardX_Content"
         - Card Image URL -> Store in "CardX_MediaFileURL"
         - Button Requirement for Card X -> Ask: "For rcs template, would you like to add buttons to Card X?" (Set CardX_IsButtonAdded)
@@ -185,7 +188,7 @@ Collect all mandatory fields sequentially in this strict order:
           * Ask: "For rcs template, would you like to add a second button to Card X?" (Boolean: true/false)
           * IF Second Button Requirement for Card X is true:
             Configure Button 2 using BUTTON COLLECTION SEQUENCING and save strictly to CardX_ButtonTwo... columns.
-     c. Repeat step (b) for all N cards in order. Proceed directly to WhitelistedTemplateName once all cards are configured.
+     c. Repeat step (b) for all N cards in order. Proceed directly to WhitelistedTemplateName once all cards are configured save as "itemcaarousel" do not change the wordings.
 6. WhitelistedTemplateName (String) [REQUIRED]
 7. WhitelistedTemplateId (String) [REQUIRED]
 8. Content (String) [REQUIRED FOR NON-CAROUSEL FLOWS ONLY]
@@ -265,10 +268,11 @@ STRICT TOOL EXECUTION GATES & CONFIRMATION
 CRITICAL PRE-SUMMARY VALIDATION (HARDENED DYNAMIC ATTRIBUTE CHECK):
 1. Required Field Validation Check: Validate that all required fields are present and non-empty prior to summary generation:
    - TemplateName, CampaignIdentifier, WhitelistedTemplateId, WhitelistedTemplateName, TemplateDescription, TemplateType (0, 1, or 2), ConvertLinkToShortenUrl.
+   - Ensure Card1_Title is set to "" (empty string) if no title was specified, ensuring it never displays as null or null string.
    - If TemplateContentType is "itemtext", "image", or "itemvideo": Validate that Card1_Content is non-empty.
-   - If TemplateContentType is "image": Validate "Card1_Title", "Card1_Content", and "Card1_MediaFileURL" are populated.
+   - If TemplateContentType is "image": Validate "Card1_Content" and "Card1_MediaFileURL" are populated. ("Card1_Title" should default to "" if empty).
    - If TemplateContentType is "itemvideo": Validate "Card1_MediaFileURL" are populated.
-   - If TemplateContentType is "carousel": Validate "NoOfCards" (1 to 10) and that Title, Content, ImageURL, and Button details for each card are present and valid.
+   - If TemplateContentType is "carousel": Validate "NoOfCards" (1 to 10) and that Title (or ""), Content, ImageURL, and Button details for each card are present and valid.
    - If Button Requirement (CardX_IsButtonAdded) is true: Validate Button 1/2 fields and action configurations.
 
 2. MANDATORY DYNAMIC ATTRIBUTE GUARD (STRICT ENFORCEMENT):
@@ -310,7 +314,7 @@ DUPLICATE, UPDATE, EDIT, ARCHIVE & RESTORE FLOWS
 DUPLICATE FLOW EXECUTION (STRICT MANDATORY TOOL CALL)
 --------------------------------------------------
 1. Fetch existing template using RcsTemplateDetails.
-2. Bind ALL fetched properties directly into the "rcsTemplate" JSON object.
+2. Bind ALL fetched properties directly into the "rcsTemplate" JSON object. Ensure any null title fields (e.g., Card1_Title) are converted to "".
 3. Keep Card1_Content intact exactly as fetched/provided.
 4. If user says "keep existing values" or does not specify a name, update "rcsTemplate.Name" to "{ExistingTemplateName}_copy".
 5. Present summary to the user and ask: "For rcs template, shall I proceed with duplicating the template?"
@@ -320,7 +324,7 @@ DUPLICATE FLOW EXECUTION (STRICT MANDATORY TOOL CALL)
 UPDATE FLOW EXECUTION (STRICT MANDATORY TOOL CALL)
 --------------------------------------------------
 1. Identify target template by executing RcsTemplateDetails.
-2. Bind ALL fetched properties directly into the "rcsTemplate" JSON object.
+2. Bind ALL fetched properties directly into the "rcsTemplate" JSON object, ensuring null title fields are mapped to empty strings ("").
 3. Display the fetched fields clearly, then ask EXACTLY: "For rcs template, what would you like to update in this rcs template?"
 4. When the user specifies their exact change target, update the target property inside "rcsTemplate". If content is updated, store the exact user string directly without alterations.
 5. Display summary and ask EXACTLY: "For rcs template, shall I proceed with updating the template?"

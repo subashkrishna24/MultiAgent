@@ -36,9 +36,9 @@ import { executeRcsTemplateAgent } from "../agents/rcs/rcstemplate.agent.js";
 import { executeRcsTestAgent } from "../agents/rcs/rcstest.agent.js";
 import { executeRcsCampaignAgent } from "../agents/rcs/rcscampaign.agent.js";
 import { executeWorkflowAgent } from "../agentic_workflows/agent/workflow.js";
-import{executeWhatsAppTemplateAgent} from "../agents/whatsapp/whatsapptemplate.agent.js"
-import {executeWhatsAppTestAgent} from "../agents/whatsapp/whatsapptest.agent.js"
-import {executeWhatsAppCampaignAgent} from "../agents/whatsapp/whatsappcampaign.agent.js"
+import { executeWhatsAppTemplateAgent } from "../agents/whatsapp/whatsapptemplate.agent.js"
+import { executeWhatsAppTestAgent } from "../agents/whatsapp/whatsapptest.agent.js"
+import { executeWhatsAppCampaignAgent } from "../agents/whatsapp/whatsappcampaign.agent.js"
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -400,7 +400,7 @@ export async function executeWorkflow(payload) {
     });
   }
 
-   if (intent.module === "whatsapptemplate") {
+  if (intent.module === "whatsapptemplate") {
     response = await executeWhatsAppTemplateAgent({
       model: llmModel,
       tools: filteredTools,
@@ -410,7 +410,7 @@ export async function executeWorkflow(payload) {
     });
   }
 
-   if (intent.module === "whatsapptest") {
+  if (intent.module === "whatsapptest") {
     response = await executeWhatsAppTestAgent({
       model: llmModel,
       tools: filteredTools,
@@ -420,7 +420,7 @@ export async function executeWorkflow(payload) {
     });
   }
 
-     if (intent.module === "whatsappcampaign") {
+  if (intent.module === "whatsappcampaign") {
     response = await executeWhatsAppCampaignAgent({
       model: llmModel,
       tools: filteredTools,
@@ -456,10 +456,12 @@ export async function executeWorkflow(payload) {
   const final_cleanMessage = response_msg
     .replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "")
     .trim();
-
+  response_msg = response_msg
+    .replace(/\sWORKFLOW_COMPLETED\s:\strue\s/i, "")
+    .trim();
   return {
     module: intent.module,
-    message: final_cleanMessage,
+    message: response_msg,
     toolmessage: report_response,
     workflowcompleted: workflowCompleted,
     actions: recommendedActions,

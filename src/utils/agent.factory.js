@@ -47,7 +47,7 @@ import { REALTIME_PROMPT } from "../prompts/analytics/realtimedata.prompt.js";
 import { WHATSAPPTEMPLATE_PROMPT } from "../prompts/whatsapp/whatsapptemplate.prompt.js";
 
 import { WHATSAPPTEST_PROMPT } from "../prompts/whatsapp/whatsapptest.prompt.js";
-import {WHATSAPPCAMPAIGN_PROMPT} from "../prompts/whatsapp/whatsappcampaign.prompt.js"
+import { WHATSAPPCAMPAIGN_PROMPT } from "../prompts/whatsapp/whatsappcampaign.prompt.js"
 function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,

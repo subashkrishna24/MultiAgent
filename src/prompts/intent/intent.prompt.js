@@ -1192,4 +1192,21 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       {
         "module": "whatsapptest"
       }
+  25. Route to WHATSAPPCAMPAIGN when the user says:
+
+      * whatsapp campaign list
+      * whatsapp particular campaign
+      * scheduled whatsapp campaign
+      * upcoming whatsapp campaign
+      * get campaign by name
+      * get details of campaign
+      * delete the whatsapp campaign by name
+      * duplicate the whatsapp campaign by name
+      * update the whatsapp campaign by name
+
+      Examples:
+      {
+        "module": "whatsappcampaign"
+      }
+
   `;

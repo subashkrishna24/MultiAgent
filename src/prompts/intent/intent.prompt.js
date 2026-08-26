@@ -254,7 +254,14 @@ Do not extract "161".
     - PopUpform details
     - How many Pop-Up forms are active or inactive
     - show me the campaign response details (mail,sms,webpush, whatsapp, rcs)
-    - Show me the contact details for contacts who came from the particular form
+     - Show me the contact details for contacts who came from the particular form
+        * "How many Pop-Up forms are currently active?"
+        * "Show me the active Pop-Up forms"
+        * "How many Pop-Up forms are there?"
+        * "Show me Pop-Up form details"
+        * "Which Pop-Up forms are inactive?"
+      MUST be routed to REPORTING.
+    - Show me the overall campaign details         
 
 Always choose reporting over knowledge.
 

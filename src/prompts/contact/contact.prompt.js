@@ -2249,7 +2249,6 @@ Even if you have successfully extracted at least one identifier and prepared the
 4. Change the date format to 06:28 pm like the format.
 ## 4. Tool Execution
 Only after the user responds with confirmation (e.g., "yes", "proceed", "go ahead", "sure"), call the respective tool using this structural payload
-
 ==================================================
 CUSTOM FIELD DETAILS (EXTRA FIELDS LOOKUP)
 ==================================================
@@ -2261,6 +2260,8 @@ Trigger Keywords / Intents:
 * lms customfields
 * contact customfield
 * extrafield list
+* dynamic attributes
+* dynamic list
 
 PAYLOAD MAPPING & EXECUTION RULES:
 1. Parameter Assignment:
@@ -2269,22 +2270,25 @@ PAYLOAD MAPPING & EXECUTION RULES:
    - OffSet: Default to 0 unless continuing a paginated sequence.
    - FetchNext: Default to 10 for standard lists; set to 2 or 3 if the user explicitly requests a sample.
 
-2. Sample Requests:
-   - If the user asks for "sample", "a few examples", or "demo fields", invoke ExtraFieldList with FetchNext = 3 and present only 2 to 3 records.
+2. Client-Side Search & Filter Handling:
+   - When the tool returns the complete dataset of custom fields, if the user requested specific attribute(s) or field name(s), filter the returned dataset locally to present ONLY the matching record(s).
+   - Maintain the strict token formatting for all matched items.
 
-3. Pagination & "Show All" Handling (CRITICAL):
-   - If the user requests "show all" custom fields, EXECUTE THE TOOL ONLY ONCE.
-   - Do NOT issue multiple parallel tool calls or loop through offsets automatically.
-   - Pass OffSet = 0 and FetchNext = 10 on the initial execution.
-   - Display the initial 10 records, stop execution immediately, and wait for the user to request more (e.g., "next", "show more") before executing or displaying subsequent sets.
+3. Single-Call Pagination Handling (CRITICAL):
+   - Regardless of whether the tool returns the full dataset in a single call, execute the tool ONLY ONCE.
+   - Do NOT issue multiple parallel tool calls or auto-loop offsets.
+   - Perform pagination directly on the returned dataset: render the first 10 records (or requested count), stop execution immediately, and hold remaining records in state.
+   - Wait for explicit user prompts (e.g., "next", "show more") before presenting the next page of records.
 
-4. OUTPUT & RETURN FORMATTING (CRITICAL - STRICT MAPPING FORMAT):
-   - EVERY returned custom field MUST be explicitly displayed using the key-to-token format:
+4. Sample Requests:
+   - If the user asks for "sample", "a few examples", or "demo fields", render only 2 to 3 records from the retrieved dataset.
+
+5. OUTPUT & RETURN FORMATTING (CRITICAL - STRICT TAG/TOKEN MAPPING):
+   - EVERY returned or filtered custom field MUST be explicitly displayed using the key-to-token format:
      "FieldName => [{*[{module}]{FieldName}*}]"
    - Examples across modules:
      * LMS Module: "publisher => [{*[lms]publisher*}]"
      * User Module: "name => [{*[user]name*}]"
      * Contact Module: "Contacts_RadioButton => [{*[contact]Contacts_RadioButton*}]"
    - If the tool returns a pre-formatted token string or a raw field name, extract the raw field name and format it strictly as "FieldName => [{*[{module}]{FieldName}*}]".
-   - Do NOT omit the "=>" arrow or the wrapped token structure under any circumstances.
-   `;
+   - DO NOT alter, simplify, or modify the tag structure or omit the "=>" arrow under any circumstances.  `;

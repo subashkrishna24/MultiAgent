@@ -99,7 +99,7 @@ function getPrompt(module) {
 
 export function createAgent({ module, model, tools, accountId, session }) {
   var common_prompt = "";
-  if (module != "knowledge" && module != "reporting") {
+  if (module != "reporting") {
     common_prompt = SHARED_PROMPT;
   }
 

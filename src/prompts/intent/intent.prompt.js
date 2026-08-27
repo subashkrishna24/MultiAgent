@@ -426,6 +426,7 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    - change handledby or user or owner or agent for lmsleads
    - Add Notes
    - Bind History
+   - field list
 
     Example:
     {

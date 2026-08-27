@@ -5,7 +5,7 @@ export function setTimeZone(timeZone) {
 }
 
 export function getDateContext() {
-    const timeZone = "Asia/Kolkata";
+    const timeZone = userTimeZone;
     const now = new Date();
 
     // ============================================================

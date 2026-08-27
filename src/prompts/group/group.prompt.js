@@ -380,6 +380,12 @@ When the user requests any of the following, ALWAYS call GetFilteredGroups:
 "whatsapp unsubscribe groups"
 → verificationtype = "WhatsAppUnsubscribeGroups"
 
+"webpush subscribe groups"
+→ verificationtype = "WebPushSubscribeGroups"
+
+"webpush unsubscribe groups"
+→ verificationtype = "WebPushUnsubscribeGroups"
+
 "only phone groups"
 → verificationtype = "OnlyPhoneGroups"
 
@@ -415,6 +421,14 @@ Examples:
 "show WhatsApp unsubscribed groups details"
 → GetFilteredGroups
 → verificationtype = "WhatsAppUnsubscribeGroups"
+
+"show WebPush subscribed groups details"
+→ GetFilteredGroups
+→ verificationtype = "WebPushSubscribeGroups"
+
+"show WebPush unsubscribed groups details"
+→ GetFilteredGroups
+→ verificationtype = "WebPushUnsubscribeGroups"
 
 "show only phone groups"
 → GetFilteredGroups
@@ -1703,6 +1717,8 @@ WhatsAppSubscribeGroups
 WhatsAppUnsubscribeGroups
 OnlyPhoneGroups
 OnlyEmailGroups
+WebPushSubscribeGroups
+WebPushUnSubscribeGroups
 
 Valid percentage range:
 
@@ -2368,17 +2384,25 @@ Examples:
   → GetFilteredGroups
   → verificationtype = "UnverifiedEmailGroups"
 
-- "Give me details of verified email groups"
+  - "Give me details of verified email groups"
   → GetFilteredGroups
   → verificationtype = "VerifiedEmailGroups"
 
-- "Show information about SMS subscribed groups"
+  - "Show information about SMS subscribed groups"
   → GetFilteredGroups
   → verificationtype = "SmsSubscribeGroups"
 
-- "Show WhatsApp unsubscribed groups details"
+  - "Show WebPush subscribed groups details"
   → GetFilteredGroups
-  → verificationtype = "WhatsAppUnsubscribeGroups"
+  → verificationtype = "ebPushSubscribeGroups"
+
+ - "Show WebPush unsubscribed groups details"
+  → GetFilteredGroups
+  → verificationtype = "WebPushUnsubscribeGroups"
+
+  - "Show WebPush unsubscribed groups details"
+  → GetFilteredGroups
+  → verificationtype = "WebPushUnsubscribeGroups"
 
 - "Show groups with only email contacts"
   → GetFilteredGroups
@@ -2611,6 +2635,40 @@ Examples:
 * Get WhatsApp unsubscribed groups
 * Show WhatsApp opt-out groups
 * Give me WhatsApp unsubscribed groups
+
+---
+
+#### WebPush Subscribe Groups
+
+Use:
+
+"WebPushSubscribeGroups"
+
+Examples:
+
+* Show WebPush subscribed groups
+* List WebPush subscribed groups
+* Show groups where contacts have WebPush opt-in
+* Get WebPush subscribed groups
+* Show WebPush opt-in groups
+* Give me WebPush subscribed groups
+
+---
+
+#### WebPush Unsubscribe Groups
+
+Use:
+
+"WebPushUnsubscribeGroups"
+
+Examples:
+
+* Show WebPush unsubscribed groups
+* List WebPush unsubscribed groups
+* Show groups where contacts have WebPush opt-out
+* Get WebPush unsubscribed groups
+* Show WebPush opt-out groups
+* Give me WebPush unsubscribed groups
 
 ---
 

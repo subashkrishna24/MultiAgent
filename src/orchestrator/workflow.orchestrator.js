@@ -18,8 +18,12 @@ import { executeMailTestAgent } from "../agents/mail/mailtest.agent.js";
 import { executeMailAbTestCampaignAgent } from "../agents/mail/mailabtestcamapign.agent.js";
 import { getSession, clearPagingSession } from "../store/session.store.js";
 import { handlePagination } from "../utils/pagination.helper.js";
-import {  prepareUserDetails,  cleanReportEntry,  cleanMergedResults,} from "../utils/shared.helper.js";
-import {  setTimeZone,getDateContext } from "../utils/datecontext.helper.js";
+import {
+  prepareUserDetails,
+  cleanReportEntry,
+  cleanMergedResults,
+} from "../utils/shared.helper.js";
+import { getDateContext, setTimeZone } from "../utils/datecontext.helper.js";
 import { executeContactImportAgent } from "../agents/contact/contactimport.agent.js";
 import { executeLeadsImportAgent } from "../agents/lms/leadsimport.agent.js";
 import { executeLeadManagementAgent } from "../agents/lms/leadmanagment.agent.js";
@@ -31,8 +35,10 @@ import { executeSmsCampaignAgent } from "../agents/sms/smscampaign.agent.js";
 import { executeRcsTemplateAgent } from "../agents/rcs/rcstemplate.agent.js";
 import { executeRcsTestAgent } from "../agents/rcs/rcstest.agent.js";
 import { executeRcsCampaignAgent } from "../agents/rcs/rcscampaign.agent.js";
-import { executeRealTimeAgent } from "../agents/analytics/realtime.agent.js";
-
+import { executeWorkflowAgent } from "../agentic_workflows/agent/workflow.js";
+import { executeWhatsAppTemplateAgent } from "../agents/whatsapp/whatsapptemplate.agent.js"
+import { executeWhatsAppTestAgent } from "../agents/whatsapp/whatsapptest.agent.js"
+import { executeWhatsAppCampaignAgent } from "../agents/whatsapp/whatsappcampaign.agent.js"
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -43,13 +49,20 @@ export async function executeWorkflow(payload) {
     uploadedfile,
     userdetails,
     machineid,
+    isagentworkflow,
   } = payload;
-   setTimeZone(userdetails?.timeZone);
+  setTimeZone(userdetails?.timeZone);
   if (history.length === 1) {
     clearPagingSession(machineid);
   }
   // Session
   const session = getSession(machineid);
+
+  if (session.IsAgentWorkflow !== isagentworkflow) {
+    session.agenticWorkflowHandled = false;
+  }
+
+  session.IsAgentWorkflow = isagentworkflow;
 
   // User Details
   prepareUserDetails(userdetails, session);
@@ -118,6 +131,49 @@ export async function executeWorkflow(payload) {
 
   handlePagination(recentHistory, session, intent.module);
 
+  if (isagentworkflow) {
+    response = await executeWorkflowAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+
+    console.log("Workflow response:", response);
+
+    let response_msg = response?.content ?? "No response generated";
+
+    let workflowCompleted = false;
+    let recommendedActions = [];
+
+    if (response_msg.includes("WORKFLOW_COMPLETED:true")) {
+      workflowCompleted = true;
+    }
+
+    const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
+
+    if (match) {
+      try {
+        recommendedActions = JSON.parse(match[1]);
+      } catch (error) {
+        console.error("Failed to parse recommended actions:", error);
+      }
+    }
+
+    const final_cleanMessage = response_msg
+      .replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "")
+      .trim();
+
+    return {
+      module: intent.module,
+      message: final_cleanMessage,
+      toolmessage: recommendedActions,
+      workflowcompleted: workflowCompleted,
+      actions: [],
+    };
+  }
+
   // STEP 4
   if (intent.module === "knowledge") {
     response = await executeKnowledgeAgent({
@@ -163,7 +219,7 @@ export async function executeWorkflow(payload) {
       tools: filteredTools,
       history: recentHistory,
       accountId: accountid,
-      session
+      session,
     });
   }
 
@@ -334,7 +390,7 @@ export async function executeWorkflow(payload) {
     });
   }
 
-    if (intent.module === "realtime") {
+  if (intent.module === "realtime") {
     response = await executeRealTimeAgent({
       model: llmModel,
       tools: filteredTools,
@@ -343,6 +399,37 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
+
+  if (intent.module === "whatsapptemplate") {
+    response = await executeWhatsAppTemplateAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
+  if (intent.module === "whatsapptest") {
+    response = await executeWhatsAppTestAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
+  if (intent.module === "whatsappcampaign") {
+    response = await executeWhatsAppCampaignAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
 
   console.log("Final response from agent:", response);
 
@@ -356,7 +443,12 @@ export async function executeWorkflow(payload) {
     workflowCompleted = true;
   }
 
-  var RemoveRecommendations = ["contact", "leadmanagement", "leadsfollowup", "leadsimport"];
+  var RemoveRecommendations = [
+    "contact",
+    "leadmanagement",
+    "leadsfollowup",
+    "leadsimport",
+  ];
   const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
   if (match && !RemoveRecommendations.includes(intent.module.toLowerCase())) {
     recommendedActions = JSON.parse(match[1]);
@@ -364,10 +456,12 @@ export async function executeWorkflow(payload) {
   const final_cleanMessage = response_msg
     .replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "")
     .trim();
-
+  response_msg = response_msg
+    .replace(/\sWORKFLOW_COMPLETED\s:\strue\s/i, "")
+    .trim();
   return {
     module: intent.module,
-    message: final_cleanMessage,
+    message: response_msg,
     toolmessage: report_response,
     workflowcompleted: workflowCompleted,
     actions: recommendedActions,

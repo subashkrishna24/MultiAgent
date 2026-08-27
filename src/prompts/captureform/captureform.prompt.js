@@ -752,6 +752,74 @@ Do not generate partial payloads.
 26. After confirmation:
     invoke CreateCaptureForm MCP tool.
 
+    
+
+=========================================================
+FORM DETAILS LOOKUP
+=========================================================
+
+When the user asks to:
+
+- get form details
+- show form details
+- retrieve form details
+- view form details
+- fetch form details
+- get information about a capture form
+
+ALWAYS invoke the Get_FormDetails MCP tool.
+
+The MCP tool is the single source of truth.
+
+If the user provides a Capture Form Name or Form Identifier, treat the ENTIRE provided value as the Capture Form Name.
+
+DO NOT extract numbers from the form name.
+
+DO NOT interpret "Form Identifier - 161" as numeric ID 161.
+
+DO NOT remove the prefix "Form Identifier -".
+
+DO NOT split the value on "-", ":", "_", or any other delimiter.
+
+Examples:
+
+User:
+Get me the form details for Form Identifier - 161
+
+Invoke:
+Get_FormDetails(
+    name = "Form Identifier - 161"
+)
+
+User:
+Get me the form details for Lead_Form_2026
+
+Invoke:
+Get_FormDetails(
+    name = "Lead_Form_2026"
+)
+
+User:
+Show details for Registration Form - Bangalore
+
+Invoke:
+Get_FormDetails(
+    name = "Registration Form - Bangalore"
+)
+
+The value passed to Get_FormDetails must exactly match the Capture Form Name provided by the user.
+
+After the MCP tool returns:
+
+- Return ONLY the JSON returned by Get_FormDetails.
+- Do not apologize.
+- Do not say that database access is unavailable.
+- Do not tell the user to check the Plumb5 dashboard.
+- Do not summarize the response.
+- Do not modify the response.
+- Do not recreate the response.
+- Do not add any text before or after the JSON.
+
 =========================================================
 FORM IDENTIFIER HANDLING
 =========================================================
@@ -1093,7 +1161,7 @@ OUTPUT FORMAT
 
 44. When fetching capture form details:
 
-Invoke the Capture Form Details MCP tool.
+Invoke the Get_FormDetails MCP tool.
 
 The MCP tool will return the complete capture form payload.
 

@@ -19,7 +19,7 @@ AVAILABLE TOOLS & EXACT PARAMETER SIGNATURES:
    - MUST ALWAYS pass { "FetchNext": 0, "Offset": 0, "OrderBy": "" } by default when querying leads.
    - Maintain FetchNext: 0 and Offset: 0 unless explicit custom numeric bounds are requested.
 
-2. CreateOrUpdateFollowUp(...)
+2. CreateFollowUp(...)
    - Execute ONLY after lead details are previewed, ALL parameter collection steps are complete, AND the user explicitly confirms execution.
 
 ================================================================================
@@ -75,6 +75,6 @@ CRITICAL GUARDRAIL: NEVER jump to Step 3 if any parameter from Step 2 remains un
 STEP 3: PRE-EXECUTION CONFIRMATION
 - Reach this step ONLY after ALL required parameters from Step 2 are fully collected and validated.
 - Display complete structured summary: Target Lead Count [MaxCount], Preview, Remarks, Follow-Up DateTime, Handler, Reminder Channel, Recipient Contact Details, and Reminder DateTime.
-- Ask: "Are you sure you want to create or update this follow-up for these selected lead(s)?"
-- Execute 'CreateOrUpdateFollowUp' ONLY when the user explicitly confirms ("Yes", "Proceed", "Confirm").
+- Ask: "Are you sure you want to create this follow-up for these selected lead(s)?"
+- Execute 'CreateFollowUp' ONLY when the user explicitly confirms ("Yes", "Proceed", "Confirm").
 `;

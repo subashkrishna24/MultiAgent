@@ -454,14 +454,14 @@ export async function executeWorkflow(payload) {
     recommendedActions = JSON.parse(match[1]);
   }
   const final_cleanMessage = response_msg
-    .replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "")
-    .trim();
-  response_msg = response_msg
-    .replace(/\sWORKFLOW_COMPLETED\s:\strue\s/i, "")
-    .trim();
+  .replace(/WORKFLOW_COMPLETED:\s*(true|false)/gi, "")
+  .replace(/RECOMMENDED_ACTIONS:\s*(\[[^\]]\]|.)/gi, "")
+  .replace(/\b(workflow\scompleted|recommended\sactions?|recommendations?)\b/gi, "")
+  .replace(/\s{2,}/g, " ")
+  .trim();
   return {
     module: intent.module,
-    message: response_msg,
+    message: final_cleanMessage,
     toolmessage: report_response,
     workflowcompleted: workflowCompleted,
     actions: recommendedActions,

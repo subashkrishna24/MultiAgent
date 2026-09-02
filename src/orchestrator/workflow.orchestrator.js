@@ -39,6 +39,8 @@ import { executeWorkflowAgent } from "../agentic_workflows/agent/workflow.js";
 import { executeWhatsAppTemplateAgent } from "../agents/whatsapp/whatsapptemplate.agent.js"
 import { executeWhatsAppTestAgent } from "../agents/whatsapp/whatsapptest.agent.js"
 import { executeWhatsAppCampaignAgent } from "../agents/whatsapp/whatsappcampaign.agent.js"
+import {checkClarification} from "../utils/json.utils.js"
+
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -54,6 +56,15 @@ export async function executeWorkflow(payload) {
   setTimeZone(userdetails?.timeZone);
   if (history.length === 1) {
     clearPagingSession(machineid);
+  }
+
+  const content = history.findLast((msg) => msg.role === "user")?.content;
+  var checkintent = checkClarification(content);
+
+  if (checkintent.needsClarification) {
+    return {
+      message: checkintent.message,
+    };
   }
   // Session
   const session = getSession(machineid);

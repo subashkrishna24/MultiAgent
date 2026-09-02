@@ -178,3 +178,52 @@ export function extractJSON(text) {
     throw new Error(`Failed to parse JSON: ${error.message}`);
   }
 }
+
+
+export function checkClarification(userInput) {
+  if (!userInput || typeof userInput !== "string") {
+    return { needsClarification: false, message: null };
+  }
+
+  const text = userInput.trim().toLowerCase();
+
+  const hasCampaign =
+    /(?:^|[\s,.:;?!()[\]{}'"])\bcamp(aigns?)?\b(?:$|[\s,.:;?!()[\]{}'"])/i.test(
+      text,
+    );
+  const hasTemplate =
+    /(?:^|[\s,.:;?!()[\]{}'"])\btemplates?\b(?:$|[\s,.:;?!()[\]{}'"])/i.test(
+      text,
+    );
+
+  if (!hasCampaign && !hasTemplate) {
+    return { needsClarification: false, message: null };
+  }
+
+  const standaloneChannelRegex =
+    /(?:^|[\s,.:;?!()[\]{}'"])(mail|email|sms|whatsapp|wa|rcs|web\s*push|push)(?:$|[\s,.:;?!()[\]{}'"])/i;
+  const channelFound = standaloneChannelRegex.test(text);
+
+  if (channelFound) {
+    return { needsClarification: false, message: null };
+  }
+
+  const moduleName = hasCampaign ? "campaign" : "template";
+
+  const hasTimeOrAction =
+    /(?:^|[\s,.:;?!()[\]{}'"])\b(next|last|past|today|tomorrow|yesterday|upcoming|scheduled|days?|weeks?|months?|years?|create|draft|new|build|add)\b(?:$|[\s,.:;?!()[\]{}'"])/i.test(
+      text,
+    );
+
+  let message = "";
+  if (hasTimeOrAction) {
+    message = `Sure — which channel is this ${moduleName} for: Mail, SMS, WhatsApp, RCS, or Web Push?`;
+  } else {
+    message = `Which ${moduleName} are you looking for: Mail, SMS, WhatsApp, RCS, or Web Push?`;
+  }
+
+  return {
+    needsClarification: true,
+    message: message,
+  };
+}

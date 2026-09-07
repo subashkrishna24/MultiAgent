@@ -40,6 +40,7 @@ import { executeWhatsAppTemplateAgent } from "../agents/whatsapp/whatsapptemplat
 import { executeWhatsAppTestAgent } from "../agents/whatsapp/whatsapptest.agent.js"
 import { executeWhatsAppCampaignAgent } from "../agents/whatsapp/whatsappcampaign.agent.js"
 import {checkClarification} from "../utils/json.utils.js"
+import {executeWebPushTemplateAgent} from "../agents/webpush/webpushtemplate.agent.js"
 
 export async function executeWorkflow(payload) {
   const {
@@ -441,7 +442,15 @@ export async function executeWorkflow(payload) {
     });
   }
 
-
+  if (intent.module === "webpushtemplate") {
+    response = await executeWebPushTemplateAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
   console.log("Final response from agent:", response);
 
   await mcpClient.close();

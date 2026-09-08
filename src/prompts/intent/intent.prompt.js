@@ -1190,8 +1190,6 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    24. Route to WHATSAPPTEST when the user says:
 
       * send test whatsapp
-      * send test whatsapp
-      * test whatsapp
       * test whatsapp
       * whatsapp configuration list
       * whatsapp config details
@@ -1201,6 +1199,7 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       {
         "module": "whatsapptest"
       }
+
   25. Route to WHATSAPPCAMPAIGN when the user says:
 
       * whatsapp campaign list
@@ -1217,6 +1216,7 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       {
         "module": "whatsappcampaign"
       }
+
  26. Route to WebPushTEMPLATE when the user wants:
 
    - create webpush templates
@@ -1234,5 +1234,16 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    {
      "module": "webpushtemplate"
    }
-    
+   
+  27. Route to WEBPUSHTEST when the user says:
+
+      * send test webpush
+      * send group test webpush
+      * test webpush
+      * test webpush by group
+
+      Examples:
+      {
+        "module": "webpushtest"
+      }
   `;

@@ -41,7 +41,7 @@ import { executeWhatsAppTestAgent } from "../agents/whatsapp/whatsapptest.agent.
 import { executeWhatsAppCampaignAgent } from "../agents/whatsapp/whatsappcampaign.agent.js"
 import {checkClarification} from "../utils/json.utils.js"
 import {executeWebPushTemplateAgent} from "../agents/webpush/webpushtemplate.agent.js"
-
+import {executeWebPushTestAgent} from "../agents/webpush/webpushtest.agent.js"
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -451,6 +451,17 @@ export async function executeWorkflow(payload) {
       session,
     });
   }
+
+   if (intent.module === "webpushtest") {
+    response = await executeWebPushTestAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
   console.log("Final response from agent:", response);
 
   await mcpClient.close();

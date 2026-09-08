@@ -51,6 +51,7 @@ import { WHATSAPPTEST_PROMPT } from "../prompts/whatsapp/whatsapptest.prompt.js"
 import { WHATSAPPCAMPAIGN_PROMPT } from "../prompts/whatsapp/whatsappcampaign.prompt.js"
 
 import { WEBPUSHTEMPLATE_PROMPT } from "../prompts/webpush/webpushtemplate.prompt.js";
+import { WEBPUSHTEST_PROMPT } from "../prompts/webpush/webpushtest.prompt.js";
 
 function getPrompt(module) {
   const prompts = {
@@ -96,7 +97,8 @@ function getPrompt(module) {
     whatsapptemplate:WHATSAPPTEMPLATE_PROMPT,
     whatsapptest:WHATSAPPTEST_PROMPT,
     whatsappcampaign:WHATSAPPCAMPAIGN_PROMPT,
-    webpushtemplate:WEBPUSHTEMPLATE_PROMPT
+    webpushtemplate:WEBPUSHTEMPLATE_PROMPT,
+    webpushtest:WEBPUSHTEST_PROMPT
   };
 
   return prompts[module];

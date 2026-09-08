@@ -98,7 +98,8 @@ function getPrompt(module) {
     whatsapptest:WHATSAPPTEST_PROMPT,
     whatsappcampaign:WHATSAPPCAMPAIGN_PROMPT,
     webpushtemplate:WEBPUSHTEMPLATE_PROMPT,
-    webpushtest:WEBPUSHTEST_PROMPT
+    webpushtest:WEBPUSHTEST_PROMPT,
+    webpushcampaign:WEBPUSHCAMPAIGN_PROMPT,
   };
 
   return prompts[module];

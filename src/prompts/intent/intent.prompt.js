@@ -43,7 +43,9 @@ Available modules:
 - smscampaign
 - smstest
 - rcstemplate
-- webpush
+- rcscampaign
+- webpushtemplate
+- webpushcampaign
 
 Return ONLY JSON.
 
@@ -1246,4 +1248,22 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       {
         "module": "webpushtest"
       }
+
+   28. Route to WEBPUSHCAMPAIGN when the user says:
+
+      * webpush campaign list
+      * webpush particular campaign
+      * scheduled webpush campaign
+      * upcoming webpush campaign
+      * get campaign by name
+      * get details of campaign
+      * delete the webpush campaign by name
+      * duplicate the webpush campaign by name
+      * update the webpush campaign by name
+
+      Examples:
+      {
+        "module": "webpushcampaign"
+      }
+
   `;

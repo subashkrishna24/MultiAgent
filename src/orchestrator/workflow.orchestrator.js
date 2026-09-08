@@ -42,6 +42,7 @@ import { executeWhatsAppCampaignAgent } from "../agents/whatsapp/whatsappcampaig
 import {checkClarification} from "../utils/json.utils.js"
 import {executeWebPushTemplateAgent} from "../agents/webpush/webpushtemplate.agent.js"
 import {executeWebPushTestAgent} from "../agents/webpush/webpushtest.agent.js"
+import {executeWebPushCampaignAgent} from "../agents/webpush/webpushcampaign.agent.js"
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -454,6 +455,17 @@ export async function executeWorkflow(payload) {
 
    if (intent.module === "webpushtest") {
     response = await executeWebPushTestAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
+
+   if (intent.module === "webpushcampaign") {
+    response = await executeWebPushCampaignAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,

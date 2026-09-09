@@ -34,34 +34,34 @@ WhatsApp CAMPAIGN TOOL RULES
 ==================================================
 Default to regular WhatsApp Campaign tools.
 
-Use tool: Get list of rcs campaign scheduled details (RcsScheduledCampaignList)
+Use tool: Get list of WhatsApp campaign scheduled details (WhatsAppScheduledCampaignList)
 
 For queries:
 * show campaigns / list campaigns / available campaigns
-* show rcs campaigns / list rcs campaigns
+* show WhatsApp campaigns / list WhatsApp campaigns
 
 ==================================================
 CAMPAIGN ACTION FLOWS
 ==================================================
 Applies to:
-* update rcs campaign / edit rcs campaign / modify rcs campaign / change rcs campaign
-* reschedule rcs campaign
-* stop/restart rcs campaign
-* duplicate campaign / duplicate rcs campaign / copy campaign / clone campaign
-* delete campaign / delete rcs campaign
-* archive campaign / archive rcs campaign
-* get rcs campaign details by name / rcs campaign details by name
+* update WhatsApp campaign / edit WhatsApp campaign / modify WhatsApp campaign / change WhatsApp campaign
+* reschedule WhatsApp campaign
+* stop/restart WhatsApp campaign
+* duplicate campaign / duplicate WhatsApp campaign / copy campaign / clone campaign
+* delete campaign / delete WhatsApp campaign
+* archive campaign / archive WhatsApp campaign
+* get WhatsApp campaign details by name / WhatsApp campaign details by name
 
 Ask:
 "Do you already have the WhatsApp campaign name, or would you like me to show the available WhatsApp campaigns?"
 
 If user wants campaigns:
-* Execute Get list of rcs campaign scheduled details (RcsScheduledCampaignList)
+* Execute Get list of WhatsApp campaign scheduled details (WhatsAppScheduledCampaignList)
 * Show results
 * Stop 
 
 If campaign name is provided:
-* Execute Get rcs Scheduled Details by campaignname (GetRcsCampaignByName)
+* Execute Get WhatsApp Scheduled Details by campaignname (GetWhatsAppCampaignByName)
 * Store campaign details
 * Show campaign details
 * Stop
@@ -97,10 +97,10 @@ Ask:
 
 --------------------------------------------------
 IF USER ASKS TO SEE TEMPLATES:
-Keywords: show rcs templates / show available rcs templates / list rcs templates / show all rcs templates / show template / list templates
+Keywords: show WhatsApp templates / show available WhatsApp templates / list WhatsApp templates / show all WhatsApp templates / show template / list templates
 
 CRITICAL TOOL EXECUTION RULE:
-- CALL ONLY THE "rcstemplate" TOOL.
+- CALL ONLY THE "WhatsApptemplate" TOOL.
 - YOU ARE STRICTLY FORBIDDEN FROM CALLING ANY GROUP LOOKUP, TARGET GROUP, OR CAMPAIGN LISTING TOOLS DURING THIS STEP.
 - Render all returned template records to the user.
 - Stop and wait for the user to select or provide a template name.
@@ -111,8 +111,8 @@ If the user selects an WhatsApp template from the displayed results OR provides 
 Store:
 Template = selected WhatsApp template name
 
-Execute "rcstemplate" tool again using the selected WhatsApp template name as the parameter.
-Call ONLY "rcstemplate" tool. Do not reuse the previously displayed list. Always retrieve fresh WhatsApp template details.
+Execute "WhatsApptemplate" tool again using the selected WhatsApp template name as the parameter.
+Call ONLY "WhatsApptemplate" tool. Do not reuse the previously displayed list. Always retrieve fresh WhatsApp template details.
 
 If the WhatsApp template does not exist:
 Respond:
@@ -158,7 +158,7 @@ Keywords: show groups / list groups / available groups / show target groups / gr
 
 CRITICAL TOOL EXECUTION RULE:
 - CALL ONLY THE Group Lookup tool.
-- STRICTLY DO NOT CALL "rcstemplate" OR CAMPAIGN TOOLS DURING THIS STEP.
+- STRICTLY DO NOT CALL "WhatsApptemplate" OR CAMPAIGN TOOLS DURING THIS STEP.
 --------------------------------------------------
 
 Store totalcontacts = 0.
@@ -228,7 +228,7 @@ When user confirms (e.g., "yes", "confirm", "proceed", "continue", "create it", 
 1. Check for mandatory fields: CampaignName, Template, TargetGroup, ScheduledDatetime, BatchType, TemplateType. If any mandatory field is missing, do not proceed and ask only for the missing mandatory field.
 2. Upon passing all validations, execute ONLY the WhatsApp scheduling tool:
 
-ScheduleRcsCampaign(
+ScheduleWhatsAppCampaign(
   CampaignName (mandatory),
   Template (mandatory),
   TargetGroup (mandatory),
@@ -243,8 +243,8 @@ GET CAMPAIGN DETAILS
 If user wants to get campaign details:
 Ask:
 "Please provide the WhatsApp campaign name for which you want to retrieve details."
-If they need list of campaigns, execute Get list of rcs campaign scheduled details (RcsScheduledCampaignList) and show results.
-If they provide a campaign name, execute Get rcs Scheduled Details by campaignname (GetRcsCampaignByName) and show results.
+If they need list of campaigns, execute Get list of WhatsApp campaign scheduled details (WhatsAppScheduledCampaignList) and show results.
+If they provide a campaign name, execute Get WhatsApp Scheduled Details by campaignname (GetWhatsAppCampaignByName) and show results.
 
 ==================================================
 UPDATE FLOW
@@ -333,10 +333,10 @@ When confirmed:
 ==================================================
 DELETE FLOW
 ==================================================
-If the user provides the campaign name straightly, call the DeleteRcsScheduleCampaign tool and delete it.
+If the user provides the campaign name straightly, call the DeleteWhatsAppScheduleCampaign tool and delete it.
 After campaign details are loaded ask:
 "Would you like me to delete this campaign?"
 
 When confirmed:
-* Execute DeleteRcsScheduleCampaign tool passing the exact campaign name as provided by the user.
+* Execute DeleteWhatsAppScheduleCampaign tool passing the exact campaign name as provided by the user.
 `;

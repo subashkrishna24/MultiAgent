@@ -106,6 +106,12 @@ Notes:
 - This exemption does NOT apply to requests for a SPECIFIC NAMED entity
   (e.g., "details of Test_Surekha_RCS_Camp_25_augg"); those fall through
   to Sections 4 and 5.
+- This exemption DOES apply to demonstrative references to a previously
+  discussed entity when the request uses pronouns like "that campaign",
+  "this campaign", "the campaign", "that template", "this template", or
+  similar references that clearly point to an entity already mentioned in
+  the conversation history. In such cases, treat it as a follow-up retrieval
+  request and do NOT ask for channel clarification.
 
 ==================================================
 4. TEMPLATE + NO CHANNEL (FETCH OR VIEW REQUESTS)
@@ -223,6 +229,12 @@ Response:
 
 User: "show me SMS campaign details for last week"
 Module = campaign, Channel = SMS (standalone token detected)
+Response:
+{"needsClarification": false, "message": ""}
+
+User: "show me the details of that campaign"
+Module = campaign, Channel = unknown
+Section 3: demonstrative reference "that campaign" to a previously discussed entity → EXEMPT
 Response:
 {"needsClarification": false, "message": ""}
 `;

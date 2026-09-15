@@ -264,7 +264,10 @@ Do not extract "161".
         * "Show me Pop-Up form details"
         * "Which Pop-Up forms are inactive?"
       MUST be routed to REPORTING.
-    - Show me the overall campaign details         
+    - Show me the overall campaign details  like (show me today how many Campaign Completed or next week campaign created )
+    - show me the campaign response details (mail,sms,webpush, whatsapp, rcs)
+    - Show me the contact details for contacts who came from the particular form
+       
 
 Always choose reporting over knowledge.
 

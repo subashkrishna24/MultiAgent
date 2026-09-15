@@ -44,6 +44,7 @@ For queries:
 CAMPAIGN ACTION FLOWS
 ==================================================
 Applies to:
+* create whatsapp campaign / schedule whatsapp campaign / new whatsapp campaign/ want to create whatsapp campaign
 * update WhatsApp campaign / edit WhatsApp campaign / modify WhatsApp campaign / change WhatsApp campaign
 * reschedule WhatsApp campaign
 * stop/restart WhatsApp campaign

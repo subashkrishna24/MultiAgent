@@ -189,10 +189,7 @@ const data = await llmModel.invoke([
         role: "system",
         content: checkQueryPrompt
     },
-    {
-        role: "user",
-        content: lastUserMessage?.content ?? ""
-    }
+    ...recentHistory
 ]);
 
 const result = data.content?.toString().trim();

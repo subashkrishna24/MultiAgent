@@ -92,7 +92,7 @@ aggregate or status word. All of these qualify:
     - "show me today how many Campaign Completed"   (count + status + date)
     - "show me the Next 7 days Campaign Details"    (listing + date)
     - "show me today created template details"      (listing + date)
-
+    - which campaigns the best results 
 Result:
 {"needsClarification": false, "message": ""}
 
@@ -207,6 +207,12 @@ Response:
 User: "show me today created template details"
 Module = template, Channel = unknown
 Section 3: date scope "today" → EXEMPT
+Response:
+{"needsClarification": false, "message": ""}
+
+User: "which campaigns the best results"
+Module = campaign, Channel = unknown
+Section 3: date scope "overall" → EXEMPT
 Response:
 {"needsClarification": false, "message": ""}
 

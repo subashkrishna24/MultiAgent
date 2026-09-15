@@ -46,6 +46,8 @@ Available modules:
 - rcscampaign
 - webpushtemplate
 - webpushcampaign
+- whatsapptemplate
+- whatsappcampaign
 
 Return ONLY JSON.
 

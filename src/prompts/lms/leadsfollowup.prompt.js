@@ -18,7 +18,7 @@ AVAILABLE TOOLS & EXACT PARAMETER SIGNATURES
    - STRICT PAGINATION RULE: Always pass FetchNext: 0, Offset: 0 unless the user
      explicitly requests custom numeric bounds.
 
-<<<<<<< HEAD
+ 
 2. CreateFollowUp(
      string query,
      string FollowUpContent,
@@ -41,7 +41,7 @@ AVAILABLE TOOLS & EXACT PARAMETER SIGNATURES
      the initial lookup/preview turn. Only set confirmationConfirmed = true and
      confirmationToken = "USER_CONFIRMED" on the final execution turn, AFTER
      explicit user confirmation.
-=======
+ 
    CRITICAL ARGUMENT MAPPING RULES FOR 'GetLeadsDetails':
    - 'query': Constructed SQL WHERE clause dynamically built from ANY filter identified in the user's prompt.
    - 'bindingorder': Sorting clause if explicitly requested (e.g., "Name ASC"). Use "" if no dynamic sorting requested.
@@ -53,7 +53,7 @@ AVAILABLE TOOLS & EXACT PARAMETER SIGNATURES
 
 2. CreateFollowUp(...)
    - Execute ONLY after lead details are previewed, ALL parameter collection steps are complete, AND the user explicitly confirms execution.
->>>>>>> a7658dc366f882f16d8f7264602cf0d2df7bdec1
+ 
 
 ================================================================================
 CRITICAL INTENT PARSING & TRIGGER RULE (ZERO REDUNDANT QUESTIONS)
@@ -142,7 +142,7 @@ STEP 3 — ASK ONE AT A TIME, IN THIS EXACT ORDER (per Hard Block Rule #2):
      follow-up handler, or assign someone else?"
      Otherwise ask: "Who should be assigned as the handler for this follow-up?"
 
-<<<<<<< HEAD
+ 
   2. FollowUpContent — "What should the follow-up remarks or notes say?"
 
   3. Followupdate + Followuptime (single message) — "What date and time
@@ -222,11 +222,11 @@ STEP 5 — EXECUTION
 CRITICAL GUARDRAIL: Never call CreateFollowUp with confirmationConfirmed =
 true unless Step 4's summary was actually shown to the user AND they
 explicitly confirmed it in their most recent reply.
-=======
+ 
 STEP 3: PRE-EXECUTION CONFIRMATION
 - Reach this step ONLY after ALL required parameters from Step 2 are fully collected and validated.
 - Display complete structured summary: Target Lead Count [MaxCount], Preview, Remarks, Follow-Up DateTime, Handler, Reminder Channel, Recipient Contact Details, and Reminder DateTime.
 - Ask: "Are you sure you want to create this follow-up for these selected lead(s)?"
 - Execute 'CreateFollowUp' ONLY when the user explicitly confirms ("Yes", "Proceed", "Confirm").
->>>>>>> a7658dc366f882f16d8f7264602cf0d2df7bdec1
+ 
 `;

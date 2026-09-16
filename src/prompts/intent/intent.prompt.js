@@ -43,6 +43,11 @@ Available modules:
 - smscampaign
 - smstest
 - rcstemplate
+- rcscampaign
+- webpushtemplate
+- webpushcampaign
+- whatsapptemplate
+- whatsappcampaign
 
 Return ONLY JSON.
 
@@ -261,7 +266,10 @@ Do not extract "161".
         * "Show me Pop-Up form details"
         * "Which Pop-Up forms are inactive?"
       MUST be routed to REPORTING.
-    - Show me the overall campaign details         
+    - Show me the overall campaign details  like (show me today how many Campaign Completed or next week campaign created )
+    - show me the campaign response details (mail,sms,webpush, whatsapp, rcs)
+    - Show me the contact details for contacts who came from the particular form
+       
 
 Always choose reporting over knowledge.
 
@@ -818,7 +826,7 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    Example:
     {
       "module": "leadsfollowup"
-    } 
+    }
     15. Route to SENDMAILTOLEAD when the user wants:
    - send mail to lead
    - send email to lead
@@ -1189,8 +1197,6 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    24. Route to WHATSAPPTEST when the user says:
 
       * send test whatsapp
-      * send test whatsapp
-      * test whatsapp
       * test whatsapp
       * whatsapp configuration list
       * whatsapp config details
@@ -1200,6 +1206,7 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       {
         "module": "whatsapptest"
       }
+
   25. Route to WHATSAPPCAMPAIGN when the user says:
 
       * whatsapp campaign list
@@ -1215,6 +1222,53 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       Examples:
       {
         "module": "whatsappcampaign"
+      }
+
+ 26. Route to WebPushTEMPLATE when the user wants:
+
+   - create webpush templates
+   - duplicate webpush templates
+   - update webpush templates
+   - archive webpush templates
+   - view webpush templates
+   - list webpush templates
+   - manage webpush templates 
+   - webpush template details
+   - webpush template by name
+   - get webpush template details
+   
+   Example:
+   {
+     "module": "webpushtemplate"
+   }
+   
+  27. Route to WEBPUSHTEST when the user says:
+
+      * send test webpush
+      * send group test webpush
+      * test webpush
+      * test webpush by group
+
+      Examples:
+      {
+        "module": "webpushtest"
+      }
+
+   28. Route to WEBPUSHCAMPAIGN when the user says:
+
+      * webpush campaign list
+      * webpush particular campaign
+      * scheduled webpush campaign
+      * upcoming webpush campaign
+      * get campaign by name
+      * get details of campaign
+      * delete the webpush campaign by name
+      * duplicate the webpush campaign by name
+      * update the webpush campaign by name
+
+      Examples:
+      {
+        "module": "webpushcampaign"
       }
 
   `;

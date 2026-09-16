@@ -8,7 +8,7 @@ export function getMcpClient(accountid, p5apikey) {
       plumb5mcp: {
         transport: "sse",
 
-        // url: "https://mcp.plumb5.in/sse",
+        //url: "https://mcp.plumb5.in/sse",
         url: "http://localhost:5010/sse",
 
         headers: {

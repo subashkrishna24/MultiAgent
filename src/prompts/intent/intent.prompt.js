@@ -810,10 +810,10 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       "module": "leadmanagement"
     }
     14. Route to LEADSFOLLOWUP when the user wants:
-   - follow up
-   - followup
-   - lms follow up
-   - lms followup
+   - Create follow up
+   - Create followup
+   - Create lms follow up
+   - Create lms followup
 
    Example:
     {

@@ -36,12 +36,14 @@ import { executeRcsTemplateAgent } from "../agents/rcs/rcstemplate.agent.js";
 import { executeRcsTestAgent } from "../agents/rcs/rcstest.agent.js";
 import { executeRcsCampaignAgent } from "../agents/rcs/rcscampaign.agent.js";
 import { executeWorkflowAgent } from "../agentic_workflows/agent/workflow.js";
-import { executeWhatsAppTemplateAgent } from "../agents/whatsapp/whatsapptemplate.agent.js"
-import { executeWhatsAppTestAgent } from "../agents/whatsapp/whatsapptest.agent.js"
-import { executeWhatsAppCampaignAgent } from "../agents/whatsapp/whatsappcampaign.agent.js"
-import {checkClarification} from "../utils/json.utils.js"
-import {executeWebPushTemplateAgent} from "../agents/webpush/webpushtemplate.agent.js"
-import {executeWebPushTestAgent} from "../agents/webpush/webpushtest.agent.js"
+import { executeWhatsAppTemplateAgent } from "../agents/whatsapp/whatsapptemplate.agent.js";
+import { executeWhatsAppTestAgent } from "../agents/whatsapp/whatsapptest.agent.js";
+import { executeWhatsAppCampaignAgent } from "../agents/whatsapp/whatsappcampaign.agent.js";
+import { checkClarification } from "../utils/json.utils.js";
+import { executeWebPushTemplateAgent } from "../agents/webpush/webpushtemplate.agent.js";
+import { executeWebPushTestAgent } from "../agents/webpush/webpushtest.agent.js";
+import { executeWebPushCampaignAgent } from "../agents/webpush/webpushcampaign.agent.js";
+import { checkQueryPrompt } from "../prompts/shared/checkquery.prompt.js";
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -59,14 +61,6 @@ export async function executeWorkflow(payload) {
     clearPagingSession(machineid);
   }
 
-  const content = history.findLast((msg) => msg.role === "user")?.content;
-  var checkintent = checkClarification(content);
-
-  if (checkintent.needsClarification) {
-    return {
-      message: checkintent.message,
-    };
-  }
   // Session
   const session = getSession(machineid);
 
@@ -131,7 +125,13 @@ export async function executeWorkflow(payload) {
   let report_response;
   let workflowCompleted = false;
   let recommendedActions = [];
-
+  let modulecheck = [
+    "leadmanagement",
+    "leadsfollowup",
+    "leadsimport",
+    "sendmailtolead",
+    "knowledge",
+  ];
   //Add fromdate and todate in prompt
   const recentHistory = [
     {
@@ -186,6 +186,66 @@ export async function executeWorkflow(payload) {
     };
   }
 
+  if (!modulecheck.includes(intent.module.toLowerCase())) {
+    const priorTurns = recentHistory.slice(-10);
+    const currentMessage = history[history.length - 1].content;
+
+    const formattedHistory = priorTurns
+      .map((msg) => {
+        const text =
+          typeof msg.content === "string"
+            ? msg.content
+            : JSON.stringify(msg.content);
+        return `${msg.role.toUpperCase()}: ${text}`;
+      })
+      .join("\n\n");
+
+    const userPayload = `CONVERSATION_HISTORY:
+${formattedHistory || "None"}
+
+LATEST_USER_QUERY:
+${currentMessage}`;
+
+    const data = await llmModel.invoke([
+      {
+        role: "system",
+        content: checkQueryPrompt,
+      },
+      {
+        role: "user",
+        content: userPayload,
+      },
+    ]);
+
+    const rawContent =
+      typeof data.content === "string"
+        ? data.content
+        : data.content?.[0]?.text || "";
+
+    const result = rawContent
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
+    let parsedResult;
+
+    try {
+      parsedResult = JSON.parse(result);
+    } catch (error) {
+      console.error("Invalid LLM response from checkQueryPrompt:", result);
+      parsedResult = { needsClarification: false, message: "" };
+    }
+
+    if (parsedResult.needsClarification) {
+      return {
+        module: "",
+        message: parsedResult.message || "",
+        toolmessage: [],
+        workflowcompleted: false,
+        actions: [],
+      };
+    }
+  }
   // STEP 4
   if (intent.module === "knowledge") {
     response = await executeKnowledgeAgent({
@@ -200,12 +260,14 @@ export async function executeWorkflow(payload) {
   if (intent.module === "reporting") {
     const reportTool = filteredTools.find((t) => t.name === "GetReport");
 
-    const lastUserMessage = [...recentHistory]
-      .reverse()
-      .find((m) => m.role === "user");
+    const lastUserMessage = recentHistory
+      .filter((m) => m.role === "user")
+      .slice(-5)
+      .map((m) => m.content)
+      .join("\n");
 
     const toolResponse = await reportTool.invoke({
-      getquery: lastUserMessage?.content ?? "",
+      getquery: lastUserMessage ?? "",
       type: 1,
     });
 
@@ -452,8 +514,18 @@ export async function executeWorkflow(payload) {
     });
   }
 
-   if (intent.module === "webpushtest") {
+  if (intent.module === "webpushtest") {
     response = await executeWebPushTestAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+
+  if (intent.module === "webpushcampaign") {
+    response = await executeWebPushCampaignAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,
@@ -480,16 +552,23 @@ export async function executeWorkflow(payload) {
     "leadsfollowup",
     "leadsimport",
   ];
-  const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
+
+  const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])\s*$/m);
   if (match && !RemoveRecommendations.includes(intent.module.toLowerCase())) {
-    recommendedActions = JSON.parse(match[1]);
+    try {
+      recommendedActions = JSON.parse(match[1]);
+    } catch (err) {
+      console.error("Failed to parse RECOMMENDED_ACTIONS:", match[1], err);
+      recommendedActions = [];
+    }
   }
+
   const final_cleanMessage = response_msg
-  .replace(/WORKFLOW_COMPLETED:\s*(true|false)/gi, "")
-  .replace(/RECOMMENDED_ACTIONS:\s*(\[[^\]]\]|.)/gi, "")
-  .replace(/\b(workflow\scompleted|recommended\sactions?|recommendations?)\b/gi, "")
-  .replace(/\s{2,}/g, " ")
-  .trim();
+    .replace(/WORKFLOW_COMPLETED:\s*(true|false)/gi, "")
+    .replace(/RECOMMENDED_ACTIONS:\s*\[[^\]]*\]/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
   return {
     module: intent.module,
     message: final_cleanMessage,

@@ -29,8 +29,7 @@ Step 2: Target Audience Type Selection (Group vs. Individual)
 
 - **BRANCH A: INDIVIDUAL**
   1. Ask for the target MachineId (if not already provided).
-  2. Validate that the input is a valid machine ID format. If invalid, request a valid machine ID.
-  3. Store target as MachineId, set GroupName = null.
+  2. Store target as MachineId, set GroupName = null.
 
 - **BRANCH B: GROUP**
   1. Ask for the target GroupName.

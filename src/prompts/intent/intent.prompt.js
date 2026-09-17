@@ -43,7 +43,11 @@ Available modules:
 - smscampaign
 - smstest
 - rcstemplate
-- webpush
+- rcscampaign
+- webpushtemplate
+- webpushcampaign
+- whatsapptemplate
+- whatsappcampaign
 
 Return ONLY JSON.
 
@@ -262,7 +266,10 @@ Do not extract "161".
         * "Show me Pop-Up form details"
         * "Which Pop-Up forms are inactive?"
       MUST be routed to REPORTING.
-    - Show me the overall campaign details         
+    - Show me the overall campaign details  like (show me today how many Campaign Completed or next week campaign created )
+    - show me the campaign response details (mail,sms,webpush, whatsapp, rcs)
+    - Show me the contact details for contacts who came from the particular form
+    - verified contact details  route to contact 
 
 Always choose reporting over knowledge.
 
@@ -1246,4 +1253,22 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       {
         "module": "webpushtest"
       }
+
+   28. Route to WEBPUSHCAMPAIGN when the user says:
+
+      * webpush campaign list
+      * webpush particular campaign
+      * scheduled webpush campaign
+      * upcoming webpush campaign
+      * get campaign by name
+      * get details of campaign
+      * delete the webpush campaign by name
+      * duplicate the webpush campaign by name
+      * update the webpush campaign by name
+
+      Examples:
+      {
+        "module": "webpushcampaign"
+      }
+
   `;

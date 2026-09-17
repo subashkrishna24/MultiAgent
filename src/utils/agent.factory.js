@@ -52,7 +52,7 @@ import { WHATSAPPCAMPAIGN_PROMPT } from "../prompts/whatsapp/whatsappcampaign.pr
 
 import { WEBPUSHTEMPLATE_PROMPT } from "../prompts/webpush/webpushtemplate.prompt.js";
 import { WEBPUSHTEST_PROMPT } from "../prompts/webpush/webpushtest.prompt.js";
-
+import {WEBPUSHCAMPAIGN_PROMPT} from "../prompts/webpush/webpushcampaign.prompt.js";
 function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
@@ -98,7 +98,8 @@ function getPrompt(module) {
     whatsapptest:WHATSAPPTEST_PROMPT,
     whatsappcampaign:WHATSAPPCAMPAIGN_PROMPT,
     webpushtemplate:WEBPUSHTEMPLATE_PROMPT,
-    webpushtest:WEBPUSHTEST_PROMPT
+    webpushtest:WEBPUSHTEST_PROMPT,
+    webpushcampaign:WEBPUSHCAMPAIGN_PROMPT,
   };
 
   return prompts[module];

@@ -269,7 +269,7 @@ Do not extract "161".
     - Show me the overall campaign details  like (show me today how many Campaign Completed or next week campaign created )
     - show me the campaign response details (mail,sms,webpush, whatsapp, rcs)
     - Show me the contact details for contacts who came from the particular form
-       
+    - verified contact details  route to contact 
 
 Always choose reporting over knowledge.
 

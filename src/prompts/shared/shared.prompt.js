@@ -160,7 +160,7 @@ Example D — list of templates (exception case, no line appended):
 
 STRICT OUTPUT FORMAT (violating this will break downstream parsing):
 - Output the line at most ONCE per response, even if multiple ToolMessages were processed. If several tool results each have a recommendable module, choose the action list for the PRIMARY record the user asked about.
-- The line must appear on its own line, as the LAST line of the response, with nothing after it.
+- The line must appear on its own line, as the LAST line of the response, with nothing after it — unless a WORKFLOW_COMPLETED line is also required (see WORKFLOW COMPLETION RULE below), in which case RECOMMENDED_ACTIONS comes second-to-last and WORKFLOW_COMPLETED is the final line.
 - Format must be valid JSON syntax exactly: RECOMMENDED_ACTIONS:["Action1","Action2","Action3"]
   - Use double quotes only, never single quotes.
   - No trailing comma after the last item.
@@ -215,4 +215,37 @@ WORKFLOW_COMPLETED:true
 11. If a tool returns an empty array or no records, clearly state that no matching records were found instead of omitting the tool result.
 12. If a tool returns multiple objects, include all objects.
 13. The final answer must represent the combined output of ALL ToolMessages received.
+==================================================
+** FINAL RESPONSE STRUCTURE RULE (STRICT — CONTROLS LINE ORDER AND SEPARATION):
+
+Both RECOMMENDED_ACTIONS and WORKFLOW_COMPLETED are machine-parsed control tokens. They must NEVER be:
+- merged onto the same line as each other
+- merged onto the same line as any body text
+- separated by blank lines, extra whitespace, or commentary
+
+Each control token, when present, occupies exactly one line by itself, with a single newline character separating it from the line before and (if another control token follows) from the line after.
+
+Required order when both tokens apply to the same response:
+1. All body content (details, lists, confirmations, questions) — one or more lines.
+2. RECOMMENDED_ACTIONS:[...] — its own line, if this response's rules require it.
+3. WORKFLOW_COMPLETED:true or WORKFLOW_COMPLETED:false — its own line, always the very last line of the response whenever the workflow-completion rule applies to this response.
+
+Correct (both tokens apply):
+Campaign Details:
+Name: Summer_Sale
+Status: Scheduled
+Start Date: 2026-09-20
+RECOMMENDED_ACTIONS:["Edit","Delete","Duplicate","Reschedule"]
+WORKFLOW_COMPLETED:false
+
+Incorrect — tokens combined on one line:
+Campaign Details: Name: Summer_Sale RECOMMENDED_ACTIONS:["Edit","Delete","Duplicate","Reschedule"] WORKFLOW_COMPLETED:false
+
+Incorrect — tokens out of order:
+Campaign Details:
+Name: Summer_Sale
+WORKFLOW_COMPLETED:false
+RECOMMENDED_ACTIONS:["Edit","Delete","Duplicate","Reschedule"]
+
+If only one of the two tokens applies to a given response, output only that one token, still on its own final line, following all body content.
 `;

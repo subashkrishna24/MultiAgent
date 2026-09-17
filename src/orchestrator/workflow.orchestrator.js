@@ -36,14 +36,14 @@ import { executeRcsTemplateAgent } from "../agents/rcs/rcstemplate.agent.js";
 import { executeRcsTestAgent } from "../agents/rcs/rcstest.agent.js";
 import { executeRcsCampaignAgent } from "../agents/rcs/rcscampaign.agent.js";
 import { executeWorkflowAgent } from "../agentic_workflows/agent/workflow.js";
-import { executeWhatsAppTemplateAgent } from "../agents/whatsapp/whatsapptemplate.agent.js"
-import { executeWhatsAppTestAgent } from "../agents/whatsapp/whatsapptest.agent.js"
-import { executeWhatsAppCampaignAgent } from "../agents/whatsapp/whatsappcampaign.agent.js"
-import {checkClarification} from "../utils/json.utils.js"
-import {executeWebPushTemplateAgent} from "../agents/webpush/webpushtemplate.agent.js"
-import {executeWebPushTestAgent} from "../agents/webpush/webpushtest.agent.js"
-import {executeWebPushCampaignAgent} from "../agents/webpush/webpushcampaign.agent.js"
-import {checkQueryPrompt} from "../prompts/shared/checkquery.prompt.js"
+import { executeWhatsAppTemplateAgent } from "../agents/whatsapp/whatsapptemplate.agent.js";
+import { executeWhatsAppTestAgent } from "../agents/whatsapp/whatsapptest.agent.js";
+import { executeWhatsAppCampaignAgent } from "../agents/whatsapp/whatsappcampaign.agent.js";
+import { checkClarification } from "../utils/json.utils.js";
+import { executeWebPushTemplateAgent } from "../agents/webpush/webpushtemplate.agent.js";
+import { executeWebPushTestAgent } from "../agents/webpush/webpushtest.agent.js";
+import { executeWebPushCampaignAgent } from "../agents/webpush/webpushcampaign.agent.js";
+import { checkQueryPrompt } from "../prompts/shared/checkquery.prompt.js";
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -125,7 +125,13 @@ export async function executeWorkflow(payload) {
   let report_response;
   let workflowCompleted = false;
   let recommendedActions = [];
-
+  let modulecheck = [
+    "leadmanagement",
+    "leadsfollowup",
+    "leadsimport",
+    "sendmailtolead",
+    "knowledge",
+  ];
   //Add fromdate and todate in prompt
   const recentHistory = [
     {
@@ -180,38 +186,66 @@ export async function executeWorkflow(payload) {
     };
   }
 
-    const lastUserMessage = [...recentHistory]
-      .reverse()
-      .find((m) => m.role === "user");
+  if (!modulecheck.includes(intent.module.toLowerCase())) {
+    const priorTurns = recentHistory.slice(-10);
+    const currentMessage = history[history.length - 1].content;
 
-const data = await llmModel.invoke([
-    {
+    const formattedHistory = priorTurns
+      .map((msg) => {
+        const text =
+          typeof msg.content === "string"
+            ? msg.content
+            : JSON.stringify(msg.content);
+        return `${msg.role.toUpperCase()}: ${text}`;
+      })
+      .join("\n\n");
+
+    const userPayload = `CONVERSATION_HISTORY:
+${formattedHistory || "None"}
+
+LATEST_USER_QUERY:
+${currentMessage}`;
+
+    const data = await llmModel.invoke([
+      {
         role: "system",
-        content: checkQueryPrompt
-    },
-    ...recentHistory
-]);
+        content: checkQueryPrompt,
+      },
+      {
+        role: "user",
+        content: userPayload,
+      },
+    ]);
 
-const result = data.content?.toString().trim();
+    const rawContent =
+      typeof data.content === "string"
+        ? data.content
+        : data.content?.[0]?.text || "";
 
-let parsedResult;
+    const result = rawContent
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
 
-try {
-    parsedResult = JSON.parse(result);
-} catch (error) {
-    throw new Error(`Invalid LLM response: ${result}`);
-}
+    let parsedResult;
 
-if (parsedResult.needsClarification) {
-    return {
-        module: intent.module,
+    try {
+      parsedResult = JSON.parse(result);
+    } catch (error) {
+      console.error("Invalid LLM response from checkQueryPrompt:", result);
+      parsedResult = { needsClarification: false, message: "" };
+    }
+
+    if (parsedResult.needsClarification) {
+      return {
+        module: "",
         message: parsedResult.message || "",
         toolmessage: [],
         workflowcompleted: false,
-        actions: []
-    };
-}
-
+        actions: [],
+      };
+    }
+  }
   // STEP 4
   if (intent.module === "knowledge") {
     response = await executeKnowledgeAgent({
@@ -226,12 +260,14 @@ if (parsedResult.needsClarification) {
   if (intent.module === "reporting") {
     const reportTool = filteredTools.find((t) => t.name === "GetReport");
 
-    const lastUserMessage = [...recentHistory]
-      .reverse()
-      .find((m) => m.role === "user");
+    const lastUserMessage = recentHistory
+      .filter((m) => m.role === "user")
+      .slice(-5)
+      .map((m) => m.content)
+      .join("\n");
 
     const toolResponse = await reportTool.invoke({
-      getquery: lastUserMessage?.content ?? "",
+      getquery: lastUserMessage ?? "",
       type: 1,
     });
 
@@ -478,7 +514,7 @@ if (parsedResult.needsClarification) {
     });
   }
 
-   if (intent.module === "webpushtest") {
+  if (intent.module === "webpushtest") {
     response = await executeWebPushTestAgent({
       model: llmModel,
       tools: filteredTools,
@@ -488,8 +524,7 @@ if (parsedResult.needsClarification) {
     });
   }
 
-
-   if (intent.module === "webpushcampaign") {
+  if (intent.module === "webpushcampaign") {
     response = await executeWebPushCampaignAgent({
       model: llmModel,
       tools: filteredTools,
@@ -511,15 +546,14 @@ if (parsedResult.needsClarification) {
     workflowCompleted = true;
   }
 
-var RemoveRecommendations = [
-  "contact",
-  "leadmanagement",
-  "leadsfollowup",
-  "leadsimport",
-];
+  var RemoveRecommendations = [
+    "contact",
+    "leadmanagement",
+    "leadsfollowup",
+    "leadsimport",
+  ];
 
-
- const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])\s*$/m);
+  const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])\s*$/m);
   if (match && !RemoveRecommendations.includes(intent.module.toLowerCase())) {
     try {
       recommendedActions = JSON.parse(match[1]);
@@ -529,9 +563,9 @@ var RemoveRecommendations = [
     }
   }
 
- const final_cleanMessage = response_msg
+  const final_cleanMessage = response_msg
     .replace(/WORKFLOW_COMPLETED:\s*(true|false)/gi, "")
-    .replace(/RECOMMENDED_ACTIONS:\s*\[[^\]]*\]/gi, "") 
+    .replace(/RECOMMENDED_ACTIONS:\s*\[[^\]]*\]/gi, "")
     .replace(/\s{2,}/g, " ")
     .trim();
 
@@ -542,5 +576,4 @@ var RemoveRecommendations = [
     workflowcompleted: workflowCompleted,
     actions: recommendedActions,
   };
-
 }

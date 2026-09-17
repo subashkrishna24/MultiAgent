@@ -210,6 +210,14 @@ export function checkClarification(userInput) {
 
   const moduleName = hasCampaign ? "campaign" : "template";
 
+  const demonstrativeRef =
+    /\b(that|this|the)\s+(campaign|template)\b/i.test(text) ||
+    /\bdetails\s+of\s+(that|this|the)\s+(campaign|template)\b/i.test(text);
+
+  if (demonstrativeRef) {
+    return { needsClarification: false, message: null };
+  }
+
   const hasTimeOrAction =
     /(?:^|[\s,.:;?!()[\]{}'"])\b(next|last|past|today|tomorrow|yesterday|upcoming|scheduled|days?|weeks?|months?|years?|create|draft|new|build|add)\b(?:$|[\s,.:;?!()[\]{}'"])/i.test(
       text,

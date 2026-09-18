@@ -270,6 +270,8 @@ Do not extract "161".
     - show me the campaign response details (mail,sms,webpush, whatsapp, rcs)
     - Show me the contact details for contacts who came from the particular form
     - verified contact details  route to contact 
+    - How many visitors reached certain url for this goal
+    - Show me the goals with 0% completion
 
 Always choose reporting over knowledge.
 

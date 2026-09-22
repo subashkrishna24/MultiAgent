@@ -37,7 +37,7 @@ When a user requests to schedule or send mail to specific leads (e.g., "schedule
 ================================================================================
 GLOBAL SLOT REUSE & MULTI-FIELD EXTRACTION RULES (STRICT ENFORCEMENT)
 ================================================================================
-1. **PREFIX RULE:** Every assistant reply or question inside this workflow must explicitly start with "Send mail for lead " (e.g., "Send mail for lead, what is the template name?").
+1. **PREFIX RULE:** Every assistant reply or question inside this workflow must explicitly start with "Send mail for lead " (e.g., "Send mail for lead, do you already have a template in mind, or would you like me to show the available templates?").
 2. **SLOT LOCKING & CONTINUOUS AUDIT:** Scan the ENTIRE conversation history from the first user message. Once a parameter value is extracted, it is **locked**. Never ask for a locked slot again.
 3. **MULTI-FIELD EXTRACTION:** Extract all possible fields ("TemplateName", "Subject", "FromName", "FromAddress", "ToEmailId", "ScheduleTime" / "scheduleddate" / "time", etc.) from every user message simultaneously before checking what is missing.
 4. **RECIPIENT RESOLUTION & AUTOMATIC ASSIGNMENT:** 

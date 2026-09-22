@@ -13,119 +13,128 @@ Return ONLY a valid, raw JSON object. No Markdown fences, no backticks, no expla
 }
 
 ==================================================
-0. NON-APPLICABLE MODULES (EVALUATE FIRST -> false)
+STEP 0: IMMEDIATE CHANNEL BYPASS (EVALUATE FIRST — OVERRULES ALL)
 ==================================================
-If the user's query refers to any entity other than Campaign or Template (e.g., "group", "contact", "segment", "list", "workflow", "journey", "report", "user", "tag"):
+If the LATEST_USER_QUERY contains ANY channel keyword (case-insensitive):
+Channels: "mail", "email", "sms", "whatsapp", "rcs", "push", "web push", "webpush"
+
+-> You MUST return: {"needsClarification": false, "message": ""}
+-> STOP IMMEDIATELY. Do NOT check creation rules. Do NOT ask for clarification.
+
+Directly applies to:
+- "create whatsapp template" -> false
+- "create Web Push Template" -> false
+- "create SMS campaign" -> false
+- "new mail template" -> false
+- "show me WhatsApp Template Details of Test_Surekha_new_Tempp_btnn_15_sptttt" -> false
+
+==================================================
+STEP 1: NON-APPLICABLE MODULES (false)
+==================================================
+If the user's query refers to entities other than Campaign or Template (e.g., "group", "contact", "segment", "list", "workflow", "journey", "report", "user", "tag"):
 -> Set needsClarification = false, message = ""
 
 ==================================================
-1. PRIOR HISTORY & EXEMPTION CHECKS (EVALUATE SECOND -> false)
+STEP 2: ACTIVE CONTEXT & CONVERSATIONAL CONTINUATION (false)
 ==================================================
-Set needsClarification = false and message = "" immediately if ANY of these match:
+Set needsClarification = false and message = "" immediately if:
+A. ACTIVE ASSISTANT CONTEXT:
+   The previous Assistant message was already operating within a channel (e.g., "For webpush template...", "For whatsapp template..."):
+   - User answers a question / prompt: "show", "show me", "yes", "no", "static", "dynamic", or enters a name/ID.
+   - User executes an action on the active entity: "Duplicate", "Edit", "Archive", "Delete", "Clone", "Preview".
+   -> Inherit channel context -> false
 
-A. METRICS, PERFORMANCE, RESULTS, RESPONSES & DATE SCOPES (OVERRULES ALL "SHOW DETAILS"):
-   The query asks for performance comparisons, rankings, results, metrics, aggregates, status, counts, or dates:
-   - Performance & Rankings: "best results", "top performing", "highest open rate", "worst results", "best campaigns", "campaign responses".
-   - Dates & Counts: "this month", "last 30 days", "today", "yesterday", "next 7 days", "between X and Y", "total sent count", "completed count".
-   - This rule OVERRIDES Section 2 even if words like "show me", "which", or "details of" are present.
-   - e.g., "which campaigns the best results" -> false
-   - e.g., "which campaigns had the best results" -> false
-   - e.g., "show me details of this month how many Campaign completed and campaign responses" -> false
-   - e.g., "show me last 30 days total mail sent count" -> false
+B. METRICS, PERFORMANCE, RESULTS & DATES:
+   The query asks for performance comparisons, rankings, aggregates, or time filters:
+   - "best results", "top performing", "last 30 days sent count", "campaign responses" -> false
 
-B. DIRECT ANSWER TO A CLARIFICATION QUESTION:
-   The immediate previous Assistant turn asked "Which template are you looking for..." or "Which campaign are you looking for...", and the LATEST_USER_QUERY provides a channel name ("mail", "sms", "whatsapp", "rcs", "push").
-   - e.g., Assistant: "Which template are you looking for..." -> User: "mail" -> false
+C. DIRECT ANSWER TO PREVIOUS CLARIFICATION:
+   Assistant previously asked "Which template/campaign are you looking for..." and User replied with a channel name ("mail", "sms", "whatsapp", etc.) -> false
 
-C. DIRECT ENTITY SELECTION FROM AN ASSISTANT LIST:
-   The immediate previous Assistant message listed specific templates or campaigns (e.g., bullet items like "**bhdds**", "testing_4567882ss"), and the LATEST_USER_QUERY is an exact or near-exact match of one of those names.
-   - Action: Inherit the module and channel from the listing turn -> false
-
-D. STANDALONE CHANNEL ALREADY EXPLICIT IN QUERY:
-   The query explicitly contains a standalone channel token ("mail", "email", "sms", "whatsapp", "rcs", "push").
-   - e.g., "create SMS campaign", "show mail templates", "mail" -> false
+D. DIRECT ENTITY SELECTION FROM AN ASSISTANT LIST:
+   User selects an item name previously listed by the assistant -> false
 
 ==================================================
-2. STRICT CLARIFICATION TRIGGERS (needsClarification = true)
+STEP 3: CLARIFICATION TRIGGERS (needsClarification = true)
 ==================================================
-Ask for clarification ONLY when Channel is UNKNOWN and Section 1 does NOT apply:
+Trigger clarification ONLY when the Channel is 100% UNKNOWN (NO channel keyword appears in the query AND no active channel exists in conversation history):
 
-A. BROAD / GENERIC FETCH (WITHOUT DATE, RANKING, OR METRIC):
-   The query is a plain list request with NO channel, NO date range, and NO performance metric/ranking:
-   - "show me available templates", "show me templates", "list campaigns", "get all templates"
-   - Action: DO NOT carry over the channel from earlier turns.
+A. GENERIC TEMPLATE / CAMPAIGN FETCH:
+   - "show me the available templates", "show me templates", "list campaigns", "get templates"
    -> If Template:
       {"needsClarification": true, "message": "Which template are you looking for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
    -> If Campaign:
       {"needsClarification": true, "message": "Which campaign are you looking for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
 
-B. CREATION REQUEST WITHOUT EXPLICIT CHANNEL:
-   Keywords: "create", "add", "new", "build", "schedule" targeting campaign or template without a channel token:
+B. CREATION OR ACTION ON A BLANK / UNKNOWN CONTEXT:
+   Keywords: "create", "add", "new", "build", "schedule", "duplicate" targeting campaign or template WITHOUT a channel keyword:
+   - "create template", "create campaign", "add new template"
    -> If Template:
       {"needsClarification": true, "message": "Sure — which channel is this template for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
    -> If Campaign:
       {"needsClarification": true, "message": "Sure — which channel is this campaign for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
 
-C. SPECIFIC UNKNOWN NAMED ENTITY:
-   Asking for details of a specific campaign/template name that has no channel, no date range, and was NOT present in the immediate prior assistant message:
-   -> If Template:
-      {"needsClarification": true, "message": "Which template are you looking for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
-   -> If Campaign:
-      {"needsClarification": true, "message": "Which campaign are you looking for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
+C. SPECIFIC UNKNOWN NAMED ENTITY WITHOUT A CHANNEL:
+   Asking for details of a specific name/ID where NO channel keyword appears anywhere:
+   - "show me details of template Test_Promo_01" -> true
 
 ==================================================
-3. TEST EXAMPLES
+4. TEST EXAMPLES
 ==================================================
 
 Example 1:
 History: []
-Latest Query: "which campaigns the best results"
+Latest Query: "create whatsapp template"
 Output:
 {"needsClarification": false, "message": ""}
 
 Example 2:
 History: []
-Latest Query: "show me details of this month how many Campaign completed and campaign responses"
+Latest Query: "create Web Push Template"
 Output:
 {"needsClarification": false, "message": ""}
 
 Example 3:
-History:
-  Assistant: "For mail templates, here are the available options:\n* **bhdds**\n* testing_4567882ss"
-Latest Query: "bhdds"
+History: []
+Latest Query: "show me WhatsApp Template Details of Test_Surekha_new_Tempp_btnn_15_sptttt"
 Output:
 {"needsClarification": false, "message": ""}
 
 Example 4:
-History:
-  Assistant: "For mail template, here are the details..."
+History: []
 Latest Query: "show me the available templates"
 Output:
 {"needsClarification": true, "message": "Which template are you looking for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
 
 Example 5:
 History:
-  User: "show me available templates"
-  Assistant: "Which template are you looking for: Mail, SMS, WhatsApp, RCS, or Web Push?"
-Latest Query: "mail"
+  Assistant: "For webpush template, do you already have a campaign identifier for this webpush template, or would you like me to show the available identifiers?"
+Latest Query: "show"
 Output:
 {"needsClarification": false, "message": ""}
 
 Example 6:
-History: []
-Latest Query: "show me last 30 days total mail sent count"
+History:
+  Assistant: "For whatsapp template, here are the details of the template \"Test_Surekha_new_Tempp_b\""
+Latest Query: "Duplicate"
 Output:
 {"needsClarification": false, "message": ""}
 
 Example 7:
 History: []
-Latest Query: "create group"
+Latest Query: "create template"
 Output:
-{"needsClarification": false, "message": ""}
+{"needsClarification": true, "message": "Sure — which channel is this template for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
 
 Example 8:
 History: []
 Latest Query: "create campaign"
 Output:
-{"needsClarification": true, "message": "Sure — which channel is this campaign for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
+{"needsClarification": true, "message": "Sure — which campaign is this campaign for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
+
+Example 9:
+History: []
+Latest Query: "create group"
+Output:
+{"needsClarification": false, "message": ""}
 `;

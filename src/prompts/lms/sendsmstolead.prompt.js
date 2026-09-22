@@ -49,7 +49,7 @@ STEP-BY-STEP SEQUENTIAL PARAMETER COLLECTION
 Once the target leads are resolved, previewed, and MaxCount is bound, evaluate the remaining workflow slots in this exact order. **ASK ONLY ONE QUESTION AT A TIME.**
 
 ### 1. Template Selection & Revalidation ("TemplateName")
-- Check history. If missing, ask: "Send sms for lead, do you already have a template in mind, or would you like me to show the available templates?"
+- Check history. If missing, ask: "Send sms for lead, do you already have a sms template in mind, or would you like me to show the available sms templates?"
 - When selected or provided, store the template name and proceed to the next step.
 
 ### 2. Campaign Type ("IsPromotionalOrTransactionalType")

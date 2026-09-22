@@ -130,7 +130,6 @@ export async function executeWorkflow(payload) {
     "leadsfollowup",
     "leadsimport",
     "sendmailtolead",
-    "knowledge",
   ];
   //Add fromdate and todate in prompt
   const recentHistory = [

@@ -48,6 +48,7 @@ Available modules:
 - webpushcampaign
 - whatsapptemplate
 - whatsappcampaign
+- available_assets
 
 Return ONLY JSON.
 
@@ -1272,5 +1273,36 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       {
         "module": "webpushcampaign"
       }
+
+
+      29. Route to AVAILABLE_ASSETS when the user wants:
+   - show available templates / list available templates / get available templates
+   - show me the available templates / what templates are available / show all templates
+   - show available campaigns / list available campaigns / get available campaigns
+   - show me the available campaigns / what campaigns are available / show all campaigns
+   - which templates do I have / which campaigns do I have
+   - show available templates and campaigns
+
+   Rules & Precedence:
+   - Route to AVAILABLE_ASSETS when the user wants to view or list available templates OR campaigns generally across channels without naming a specific channel.
+   - If the user explicitly mentions a single channel for templates (e.g., "show mail templates", "whatsapp template list"), route directly to that specific template module (mailtemplate, smstemplate, rcstemplate, webpushtemplate, whatsapptemplate).
+   - If the user explicitly mentions a single channel for campaigns (e.g., "show mail campaigns", "list sms campaigns"), route directly to that specific campaign module (mailcampaign, smscampaign, rcscampaign, webpushcampaign, whatsappcampaign).
+   - If the user asks to *create*, *schedule*, *edit*, or *send* a campaign/template, do NOT route to AVAILABLE_ASSETS. Follow the respective channel creation or channel prompt rules.
+
+   Examples:
+   User: "show me the available templates"
+   {
+     "module": "available_assets"
+   }
+
+   User: "show me the available campaigns"
+   {
+     "module": "available_assets"
+   }
+
+   User: "what templates and campaigns do I have available?"
+   {
+     "module": "available_assets"
+   }
 
   `;

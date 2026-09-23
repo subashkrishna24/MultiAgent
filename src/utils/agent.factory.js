@@ -48,12 +48,12 @@ import { WHATSAPPTEMPLATE_PROMPT } from "../prompts/whatsapp/whatsapptemplate.pr
 
 import { WHATSAPPTEST_PROMPT } from "../prompts/whatsapp/whatsapptest.prompt.js";
 
-import { WHATSAPPCAMPAIGN_PROMPT } from "../prompts/whatsapp/whatsappcampaign.prompt.js"
+import { WHATSAPPCAMPAIGN_PROMPT } from "../prompts/whatsapp/whatsappcampaign.prompt.js";
 
 import { WEBPUSHTEMPLATE_PROMPT } from "../prompts/webpush/webpushtemplate.prompt.js";
 import { WEBPUSHTEST_PROMPT } from "../prompts/webpush/webpushtest.prompt.js";
-import {WEBPUSHCAMPAIGN_PROMPT} from "../prompts/webpush/webpushcampaign.prompt.js";
-function getPrompt(module) {
+import { WEBPUSHCAMPAIGN_PROMPT } from "../prompts/webpush/webpushcampaign.prompt.js";
+export function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
 
@@ -94,12 +94,12 @@ function getPrompt(module) {
     rcstest: RCSTEST_PROMPT,
     rcscampaign: RCSCAMPAIGN_PROMPT,
     realtime: REALTIME_PROMPT,
-    whatsapptemplate:WHATSAPPTEMPLATE_PROMPT,
-    whatsapptest:WHATSAPPTEST_PROMPT,
-    whatsappcampaign:WHATSAPPCAMPAIGN_PROMPT,
-    webpushtemplate:WEBPUSHTEMPLATE_PROMPT,
-    webpushtest:WEBPUSHTEST_PROMPT,
-    webpushcampaign:WEBPUSHCAMPAIGN_PROMPT,
+    whatsapptemplate: WHATSAPPTEMPLATE_PROMPT,
+    whatsapptest: WHATSAPPTEST_PROMPT,
+    whatsappcampaign: WHATSAPPCAMPAIGN_PROMPT,
+    webpushtemplate: WEBPUSHTEMPLATE_PROMPT,
+    webpushtest: WEBPUSHTEST_PROMPT,
+    webpushcampaign: WEBPUSHCAMPAIGN_PROMPT,
   };
 
   return prompts[module];

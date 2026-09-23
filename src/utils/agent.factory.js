@@ -52,8 +52,13 @@ import { WHATSAPPCAMPAIGN_PROMPT } from "../prompts/whatsapp/whatsappcampaign.pr
 
 import { WEBPUSHTEMPLATE_PROMPT } from "../prompts/webpush/webpushtemplate.prompt.js";
 import { WEBPUSHTEST_PROMPT } from "../prompts/webpush/webpushtest.prompt.js";
-import { WEBPUSHCAMPAIGN_PROMPT } from "../prompts/webpush/webpushcampaign.prompt.js";
-export function getPrompt(module) {
+import {WEBPUSHCAMPAIGN_PROMPT} from "../prompts/webpush/webpushcampaign.prompt.js";
+import {CREATEORUPDATELEAD_PROMPT} from "../prompts/lms/createorupdatelead.prompt.js";
+import {SENDSMSTOLEAD_PROMPT} from "../prompts/lms/sendsmstolead.prompt.js";
+import {SENDWHATSAPPTOLEAD_PROMPT} from "../prompts/lms/sendwhatsapptolead.prompt.js";
+import {SENDRCSTOLEAD_PROMPT} from "../prompts/lms/sendrcstolead.prompt.js";
+import { LEAD_TRANSITION_PROMPT } from "../prompts/lms/leadtransition.prompt.js";
+function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
 
@@ -94,12 +99,17 @@ export function getPrompt(module) {
     rcstest: RCSTEST_PROMPT,
     rcscampaign: RCSCAMPAIGN_PROMPT,
     realtime: REALTIME_PROMPT,
-    whatsapptemplate: WHATSAPPTEMPLATE_PROMPT,
-    whatsapptest: WHATSAPPTEST_PROMPT,
-    whatsappcampaign: WHATSAPPCAMPAIGN_PROMPT,
-    webpushtemplate: WEBPUSHTEMPLATE_PROMPT,
-    webpushtest: WEBPUSHTEST_PROMPT,
-    webpushcampaign: WEBPUSHCAMPAIGN_PROMPT,
+    whatsapptemplate:WHATSAPPTEMPLATE_PROMPT,
+    whatsapptest:WHATSAPPTEST_PROMPT,
+    whatsappcampaign:WHATSAPPCAMPAIGN_PROMPT,
+    webpushtemplate:WEBPUSHTEMPLATE_PROMPT,
+    webpushtest:WEBPUSHTEST_PROMPT,
+    webpushcampaign:WEBPUSHCAMPAIGN_PROMPT,
+    createorupdatelead: CREATEORUPDATELEAD_PROMPT,
+    sendsmstolead:SENDSMSTOLEAD_PROMPT,
+    sendwhatsapptolead:SENDWHATSAPPTOLEAD_PROMPT,
+    sendrcstolead:SENDRCSTOLEAD_PROMPT,
+    leadtransition: LEAD_TRANSITION_PROMPT
   };
 
   return prompts[module];

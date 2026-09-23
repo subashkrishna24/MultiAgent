@@ -49,6 +49,11 @@ Available modules:
 - whatsapptemplate
 - whatsappcampaign
 - available_assets
+- sendsmstolead
+- sendwhatsapptolead
+- sendrcstolead
+- createorupdatelead
+- leadtransition
 
 Return ONLY JSON.
 
@@ -810,13 +815,8 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    - lmsleads with stage X
    - get stages
    - get sources
-   - create or update source
-   - move leads from source
-   - update leads stages or substages
-   - send or schedule mail to lead
-   - change label for leads
-   - change handledby or user or owner or agent for lmsleads
-   - Add Notes
+   - create or update source  
+   - send or schedule mail to lead 
    - Bind History
    - field list
 
@@ -1279,7 +1279,7 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       }
 
 
-      29. Route to AVAILABLE_ASSETS when the user wants:
+  29. Route to AVAILABLE_ASSETS when the user wants:
    - show available templates / list available templates / get available templates
    - show me the available templates / what templates are available / show all templates
    - show available campaigns / list available campaigns / get available campaigns

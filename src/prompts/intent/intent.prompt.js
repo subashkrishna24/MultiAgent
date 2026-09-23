@@ -52,6 +52,10 @@ Available modules:
 
 Return ONLY JSON.
 
+Rules & Precedence:
+- CHANNEL OVERRIDE (HIGHEST PRIORITY): If the user mentions any specific channel (WhatsApp, SMS, Mail, RCS, WebPush) alongside templates, campaigns, or identifiers, ALWAYS route to that channel's specific module (e.g., whatsappcampaign, whatsapptemplate). This applies even if words like "available", "show", "list", or "get" are present.
+- Route to AVAILABLE_ASSETS ONLY when NO channel is specified.
+
 Rules:
 
 1. Route to KNOWLEDGE when the user is:
@@ -1304,5 +1308,20 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    {
      "module": "available_assets"
    }
+
+   User: "show me the available whatsapp campaigns"
+{
+  "module": "whatsappcampaign"
+}
+
+User: "get available sms templates"
+{
+  "module": "smstemplate"
+}
+
+User: "show me the available campaigns"
+{
+  "module": "available_assets"
+}
 
   `;

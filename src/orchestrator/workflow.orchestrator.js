@@ -49,7 +49,7 @@ import { executeSendWhatsappToLeadAgent } from "../agents/lms/sendwhatsapptolead
 import { executeSendRcsToLeadAgent } from "../agents/lms/sendrcstolead.agent.js";
 import { checkQueryPrompt } from "../prompts/shared/checkquery.prompt.js";
 import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js";
-im
+ 
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -540,15 +540,6 @@ ${currentMessage}`;
       accountId: accountid,
       session,
     });
-    if (intent.module === "leadtransition") {
-    response = await executeLeadTransitionAgent({
-      model: llmModel,
-      tools: filteredTools,
-      history: recentHistory,
-      accountId: accountid,
-      session,
-    });
-  }
   }
   if (intent.module === "createorupdatelead") {
     response = await executeCreateOrUpdateLeadAgent({
@@ -579,6 +570,15 @@ ${currentMessage}`;
   }
   if (intent.module === "scheduleorsendrcsleads") {
     response = await executeSendRcsToLeadAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+  if (intent.module === "leadtransition") {
+    response = await executeLeadTransitionAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,

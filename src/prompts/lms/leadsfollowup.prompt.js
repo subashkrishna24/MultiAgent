@@ -9,64 +9,11 @@ export const LEADS_FOLLOWUP_PROMPT = `
 ================================================================================
 INJECTED LMS ORCHESTRATOR RULES & SCHEMA DEFINITIONS
 ================================================================================
-<<<<<<< HEAD
 ${LEADMANAGEMENT_PROMPT}
-=======
-
-1. GetLeadsDetails(
-     string query,
-     string bindingorder,
-     GetLeadsDetailsInputs filterlead
-   )
-   - 'query': SQL WHERE clause built from ANY filter in the user's message
-     (e.g. Name, Email Id, Phone, HandelBy, Place, CompanyName, Stage).
-   - 'bindingorder': Sorting clause if explicitly requested (e.g. "Name ASC"). "" if none.
-   - 'filterlead': { FetchNext: 0, Offset: 0, OrderBy: "" } by default.
-   - STRICT PAGINATION RULE: Always pass FetchNext: 0, Offset: 0 unless the user
-     explicitly requests custom numeric bounds.
-
- 
-2. CreateFollowUp(
-     string query,
-     string FollowUpContent,
-     string Followupdate,
-     string Followuptime,
-     string HandelBy,
-     GetLeadsDetailsInputs filterlead,
-     bool confirmationConfirmed,
-     string confirmationToken,
-     string channel,
-     string reminderemailid,
-     string reminderphonenumber,
-     string reminderdate,
-     string remindertime
-   )
-   - Execute ONLY after lead details are previewed, target lead recipient is explicitly
-     confirmed, ALL parameters below are collected and validated, AND the user explicitly
-     confirms execution.
-   - confirmationConfirmed MUST be false and confirmationToken MUST be "" on
-     the initial lookup/preview turn. Only set confirmationConfirmed = true and
-     confirmationToken = "USER_CONFIRMED" on the final execution turn, AFTER
-     explicit user confirmation.
- 
-   CRITICAL ARGUMENT MAPPING RULES FOR 'GetLeadsDetails':
-   - 'query': Constructed SQL WHERE clause dynamically built from ANY filter identified in the user's prompt.
-   - 'bindingorder': Sorting clause if explicitly requested (e.g., "Name ASC"). Use "" if no dynamic sorting requested.
-   - 'filterlead': An object containing pagination properties like FetchNext, Offset, OrderBy.
-
-   STRICT PAGINATION RULE:
-   - MUST ALWAYS pass { "FetchNext": 0, "Offset": 0, "OrderBy": "" } by default when querying leads.
-   - Maintain FetchNext: 0 and Offset: 0 unless explicit custom numeric bounds are requested.
-
-2. CreateFollowUp(...)
-   - Execute ONLY after lead details are previewed, ALL parameter collection steps are complete, AND the user explicitly confirms execution.
- 
->>>>>>> 0182b9d91217dc422f2609a96948151f7929c5ab
 
 ================================================================================
 CRITICAL OVERRIDE RULES FOR FOLLOW-UP WORKFLOW
 ================================================================================
-<<<<<<< HEAD
 1. OVERRIDE TOOL CHOICE AT CONFIRMATION:
    - Rule 8 of LMS Orchestrator applies ONLY to Step A (Lead Lookup).
    - Once the user confirms the final Step C summary, you MUST override the default tool choice and execute \`CreateFollowUp\`. DO NOT call \`GetLeadsDetails\` at the confirmation turn.
@@ -78,19 +25,6 @@ CRITICAL OVERRIDE RULES FOR FOLLOW-UP WORKFLOW
    - \`query\`: You MUST pass the actual SQL WHERE clause string (e.g., "HandelBy = 'Manoj'") generated during Step A. NEVER pass literal placeholder text like "[EXACT SQL WHERE CLAUSE STRING FROM STEP A]".
    - \`filterlead.FetchNext\`: MUST be dynamically set equal to \`MaxCount\` (e.g., 21) captured from Step A so that the follow-up applies to ALL targeted leads, NOT capped at the preview default of 10.
    - \`filterlead.OrderBy\`: MUST retain the EXACT same \`OrderBy\` value used during Step A \`GetLeadsDetails\` (e.g., if OrderBy was "3" in Step A, pass "3" in filterlead). DO NOT mutate or force OrderBy to "4".
-=======
-- Evaluate if the user's message contains ANY identifying criteria for a lead
-  (sales rep/handler, email, phone, full/partial name, lead stage, company
-  name, city, date range).
-- Examples:
-  * "leads under Manoj" / "assigned to Manoj" -> query: "HandelBy = 'Manoj'"
-  * "leads from Bangalore" -> query: "City = 'Bangalore'"
-  * "lead email john@example.com" -> query: "Email Id = 'john@example.com'"
-  * "new leads" -> query: "Stage = 'New'"
-- RULE: IF ANY criteria is present, DO NOT ask "Which lead(s)..." upfront — immediately
-  construct the WHERE clause and call GetLeadsDetails to fetch records.
-- IF NO criteria is present at all in the user message, ask: "Which lead(s) would you like to create this follow-up for?" instead of calling any tool.
->>>>>>> 0182b9d91217dc422f2609a96948151f7929c5ab
 
 ================================================================================
 CORE OPERATIONAL LAWS (HARD BLOCKS & GUARDRAILS)

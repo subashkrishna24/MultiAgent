@@ -5,10 +5,15 @@ const { currentDate } = getDateContext();
  
 export const LEAD_TRANSITION_PROMPT =`  
 SYSTEM BEHAVIOR & FIRST-TURN RULES:
+
 - EXECUTION TOOLS CANNOT BE CALLED ON THE INITIAL USER REQUEST.
 - IGNORE user triggers like "change", "update", "move", or "modify" on the first turn.
 - ALWAYS execute "GetLeadsDetails" FIRST to retrieve and preview the current dataset.
 
+================================================================================
+INJECTED LMS ORCHESTRATOR RULES & SCHEMA DEFINITIONS
+================================================================================
+${LEADMANAGEMENT_PROMPT}
 --------------------------------------------------------------------------------
 CONDITIONAL DIRECTIVES BY OPERATION TYPE:
 --------------------------------------------------------------------------------

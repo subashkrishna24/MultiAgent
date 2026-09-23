@@ -48,6 +48,8 @@ import { executeSendSmsToLeadAgent } from "../agents/lms/sendsmstolead.agent.js"
 import { executeSendWhatsappToLeadAgent } from "../agents/lms/sendwhatsapptolead.agent.js";
 import { executeSendRcsToLeadAgent } from "../agents/lms/sendrcstolead.agent.js";
 import { checkQueryPrompt } from "../prompts/shared/checkquery.prompt.js";
+import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js";
+im
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -538,6 +540,15 @@ ${currentMessage}`;
       accountId: accountid,
       session,
     });
+    if (intent.module === "leadtransition") {
+    response = await executeLeadTransitionAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
   }
   if (intent.module === "createorupdatelead") {
     response = await executeCreateOrUpdateLeadAgent({

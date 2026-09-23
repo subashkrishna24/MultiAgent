@@ -48,7 +48,7 @@ import { WHATSAPPTEMPLATE_PROMPT } from "../prompts/whatsapp/whatsapptemplate.pr
 
 import { WHATSAPPTEST_PROMPT } from "../prompts/whatsapp/whatsapptest.prompt.js";
 
-import { WHATSAPPCAMPAIGN_PROMPT } from "../prompts/whatsapp/whatsappcampaign.prompt.js"
+import { WHATSAPPCAMPAIGN_PROMPT } from "../prompts/whatsapp/whatsappcampaign.prompt.js";
 
 import { WEBPUSHTEMPLATE_PROMPT } from "../prompts/webpush/webpushtemplate.prompt.js";
 import { WEBPUSHTEST_PROMPT } from "../prompts/webpush/webpushtest.prompt.js";
@@ -57,6 +57,7 @@ import {CREATEORUPDATELEAD_PROMPT} from "../prompts/lms/createorupdatelead.promp
 import {SENDSMSTOLEAD_PROMPT} from "../prompts/lms/sendsmstolead.prompt.js";
 import {SENDWHATSAPPTOLEAD_PROMPT} from "../prompts/lms/sendwhatsapptolead.prompt.js";
 import {SENDRCSTOLEAD_PROMPT} from "../prompts/lms/sendrcstolead.prompt.js";
+import { LEAD_TRANSITION_PROMPT } from "../prompts/lms/leadtransition.prompt.js";
 function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
@@ -107,7 +108,8 @@ function getPrompt(module) {
     createorupdatelead: CREATEORUPDATELEAD_PROMPT,
     sendsmstolead:SENDSMSTOLEAD_PROMPT,
     sendwhatsapptolead:SENDWHATSAPPTOLEAD_PROMPT,
-    sendrcstolead:SENDRCSTOLEAD_PROMPT
+    sendrcstolead:SENDRCSTOLEAD_PROMPT,
+    leadtransition: LEAD_TRANSITION_PROMPT
   };
 
   return prompts[module];

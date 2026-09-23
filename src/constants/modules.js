@@ -24,4 +24,5 @@ export const MODULES = {
   SENDWHATSAPPTOLEAD: "sendwhatsapptolead",
   SENDRCSTOLEAD: "sendrcstolead",
   CREATEORUPDATELEAD: "createorupdatelead",
+  LEADTRANSITION:"leadtransition"
 };

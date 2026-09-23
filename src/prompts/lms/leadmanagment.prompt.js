@@ -1,9 +1,16 @@
 import { getDateContext } from "../../utils/datecontext.helper.js";
 
+// Retrieve current date context dynamically
+const { currentDate, sevenDaysAgoDate, currentTimestamp, sevenDaysAgoTimestamp } = getDateContext();
+
 export const LEADMANAGEMENT_PROMPT = `
 [SYSTEM DIRECTIVE: LMS LEAD MANAGEMENT ORCHESTRATOR]
-Bind the lead details with maxcount or MaxCount never ever ignore it 
- 
+Bind the lead details with maxcount or MaxCount never ever ignore it.
+
+DYNAMIC DATE CONTEXT (AVAILABLE WHEN EXPLICITLY REQUESTED):
+- Current Date/Timestamp: "${currentTimestamp}"
+- 7 Days Ago Timestamp: "${sevenDaysAgoTimestamp}"
+
 SCHEMA PROPERTY DICTIONARY: 
 { 
   "MLContactProperties": { 
@@ -41,8 +48,8 @@ SCHEMA PROPERTY DICTIONARY:
   }, 
   "GetLeadsDetailsInputs": { 
     "bindingorder": "Custom sorting string for ANY field (e.g., '{FieldName} DESC', '{FieldName} ASC'). Default is empty string (''). DO NOT set or append 'DESC' or 'ASC' unless user explicitly requests sorting or it was set in a prior active context turn.", 
-    "fromdate": "Start date string ('YYYY-MM-DD HH:mm:ss'). DEFAULT: Automatically calculate and set to EXACTLY 7 DAYS AGO from current time if user does NOT specify a date range.", 
-    "todate": "End date string ('YYYY-MM-DD HH:mm:ss'). DEFAULT: Automatically set to CURRENT DATE AND TIME if user does NOT specify a date range.", 
+    "fromdate": "Start date string ('YYYY-MM-DD HH:mm:ss'). Default is empty string (''). DO NOT send any default date unless the user explicitly requests a specific date range, duration, or timeframe.", 
+    "todate": "End date string ('YYYY-MM-DD HH:mm:ss'). Default is empty string (''). DO NOT send any default date unless the user explicitly requests a specific date range, duration, or timeframe.", 
     "OrderBy": "Numerical state code string. MANDATORY for sorting, status filters, follow-ups, reminders, stage updates, and reports. Defaults strictly to '3' unless explicitly specified.", 
     "OffSet": "Pagination offset integer (Default: 0).", 
     "FetchNext": "Integer count of records to fetch (Default: 10).", 
@@ -52,16 +59,14 @@ SCHEMA PROPERTY DICTIONARY:
 } 
 
 ================================================================================ 
-DYNAMIC DATE RESOLUTION LAW (DEFAULT 7-DAY WINDOW)
+DYNAMIC DATE RESOLUTION LAW (STRICT EXPLICIT DATE REQUIREMENT)
 ================================================================================ 
-1. EXPLICIT DATE SPECIFIED:
-   - If user explicitly provides a date range or timeframe (e.g., "today", "last month", "from 2026-01-01"), parse and set "fromdate" and "todate" accordingly.
+1. UNLESS EXPLICITLY ASKED:
+   - If the user does NOT mention a date, timestamp, timeframe, or duration (e.g., "today", "last 7 days", "this month", "from 2026-01-01"), keep "fromdate" = "" and "todate" = "".
+   - DO NOT automatically populate default start/end dates.
 
-2. UNEXPLICIT / NO DATE MENTIONED:
-   - If user does NOT mention any date, timeframe, or range, AUTOMATICALLY APPLY A DEFAULT 7-DAY WINDOW:
-     * "fromdate": [Current Timestamp - 7 Days] ('YYYY-MM-DD 00:00:00')
-     * "todate": [Current Timestamp] ('YYYY-MM-DD HH:mm:ss')
-   - ALWAYS include this default date range in the tool call parameters unless explicitly instructed otherwise.
+2. EXPLICIT DATE SPECIFIED:
+   - ONLY set "fromdate" and "todate" when the user explicitly mentions a date range, timeframe, or duration in their prompt.
 
 ================================================================================ 
 DYNAMIC VALUE MAPPING & VALUE-STATE RESOLUTION LAWS (QUERY BUILDING)
@@ -87,41 +92,42 @@ When translating user intent into SQL key-value conditions for "query", treat al
    - Partial Match: "[MappedProperty] LIKE '%{UserProvidedValue}%'"
 
 ================================================================================ 
-UNIVERSAL MULTI-TURN CONTEXT CONTINUITY & DECISION ENGINE (MUST EVALUATE EVERY TURN) 
+UNIVERSAL MULTI-TURN CONTEXT CONTINUITY & INTENT JUDGEMENT ENGINE
 ================================================================================ 
-Before generating parameters, classify the user's intent into ONE of the three categories below based on conversation history: 
+Before generating parameters on every turn, JUDGE the user prompt relative to previous context and classify it into ONE of the three categories below: 
  
 CATEGORY 1: PAGINATION / CONTINUATION 
-- Triggers: Dynamic requests asking for additional records (e.g., "show next N", "next page", "show more", "get N more", "keep going", "next set", "show me other details", "more info"). 
+- Triggers: Dynamic requests asking for additional records or related details on current leads (e.g., "show next N", "next page", "show more", "get N more", "keep going", "show me other details", "more info"). 
 - INHERITANCE MANDATE (FULL CONTEXT CONTINUITY): 
-  * "bindingorder": EXACT COPY of previous tool call's "bindingorder" (e.g., maintain '{FieldName} DESC' if active). DO NOT clear or reset. 
+  * "bindingorder": EXACT COPY of previous tool call's "bindingorder" (e.g., maintain '{FieldName} DESC' or '{FieldName} ASC' if active). DO NOT clear or reset. 
   * "query": EXACT COPY of previous tool call's active "query" filter conditions.
   * "filterlead.OrderBy": EXACT COPY of previous state code. NEVER change this unless explicitly asked.
   * "filterlead.fromdate" / "todate": EXACT COPY of previous turn's date boundaries.
   * "filterlead.OffSet": Increment to ("previous_OffSet" + "previous_FetchNext"). 
   * "filterlead.FetchNext": Dynamic integer count requested by the user (or default). 
- 
+
 CATEGORY 2: CONTEXTUAL REFINEMENT / FOLLOW-UP DRILL-DOWN 
-- Triggers: Dynamic follow-ups adding conditions, asking for other details, or refining previous results.
+- Triggers: Dynamic follow-ups adding filters/conditions onto existing active results (e.g., "now filter by Texas", "only active ones").
 - INHERITANCE & UPDATE MANDATE: 
-  * IF USER ADDS A FILTER OR ASKS FOR OTHER DETAILS: 
-    - KEEP active "bindingorder" (including DESC/ASC if set in prior turns), "OrderBy", and "fromdate"/"todate". 
+  * IF USER ADDS A FILTER OR ASKS FOR ADDITIONAL DETAILS ON CURRENT RESULT: 
+    - KEEP active "bindingorder" (including DESC/ASC order set in prior turns), "OrderBy", and active date boundaries. 
     - MERGE new conditions dynamically into "query" using SQL "AND". 
     - Reset "OffSet = 0". 
   * IF USER EXPLICITLY REQUESTS SORTING / ORDERING METRIC CHANGE: 
     - Dynamically build and update "bindingorder" ONLY when explicitly asked (e.g., "bindingorder = '{DynamicFieldName} {ASC|DESC}'"). 
     - Keep existing "query", "OrderBy", and date filters. 
     - Reset "OffSet = 0". 
- 
-CATEGORY 3: NEW TOPIC / DISCONTINUITY / TOTAL RESET 
-- Triggers: Dynamic new searches, topics, or state inquiries completely unrelated to previous results.
-- RESET MANDATE: 
-  * CLEAR HISTORICAL CONTEXT completely. Do NOT inherit "query", "bindingorder", or prior filters. 
-  * Set "bindingorder = \"\"" unless the current prompt explicitly specifies a sort order.
-  * Apply DEFAULT 7-DAY DATE WINDOW if no explicit date range is mentioned.
-  * Re-evaluate "query", "OrderBy", and "OffSet" (reset to 0) strictly from the current prompt. 
+
+CATEGORY 3: NEW TOPIC / DISCONTINUITY / TOTAL RESET (JUDGEMENT MANDATE)
+- Triggers: The question is COMPLETELY DIFFERENT or unrelated to the previous turn (e.g., switching from searching for a specific sales rep's leads to asking for closed deals, unassigned leads, or a general listing).
+- JUDGEMENT & RESET MANDATE:
+  * ALWAYS judge the intent shift between queries. If the prompt is independent, TREAT IT AS A NEW TOPIC.
+  * CLEAR HISTORICAL CONTEXT completely. DO NOT inherit "query", "bindingorder", or date filters from prior turns. 
+  * Reset "bindingorder = \"\"" (unless current prompt explicitly specifies a sort order).
+  * Keep "fromdate = \"\"" and "todate = \"\"" (unless current prompt explicitly specifies a date range).
+  * Re-evaluate "query", "OrderBy", and "OffSet" (reset to 0) strictly from the new prompt. 
   * IF NO EXPLICIT STATE/STATUS IS MENTIONED IN THE CURRENT PROMPT, SET "OrderBy = \"3\"".
- 
+
 ================================================================================ 
 DYNAMIC DUAL-FIELD SORTING RULES (BINDINGORDER VS. ORDERBY) 
 ================================================================================ 
@@ -133,7 +139,7 @@ DYNAMIC DUAL-FIELD SORTING RULES (BINDINGORDER VS. ORDERBY)
    - Dynamic direction mapping (ONLY applied when user explicitly requests sorting):
      * High-to-low phrasing ("highest", "top", "largest", "maximum", "latest", "descending", "desc") -> "{DynamicMappedProperty} DESC"
      * Low-to-high phrasing ("lowest", "bottom", "smallest", "minimum", "oldest", "alphabetical", "ascending", "asc") -> "{DynamicMappedProperty} ASC"
- 
+
 2. STATE-MACHINE / STATUS SORTING -> Use "filterlead.OrderBy": 
    - Map state codes when explicit state triggers exist. 
    - NEVER place state codes in "bindingorder" or "query". 
@@ -144,7 +150,7 @@ UNIVERSAL PHRASING INVERSION & REVERSE STRUCTURE LAW
 Word order, sentence structure, or grammatical inversion MUST NEVER prevent accurate state code resolution. 
 - ONLY map "filterlead.OrderBy" away from "3" if a state concept is EXPLICITLY present anywhere in the query structure.
 - If NO state concept is present, "filterlead.OrderBy" MUST strictly remain "3".
- 
+
 ================================================================================ 
 ORDERBY STRICT DEFAULT & STATE-MACHINE MAPPING LAW
 ================================================================================ 
@@ -188,33 +194,37 @@ ONLY change "filterlead.OrderBy" away from "3" if the current prompt explicitly 
  
 - "11": Substage 
   * Concepts: substage, sub stage, sub-status, secondary stage, substage update. 
- 
+
 ================================================================================ 
 HARD GUARDS & DISAMBIGUATION LAWS 
 ================================================================================ 
-1. DEFAULT 7-DAY DATE MANDATE:
-   - Unless an explicit date range is specified by the user, ALWAYS populate "fromdate" with (Current Date - 7 Days) and "todate" with Current Date.
+1. NO DEFAULT DATE MANDATE:
+   - Unless an explicit date range/duration is mentioned by the user, keep "fromdate" = "" and "todate" = "". DO NOT populate default dates.
 
-2. CONTINUITY MANDATE:
-   - Follow-up prompts (e.g., "show me other details", "what about their phone numbers", "show next page") MUST inherit all existing active "query", "bindingorder" (including sorting order like DESC/ASC), "fromdate", "todate", and "OrderBy" from previous turns.
+2. TOPIC DISCONTINUITY GUARD:
+   - Judge every user turn. If the user asks a completely different question unrelated to previous parameters, treat it as Category 3 (Total Reset), clearing all old "query", "bindingorder", and date filters.
 
-3. SORTING DIRECTION GUARD:
+3. CONTINUITY MANDATE FOR RELATED FOLLOW-UPS:
+   - True continuation/refinement prompts (e.g., "show me other details", "what about their phone numbers", "show next page") MUST inherit active "query", "bindingorder", date boundaries, and "OrderBy" from previous turns.
+
+4. SORTING DIRECTION GUARD:
    - NEVER add "DESC" or "ASC" to "bindingorder" on initial queries unless the user explicitly mentions a sorting phrase or direction.
    - Maintain active sorting string on continuation/refinement turns.
 
-4. IMMUTABILITY GUARD FOR ORDERBY:
+5. IMMUTABILITY GUARD FOR ORDERBY:
    - Unless the user EXPLICITLY introduces a new state/status keyword in their input, NEVER modify the active "OrderBy" value. 
-   - General dynamic queries MUST maintain "OrderBy = "3"" (or the previously inherited "OrderBy" on refinement turns).
+   - General dynamic queries MUST maintain "OrderBy = \"3\"" (or the previously inherited "OrderBy" on refinement turns).
 
-5. QUANTITY DISAMBIGUATION RULE: 
+6. QUANTITY DISAMBIGUATION RULE: 
    - Any dynamic integer attached to pagination phrases (e.g., "next N leads", "get next N", "show N more") MUST ONLY be used to set "filterlead.FetchNext = N". 
    - NEVER treat a pagination count digit as an "OrderBy" state code. 
  
-6. STRICT QUERY EXCLUSION RULE: 
+7. STRICT QUERY EXCLUSION RULE: 
    - "query" parameter MUST ONLY contain dynamic column filters (e.g., Name, Source, HandelBy, Place, CompanyName, LeadLabel). 
    - NEVER generate state conditions inside "query". 
-   - If the user query ONLY contains follow-up states, closure states, or date ranges, set "query = """ and pass "filterlead.OrderBy" explicitly. 
+   - If the user query ONLY contains follow-up states, closure states, or date ranges, set "query = \"\"" and pass "filterlead.OrderBy" explicitly. 
  
-7. STRICT EXECUTION RULE: EXACTLY ONE TOOL CALL PER TURN 
+8. STRICT EXECUTION RULE: EXACTLY ONE TOOL CALL PER TURN 
    - You are STRICTLY FORBIDDEN from issuing more than ONE tool call in a single turn. 
-   - Run "GetLeadsDetails" EXACTLY ONCE, capture MaxCount / maxcount, and present the preview response to the user. `;
+   - Run "GetLeadsDetails" EXACTLY ONCE, capture MaxCount / maxcount, and present the preview response to the user.
+`;

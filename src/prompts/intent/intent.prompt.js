@@ -49,6 +49,10 @@ Available modules:
 - whatsapptemplate
 - whatsappcampaign
 - available_assets
+- sendsmstolead
+- sendwhatsapptolead
+- sendrcstolead
+- createorupdatelead
 
 Return ONLY JSON.
 
@@ -1275,7 +1279,7 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       }
 
 
-      29. Route to AVAILABLE_ASSETS when the user wants:
+  29. Route to AVAILABLE_ASSETS when the user wants:
    - show available templates / list available templates / get available templates
    - show me the available templates / what templates are available / show all templates
    - show available campaigns / list available campaigns / get available campaigns
@@ -1304,5 +1308,51 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    {
      "module": "available_assets"
    }
+
+  30. Route to SENDSMSTOLEAD when the user wants:
+   - send sms to lead
+   - schedule sms to lead
+   - send a sms message to lead
+   - schedule a sms message to lead
+   - send sms to lmslead 
+   - schedule sms to lmslead
+
+   Example:
+    {
+      "module": "sendsmstolead"
+    }
+
+  31. Route to SENDRCSTOLEAD when the user wants:
+   - send rcs to lead
+   - send a rcs message to lead
+   - schedule rcs to lead
+   - schedule a rcs message to lead
+   - send rcs to lmslead 
+   - schedule rcs to lmslead
+    Example:
+    {
+      "module": "sendrcstolead"
+    }
+
+  32. Route to SENDWHATSAPPTOLEAD when the user wants:
+   - send whatsapp to lead
+   - send a whatsapp message to lead
+   - send whatsapp to lmslead 
+   - schedule whatsapp to lead
+   - schedule a whatsapp message to lead
+    Example:
+    {
+      "module": "sendwhatsapptolead"
+    }
+  
+  33. Route to CREATEORUPDATELEAD when the user wants:
+    - create a lead
+    - update a lead
+    - create a new lead
+    - update an existing lead
+    Example:
+    {
+      "module": "createorupdatelead"
+    }
 
   `;

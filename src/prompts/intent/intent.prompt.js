@@ -49,6 +49,7 @@ Available modules:
 - whatsapptemplate
 - whatsappcampaign
 - available_assets
+- leadtransition
 
 Return ONLY JSON.
 
@@ -806,13 +807,8 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    - lmsleads with stage X
    - get stages
    - get sources
-   - create or update source
-   - move leads from source
-   - update leads stages or substages
-   - send or schedule mail to lead
-   - change label for leads
-   - change handledby or user or owner or agent for lmsleads
-   - Add Notes
+   - create or update source  
+   - send or schedule mail to lead 
    - Bind History
    - field list
 
@@ -1304,5 +1300,14 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    {
      "module": "available_assets"
    }
-
+30. Route to LEADTRANSITION when the user wants: 
+   - move leads from source
+   - update leads stages or substages 
+   - change label for leads
+   - change handledby or user or owner or agent for lmsleads
+   - Add Notes  
+    Example:
+    {
+      "module": "leadtransition"
+    }
   `;

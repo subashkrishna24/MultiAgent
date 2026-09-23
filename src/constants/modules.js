@@ -19,5 +19,6 @@ export const MODULES = {
   SENDSMS:"smstest",
   SMSCAMPAIGN:"smscampaign",
   RCSTEMPLATE:"rcstemplate" ,
-  REALTIME:"realtime"
+  REALTIME:"realtime",
+  LEADTRANSITION:"leadtransition" 
 };

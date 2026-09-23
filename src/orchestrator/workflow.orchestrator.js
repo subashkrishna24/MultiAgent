@@ -44,6 +44,8 @@ import { executeWebPushTemplateAgent } from "../agents/webpush/webpushtemplate.a
 import { executeWebPushTestAgent } from "../agents/webpush/webpushtest.agent.js";
 import { executeWebPushCampaignAgent } from "../agents/webpush/webpushcampaign.agent.js";
 import { checkQueryPrompt } from "../prompts/shared/checkquery.prompt.js";
+import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js";
+im
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -531,6 +533,15 @@ ${currentMessage}`;
       accountId: accountid,
       session,
     });
+    if (intent.module === "leadtransition") {
+    response = await executeLeadTransitionAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
   }
 
   console.log("Final response from agent:", response);

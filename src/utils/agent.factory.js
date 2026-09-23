@@ -53,6 +53,7 @@ import { WHATSAPPCAMPAIGN_PROMPT } from "../prompts/whatsapp/whatsappcampaign.pr
 import { WEBPUSHTEMPLATE_PROMPT } from "../prompts/webpush/webpushtemplate.prompt.js";
 import { WEBPUSHTEST_PROMPT } from "../prompts/webpush/webpushtest.prompt.js";
 import { WEBPUSHCAMPAIGN_PROMPT } from "../prompts/webpush/webpushcampaign.prompt.js";
+import { LEAD_TRANSITION_PROMPT } from "../prompts/lms/leadtransition.prompt.js";
 export function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
@@ -100,6 +101,7 @@ export function getPrompt(module) {
     webpushtemplate: WEBPUSHTEMPLATE_PROMPT,
     webpushtest: WEBPUSHTEST_PROMPT,
     webpushcampaign: WEBPUSHCAMPAIGN_PROMPT,
+    leadtransition: LEAD_TRANSITION_PROMPT
   };
 
   return prompts[module];

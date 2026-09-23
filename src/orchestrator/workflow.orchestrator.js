@@ -43,6 +43,10 @@ import { checkClarification } from "../utils/json.utils.js";
 import { executeWebPushTemplateAgent } from "../agents/webpush/webpushtemplate.agent.js";
 import { executeWebPushTestAgent } from "../agents/webpush/webpushtest.agent.js";
 import { executeWebPushCampaignAgent } from "../agents/webpush/webpushcampaign.agent.js";
+import { executeCreateOrUpdateLeadAgent } from "../agents/lms/createorupdatelead.agent.js";
+import { executeSendSmsToLeadAgent } from "../agents/lms/sendsmstolead.agent.js";
+import { executeSendWhatsappToLeadAgent } from "../agents/lms/sendwhatsapptolead.agent.js";
+import { executeSendRcsToLeadAgent } from "../agents/lms/sendrcstolead.agent.js";
 import { checkQueryPrompt } from "../prompts/shared/checkquery.prompt.js";
 import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js";
 im
@@ -132,6 +136,9 @@ export async function executeWorkflow(payload) {
     "leadsfollowup",
     "leadsimport",
     "sendmailtolead",
+    "sendsmstolead",
+    "sendwhatsapptolead",
+    "sendrcstolead",
   ];
   //Add fromdate and todate in prompt
   const recentHistory = [
@@ -533,8 +540,9 @@ ${currentMessage}`;
       accountId: accountid,
       session,
     });
-    if (intent.module === "leadtransition") {
-    response = await executeLeadTransitionAgent({
+  }
+  if (intent.module === "createorupdatelead") {
+    response = await executeCreateOrUpdateLeadAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,
@@ -542,6 +550,41 @@ ${currentMessage}`;
       session,
     });
   }
+  if (intent.module === "scheduleorsendsmsleads") {
+    response = await executeSendSmsToLeadAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+  if (intent.module === "scheduleorsendwhatsappleads") {
+    response = await executeSendWhatsappToLeadAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+  if (intent.module === "scheduleorsendrcsleads") {
+    response = await executeSendRcsToLeadAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
+  if (intent.module === "leadtransition") {
+    response = await executeLeadTransitionAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
   }
 
   console.log("Final response from agent:", response);

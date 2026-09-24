@@ -550,7 +550,7 @@ ${currentMessage}`;
       session,
     });
   }
-  if (intent.module === "scheduleorsendsmsleads") {
+  if (intent.module === "sendsmstolead") {
     response = await executeSendSmsToLeadAgent({
       model: llmModel,
       tools: filteredTools,
@@ -559,7 +559,7 @@ ${currentMessage}`;
       session,
     });
   }
-  if (intent.module === "scheduleorsendwhatsappleads") {
+  if (intent.module === "sendwhatsapptolead") {
     response = await executeSendWhatsappToLeadAgent({
       model: llmModel,
       tools: filteredTools,
@@ -568,7 +568,7 @@ ${currentMessage}`;
       session,
     });
   }
-  if (intent.module === "scheduleorsendrcsleads") {
+  if (intent.module === "sendrcstolead") {
     response = await executeSendRcsToLeadAgent({
       model: llmModel,
       tools: filteredTools,

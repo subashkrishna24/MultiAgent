@@ -57,6 +57,10 @@ Available modules:
 
 Return ONLY JSON.
 
+Rules & Precedence:
+- CHANNEL OVERRIDE (HIGHEST PRIORITY): If the user mentions any specific channel (WhatsApp, SMS, Mail, RCS, WebPush) alongside templates, campaigns, or identifiers, ALWAYS route to that channel's specific module (e.g., whatsappcampaign, whatsapptemplate). This applies even if words like "available", "show", "list", or "get" are present.
+- Route to AVAILABLE_ASSETS ONLY when NO channel is specified.
+
 Rules:
 
 1. Route to KNOWLEDGE when the user is:
@@ -1305,59 +1309,19 @@ Do NOT switch modules while an A/B Test workflow is in progress.
      "module": "available_assets"
    }
 
-  30. Route to SENDSMSTOLEAD when the user wants:
-   - send sms to lead
-   - schedule sms to lead
-   - send a sms message to lead
-   - schedule a sms message to lead
-   - send sms to lmslead 
-   - schedule sms to lmslead
+   User: "show me the available whatsapp campaigns"
+{
+  "module": "whatsappcampaign"
+}
 
-   Example:
-    {
-      "module": "sendsmstolead"
-    }
+User: "get available sms templates"
+{
+  "module": "smstemplate"
+}
 
-  31. Route to SENDRCSTOLEAD when the user wants:
-   - send rcs to lead
-   - send a rcs message to lead
-   - schedule rcs to lead
-   - schedule a rcs message to lead
-   - send rcs to lmslead 
-   - schedule rcs to lmslead
-    Example:
-    {
-      "module": "sendrcstolead"
-    }
+User: "show me the available campaigns"
+{
+  "module": "available_assets"
+}
 
-  32. Route to SENDWHATSAPPTOLEAD when the user wants:
-   - send whatsapp to lead
-   - send a whatsapp message to lead
-   - send whatsapp to lmslead 
-   - schedule whatsapp to lead
-   - schedule a whatsapp message to lead
-    Example:
-    {
-      "module": "sendwhatsapptolead"
-    }
-  
-  33. Route to CREATEORUPDATELEAD when the user wants:
-    - create a lead
-    - update a lead
-    - create a new lead
-    - update an existing lead
-    Example:
-    {
-      "module": "createorupdatelead"
-    }
-  34. Route to LEADTRANSITION when the user wants: 
-   - move leads from source
-   - update leads stages or substages 
-   - change label for leads
-   - change handledby or user or owner or agent for lmsleads
-   - Add Notes  
-    Example:
-    {
-      "module": "leadtransition"
-    }
   `;

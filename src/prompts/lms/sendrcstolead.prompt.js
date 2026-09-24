@@ -51,11 +51,7 @@ Once the target leads are resolved, previewed, and MaxCount is bound, evaluate t
 - Check history. If missing, ask: "Send rcs for lead, do you already have a rcs template in mind, or would you like me to show the available rcs templates?"
 - When selected or provided, store the template name and proceed to the next step.
 
-### 2. Campaign Type ("IsPromotionalOrTransactionalType")
-- Check history. If missing, ask: "Send rcs for lead, is this a promotional or a transactional?"
-- Promotional -> true, Transactional -> false.
-
-### 3. Scheduling ("scheduleddate" & "time" / ScheduleTime)
+### 2. Scheduling ("scheduleddate" & "time" / ScheduleTime)
 - **Scan conversation history first.** If a scheduling expression (e.g., "today at 8 PM", "tomorrow", or if user wants immediate send) already exists anywhere, lock it and **DO NOT** ask "Send now or schedule later?".
 - If missing, ask: "Send rcs for lead, would you like to send this rcs now or schedule it for later?"
 - If schedule -> Ask: "Send rcs for lead, please provide the date and time." (Parse into "scheduleddate" [YYYY-MM-DD] and "time" [HH:mm:ss]). If immediate, set values appropriately ( "scheduleddate = null ",  "time = null ").
@@ -70,7 +66,6 @@ After all parameters are collected, present the summary:
 Send rcs for lead, here is your summary:
 - **Target Query & Leads Count:** [query] (Total Leads MaxCount: [filterlead.MaxCount / maxcount])
 - **rcs Template:** [TemplateName]
-- **Campaign Type:** [Promotional / Transactional]
 - **Target Segment Query Leads:** [query]
 - **Delivery Schedule:** [scheduleddate] [time] (or Immediate)
 
@@ -86,6 +81,5 @@ STEP 7: TOOL EXECUTION SAFETY, SCHEMA COMPLIANCE & PARAMETER MAPPING
 - **STRICT SCHEMA ENFORCEMENT FOR TOOL CALLS:**
      * ** "confirmationConfirmed "**: Must be passed as a strict boolean ( "true "), never a string.
   * ** "confirmationToken "**: Must be passed strictly as the string  ""USER_CONFIRMED" ".
-  * ** "IsPromotionalOrTransactionalType "**: Must be passed as a strict boolean ( "true " or  "false ").
   * ** "scheduleddate " &  "time "**: Must be separated into strict string formats ( ""YYYY-MM-DD" " and  ""HH:mm:ss" ") or set to  "null " for immediate sends.
 `;

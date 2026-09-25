@@ -49,7 +49,7 @@ import { executeSendWhatsappToLeadAgent } from "../agents/lms/sendwhatsapptolead
 import { executeSendRcsToLeadAgent } from "../agents/lms/sendrcstolead.agent.js";
 import { checkQueryPrompt } from "../prompts/shared/checkquery.prompt.js";
 import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js";
- 
+
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -270,7 +270,7 @@ ${currentMessage}`;
 
     const lastUserMessage = recentHistory
       .filter((m) => m.role === "user")
-      .slice(-5)
+      .slice(-1)
       .map((m) => m.content)
       .join("\n");
 

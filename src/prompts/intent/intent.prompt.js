@@ -840,6 +840,7 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    - schedule mail to lead
    - schedule email to lead
    - send mail to lmslead 
+   - send mail now to lead
 
    Example:
     {

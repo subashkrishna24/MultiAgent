@@ -44,7 +44,7 @@ If the LATEST_USER_QUERY contains ANY channel keyword (case-insensitive):
 Channels: "mail", "email", "sms", "whatsapp", "rcs", "push", "web push", "webpush"
 
 -> You MUST return: {"needsClarification": false, "message": ""}
--> STOP IMMEDIATELY. Do NOT check creation rules. Do NOT check metrics rules. Do NOT ask for clarification.
+-> STOP IMMEDIATELY. Do NOT check creation rules. Do NOT check metrics rules. Do NOT check entity detail rules. Do NOT ask for clarification.
 
 Directly applies to:
 - "create whatsapp template" -> false
@@ -54,6 +54,7 @@ Directly applies to:
 - "mail sent count yesterday" -> false
 - "total webpush delivered in last 30 days" -> false
 - "sms analytics for previous week" -> false
+- Any query fetching details of a named entity where a channel is present (e.g., "Show me the details of the web push template name is - surekha_web_23_sptt") -> false
 
 ==================================================
 STEP 2: METRICS, STATS, PERFORMANCE & DATE RANGES (BYPASS)
@@ -96,8 +97,9 @@ B. CREATION OR ACTION ON A BLANK / UNKNOWN CONTEXT:
       {"needsClarification": true, "message": "Sure — which campaign is this campaign for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
 
 C. SPECIFIC UNKNOWN NAMED ENTITY WITHOUT A CHANNEL (COLD START):
-   Asking for details/view of a specific campaign or template name/ID where NO channel keyword appears anywhere in history or query:
+   Asking for details/view of a specific campaign or template name/ID ONLY where NO channel keyword appears anywhere in history or query:
    - "show me details of template Test_Promo_01" -> true
+   (If any channel keyword like "web push", "sms", "email" appears anywhere in the sentence, Step 1 applies and this step is completely ignored).
 
 ==================================================
 5. TEST EXAMPLES
@@ -171,6 +173,12 @@ Output:
 Example 11:
 History: []
 Latest Query: "create group"
+Output:
+{"needsClarification": false, "message": ""}
+
+Example 12:
+History: []
+Latest Query: "Show me the details of the web push template name is - surekha_web_23_sptt"
 Output:
 {"needsClarification": false, "message": ""}
 `;

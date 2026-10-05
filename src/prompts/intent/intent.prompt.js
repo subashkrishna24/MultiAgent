@@ -54,6 +54,7 @@ Available modules:
 - sendrcstolead
 - createorupdatelead
 - leadtransition
+- workflow
 
 Return ONLY JSON.
 
@@ -1324,5 +1325,12 @@ User: "show me the available campaigns"
 {
   "module": "available_assets"
 }
+29. Route to WORKFLOW when the user says:
 
+      * wants to create workflow 
+
+      Examples:
+      {
+        "module": "workflow"
+      }
   `;

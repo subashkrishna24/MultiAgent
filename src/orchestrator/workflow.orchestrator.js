@@ -48,8 +48,7 @@ import { executeSendSmsToLeadAgent } from "../agents/lms/sendsmstolead.agent.js"
 import { executeSendWhatsappToLeadAgent } from "../agents/lms/sendwhatsapptolead.agent.js";
 import { executeSendRcsToLeadAgent } from "../agents/lms/sendrcstolead.agent.js";
 import { checkQueryPrompt } from "../prompts/shared/checkquery.prompt.js";
-import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js";
- 
+import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js"; 
 import { executeWorkFlowAgent } from "../agents/lms/workflow.agent.js";
 const toText = (c) =>
   typeof c === "string" ? c :
@@ -81,6 +80,7 @@ function extractWorkflowJson(text) {
   }
   return null;
 }
+ 
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -297,7 +297,7 @@ ${currentMessage}`;
 
     const lastUserMessage = recentHistory
       .filter((m) => m.role === "user")
-      .slice(-5)
+      .slice(-1)
       .map((m) => m.content)
       .join("\n");
 

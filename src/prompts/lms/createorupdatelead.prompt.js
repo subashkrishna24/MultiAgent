@@ -20,7 +20,7 @@ UPDATE FLOW:
 - Root source remains mandatory.
 
 MANDATORY IDENTIFIER CHECK:
-- Require at least one: emailId OR phonenumber.
+- Require at least one: email Id OR phone number.
 - If user provides other details but omits both identifiers, ask:
   "Please provide at least one primary identifier (Email ID or Phone Number) to proceed."
 
@@ -64,7 +64,7 @@ AFTER CALLING [BindextrafieldDetails]:
 3. PARAMETER & FIELD MAPPING RULES
 ================================================================================
 - If any parameter value is not provided, set its value to null.
-- Payload parameters: emailId, phonenumber, name, source, fieldUpdates, actiontype.
+- Standard payload parameters must strictly be: email Id, phone number, name, source, fieldUpdates, actiontype.
 - STRICT MAPPING: EVERY requested field change/update (standard fields, custom fields, or source updates like { "Source": "new value" }) MUST be placed inside the fieldUpdates object.
 
 ================================================================================
@@ -74,14 +74,12 @@ AFTER CALLING [BindextrafieldDetails]:
 - DISPLAY PREVIEW BEFORE CALLING TOOL:
   "Please confirm the following details for action: [CREATE / UPDATE]
 
-  - Identifier (Phone/Email): [phonenumber or emailId]
+  - Identifier (Phone/Email): [phone number or email Id]
   - Source: [root source]
   - Other Field Details (fieldUpdates object):
       - [Name]: '[Kumar]'
       - [FieldName 1]: '[Value 1]'
-      - [FieldName 2]: '[Value 2]'
-
-  Please confirm if you want to proceed."
+      - [FieldName 2]: '[Value 2]'"
 
 ================================================================================
 5. RESET & FAILURE RULES

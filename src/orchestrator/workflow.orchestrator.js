@@ -48,8 +48,39 @@ import { executeSendSmsToLeadAgent } from "../agents/lms/sendsmstolead.agent.js"
 import { executeSendWhatsappToLeadAgent } from "../agents/lms/sendwhatsapptolead.agent.js";
 import { executeSendRcsToLeadAgent } from "../agents/lms/sendrcstolead.agent.js";
 import { checkQueryPrompt } from "../prompts/shared/checkquery.prompt.js";
-import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js";
+import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js"; 
+import { executeWorkFlowAgent } from "../agents/lms/workflow.agent.js";
+const toText = (c) =>
+  typeof c === "string" ? c :
+  Array.isArray(c) ? c.map(b => (typeof b === "string" ? b : b?.text ?? "")).join("") :
+  String(c ?? "");
 
+function extractWorkflowJson(text) {
+  if (!text || !text.includes('"flowchartConfig"')) return null;
+  for (let start = text.indexOf("{"); start !== -1; start = text.indexOf("{", start + 1)) {
+    let depth = 0, inStr = false, esc = false;
+    for (let i = start; i < text.length; i++) {
+      const ch = text[i];
+      if (inStr) {
+        if (esc) esc = false;
+        else if (ch === "\\") esc = true;
+        else if (ch === '"') inStr = false;
+        continue;
+      }
+      if (ch === '"') inStr = true;
+      else if (ch === "{") depth++;
+      else if (ch === "}" && --depth === 0) {
+        try {
+          const obj = JSON.parse(text.slice(start, i + 1));
+          if (obj.flowchartConfig && obj.configarray) return obj;
+        } catch { }
+        break;
+      }
+    }
+  }
+  return null;
+}
+ 
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -139,15 +170,14 @@ export async function executeWorkflow(payload) {
     "sendsmstolead",
     "sendwhatsapptolead",
     "sendrcstolead",
+    "workflow"      
   ];
   //Add fromdate and todate in prompt
-  const recentHistory = [
-    {
-      role: "system",
-      content: getDateContext(),
-    },
-    ...history,
-  ];
+ const baseTs = intent.module === "workflow" ? `\nBASE_TS = ${Date.now()}` : "";
+const recentHistory = [
+  { role: "system", content: getDateContext() + baseTs },
+  ...history,
+];
 
   handlePagination(recentHistory, session, intent.module);
 
@@ -167,10 +197,7 @@ export async function executeWorkflow(payload) {
     let workflowCompleted = false;
     let recommendedActions = [];
 
-    if (response_msg.includes("WORKFLOW_COMPLETED:true")) {
-      workflowCompleted = true;
-    }
-
+    
     const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
 
     if (match) {
@@ -586,19 +613,42 @@ ${currentMessage}`;
       session,
     });
   }
-
+if (intent.module === "workflow") {
+    response = await executeWorkFlowAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
   console.log("Final response from agent:", response);
 
   await mcpClient.close();
+  
 
   let response_msg =
     response?.messages?.[response.messages.length - 1]?.content ??
     "No response generated";
 
-  if (response_msg.includes("WORKFLOW_COMPLETED:true")) {
-    workflowCompleted = true;
+if (intent.module === "workflow") {
+  const wf = extractWorkflowJson(response_msg);
+  if (wf) {
+    session.activeModule = null;               // flow finished, release the sticky routing
+    const hasWf = history.some(m => toText(m.content).includes('"flowchartConfig"'));
+const looksLikeEdit = /\b(add|remove|delete|change|replace|update|rename|swap)\b/i.test(toText(lastMessage))
+                   && /\b(mail|email|sms|whatsapp|rcs|web ?push|template|step|node|audience)\b/i.test(toText(lastMessage));
+if (hasWf && looksLikeEdit && !wantsOut) intent.module = "workflow";
+    return {
+      module: "workflow",
+      message: JSON.stringify(wf),             // JSON only: prose prefix stripped, whitespace untouched
+      toolmessage: report_response,
+      workflowcompleted: true,
+      actions: [],
+    };
   }
-
+  // otherwise it's a conversational question: fall through to the normal path
+}
   var RemoveRecommendations = [
     "contact",
     "leadmanagement",

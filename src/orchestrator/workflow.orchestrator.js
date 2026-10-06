@@ -43,6 +43,7 @@ import { checkClarification } from "../utils/json.utils.js";
 import { executeWebPushTemplateAgent } from "../agents/webpush/webpushtemplate.agent.js";
 import { executeWebPushTestAgent } from "../agents/webpush/webpushtest.agent.js";
 import { executeWebPushCampaignAgent } from "../agents/webpush/webpushcampaign.agent.js";
+import { executeRealTimeAgent } from "../agents/analytics/realtime.agent.js";
 import { executeCreateOrUpdateLeadAgent } from "../agents/lms/createorupdatelead.agent.js";
 import { executeSendSmsToLeadAgent } from "../agents/lms/sendsmstolead.agent.js";
 import { executeSendWhatsappToLeadAgent } from "../agents/lms/sendwhatsapptolead.agent.js";
@@ -155,7 +156,9 @@ export async function executeWorkflow(payload) {
   // STEP 1
   const intentContext = buildIntentContext(history);
 
-  const intent = await detectIntent(llmModel, intentContext);
+  let intent = await detectIntent(llmModel, intentContext);
+
+  let wantsOut = false;
 
   // STEP 2
   const mcpClient = getMcpClient(accountid, p5apikey);
@@ -325,7 +328,7 @@ ${currentMessage}`;
     };
 
     report_response = {
-      dbdata: result.sucess ? result.dbdata : JSON.stringify([]),
+      dbdata: result.success ? result.dbdata : JSON.stringify([]),
     };
   }
 

@@ -35,7 +35,7 @@ import { executeSmsCampaignAgent } from "../agents/sms/smscampaign.agent.js";
 import { executeRcsTemplateAgent } from "../agents/rcs/rcstemplate.agent.js";
 import { executeRcsTestAgent } from "../agents/rcs/rcstest.agent.js";
 import { executeRcsCampaignAgent } from "../agents/rcs/rcscampaign.agent.js";
-import { executeWorkflowAgent } from "../agentic_workflows/agent/workflow.js";
+import { executeWorkFlowAgent } from "../agentic_workflows/agent/workflow.agent.js";
 import { executeWhatsAppTemplateAgent } from "../agents/whatsapp/whatsapptemplate.agent.js";
 import { executeWhatsAppTestAgent } from "../agents/whatsapp/whatsapptest.agent.js";
 import { executeWhatsAppCampaignAgent } from "../agents/whatsapp/whatsappcampaign.agent.js";
@@ -49,7 +49,6 @@ import { executeSendWhatsappToLeadAgent } from "../agents/lms/sendwhatsapptolead
 import { executeSendRcsToLeadAgent } from "../agents/lms/sendrcstolead.agent.js";
 import { checkQueryPrompt } from "../prompts/shared/checkquery.prompt.js";
 import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js";
-import { executeWorkFlowAgent } from "../agents/lms/workflow.agent.js";
 const toText = (c) =>
   typeof c === "string"
     ? c
@@ -622,7 +621,7 @@ ${currentMessage}`;
     });
   }
   if (isagentworkflow) {
-    response = await executeWorkFlowAgent({
+    response = await executeWorkflowAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,

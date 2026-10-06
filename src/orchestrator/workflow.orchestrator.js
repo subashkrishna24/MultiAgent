@@ -48,17 +48,25 @@ import { executeSendSmsToLeadAgent } from "../agents/lms/sendsmstolead.agent.js"
 import { executeSendWhatsappToLeadAgent } from "../agents/lms/sendwhatsapptolead.agent.js";
 import { executeSendRcsToLeadAgent } from "../agents/lms/sendrcstolead.agent.js";
 import { checkQueryPrompt } from "../prompts/shared/checkquery.prompt.js";
-import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js"; 
+import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js";
 import { executeWorkFlowAgent } from "../agents/lms/workflow.agent.js";
 const toText = (c) =>
-  typeof c === "string" ? c :
-  Array.isArray(c) ? c.map(b => (typeof b === "string" ? b : b?.text ?? "")).join("") :
-  String(c ?? "");
+  typeof c === "string"
+    ? c
+    : Array.isArray(c)
+      ? c.map((b) => (typeof b === "string" ? b : (b?.text ?? ""))).join("")
+      : String(c ?? "");
 
 function extractWorkflowJson(text) {
   if (!text || !text.includes('"flowchartConfig"')) return null;
-  for (let start = text.indexOf("{"); start !== -1; start = text.indexOf("{", start + 1)) {
-    let depth = 0, inStr = false, esc = false;
+  for (
+    let start = text.indexOf("{");
+    start !== -1;
+    start = text.indexOf("{", start + 1)
+  ) {
+    let depth = 0,
+      inStr = false,
+      esc = false;
     for (let i = start; i < text.length; i++) {
       const ch = text[i];
       if (inStr) {
@@ -73,14 +81,14 @@ function extractWorkflowJson(text) {
         try {
           const obj = JSON.parse(text.slice(start, i + 1));
           if (obj.flowchartConfig && obj.configarray) return obj;
-        } catch { }
+        } catch {}
         break;
       }
     }
   }
   return null;
 }
- 
+
 export async function executeWorkflow(payload) {
   const {
     history,
@@ -101,11 +109,11 @@ export async function executeWorkflow(payload) {
   // Session
   const session = getSession(machineid);
 
-  if (session.IsAgentWorkflow !== isagentworkflow) {
-    session.agenticWorkflowHandled = false;
-  }
+  // if (session.IsAgentWorkflow !== isagentworkflow) {
+  //   session.agenticWorkflowHandled = false;
+  // }
 
-  session.IsAgentWorkflow = isagentworkflow;
+  // session.IsAgentWorkflow = isagentworkflow;
 
   // User Details
   prepareUserDetails(userdetails, session);
@@ -170,56 +178,56 @@ export async function executeWorkflow(payload) {
     "sendsmstolead",
     "sendwhatsapptolead",
     "sendrcstolead",
-    "workflow"      
+    "workflow",
   ];
   //Add fromdate and todate in prompt
- const baseTs = intent.module === "workflow" ? `\nBASE_TS = ${Date.now()}` : "";
-const recentHistory = [
-  { role: "system", content: getDateContext() + baseTs },
-  ...history,
-];
+  const baseTs =
+    intent.module === "workflow" ? `\nBASE_TS = ${Date.now()}` : "";
+  const recentHistory = [
+    { role: "system", content: getDateContext() + baseTs },
+    ...history,
+  ];
 
   handlePagination(recentHistory, session, intent.module);
 
-  if (isagentworkflow) {
-    response = await executeWorkflowAgent({
-      model: llmModel,
-      tools: filteredTools,
-      history: recentHistory,
-      accountId: accountid,
-      session,
-    });
+  // if (isagentworkflow) {
+  //   response = await executeWorkflowAgent({
+  //     model: llmModel,
+  //     tools: filteredTools,
+  //     history: recentHistory,
+  //     accountId: accountid,
+  //     session,
+  //   });
 
-    console.log("Workflow response:", response);
+  //   console.log("Workflow response:", response);
 
-    let response_msg = response?.content ?? "No response generated";
+  //   let response_msg = response?.content ?? "No response generated";
 
-    let workflowCompleted = false;
-    let recommendedActions = [];
+  //   let workflowCompleted = false;
+  //   let recommendedActions = [];
 
-    
-    const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
+  //   const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
 
-    if (match) {
-      try {
-        recommendedActions = JSON.parse(match[1]);
-      } catch (error) {
-        console.error("Failed to parse recommended actions:", error);
-      }
-    }
+  //   if (match) {
+  //     try {
+  //       recommendedActions = JSON.parse(match[1]);
+  //     } catch (error) {
+  //       console.error("Failed to parse recommended actions:", error);
+  //     }
+  //   }
 
-    const final_cleanMessage = response_msg
-      .replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "")
-      .trim();
+  //   const final_cleanMessage = response_msg
+  //     .replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "")
+  //     .trim();
 
-    return {
-      module: intent.module,
-      message: final_cleanMessage,
-      toolmessage: recommendedActions,
-      workflowcompleted: workflowCompleted,
-      actions: [],
-    };
-  }
+  //   return {
+  //     module: intent.module,
+  //     message: final_cleanMessage,
+  //     toolmessage: recommendedActions,
+  //     workflowcompleted: workflowCompleted,
+  //     actions: [],
+  //   };
+  // }
 
   if (!modulecheck.includes(intent.module.toLowerCase())) {
     const priorTurns = recentHistory.slice(-10);
@@ -613,7 +621,7 @@ ${currentMessage}`;
       session,
     });
   }
-if (intent.module === "workflow") {
+  if (isagentworkflow) {
     response = await executeWorkFlowAgent({
       model: llmModel,
       tools: filteredTools,
@@ -625,30 +633,36 @@ if (intent.module === "workflow") {
   console.log("Final response from agent:", response);
 
   await mcpClient.close();
-  
 
   let response_msg =
     response?.messages?.[response.messages.length - 1]?.content ??
     "No response generated";
 
-if (intent.module === "workflow") {
-  const wf = extractWorkflowJson(response_msg);
-  if (wf) {
-    session.activeModule = null;               // flow finished, release the sticky routing
-    const hasWf = history.some(m => toText(m.content).includes('"flowchartConfig"'));
-const looksLikeEdit = /\b(add|remove|delete|change|replace|update|rename|swap)\b/i.test(toText(lastMessage))
-                   && /\b(mail|email|sms|whatsapp|rcs|web ?push|template|step|node|audience)\b/i.test(toText(lastMessage));
-if (hasWf && looksLikeEdit && !wantsOut) intent.module = "workflow";
-    return {
-      module: "workflow",
-      message: JSON.stringify(wf),             // JSON only: prose prefix stripped, whitespace untouched
-      toolmessage: report_response,
-      workflowcompleted: true,
-      actions: [],
-    };
+  if (intent.module === "workflow") {
+    const wf = extractWorkflowJson(response_msg);
+    if (wf) {
+      session.activeModule = null; // flow finished, release the sticky routing
+      const hasWf = history.some((m) =>
+        toText(m.content).includes('"flowchartConfig"'),
+      );
+      const looksLikeEdit =
+        /\b(add|remove|delete|change|replace|update|rename|swap)\b/i.test(
+          toText(lastMessage),
+        ) &&
+        /\b(mail|email|sms|whatsapp|rcs|web ?push|template|step|node|audience)\b/i.test(
+          toText(lastMessage),
+        );
+      if (hasWf && looksLikeEdit && !wantsOut) intent.module = "workflow";
+      return {
+        module: "workflow",
+        message: JSON.stringify(wf), // JSON only: prose prefix stripped, whitespace untouched
+        toolmessage: report_response,
+        workflowcompleted: true,
+        actions: [],
+      };
+    }
+    // otherwise it's a conversational question: fall through to the normal path
   }
-  // otherwise it's a conversational question: fall through to the normal path
-}
   var RemoveRecommendations = [
     "contact",
     "leadmanagement",

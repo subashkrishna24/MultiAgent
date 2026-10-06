@@ -57,10 +57,10 @@ import { CREATEORUPDATELEAD_PROMPT } from "../prompts/lms/createorupdatelead.pro
 import { SENDSMSTOLEAD_PROMPT } from "../prompts/lms/sendsmstolead.prompt.js";
 import { SENDWHATSAPPTOLEAD_PROMPT } from "../prompts/lms/sendwhatsapptolead.prompt.js";
 import { SENDRCSTOLEAD_PROMPT } from "../prompts/lms/sendrcstolead.prompt.js";
-import { LEAD_TRANSITION_PROMPT } from "../prompts/lms/leadtransition.prompt.js"; 
+import { LEAD_TRANSITION_PROMPT } from "../prompts/lms/leadtransition.prompt.js";
 
-import { WORKFLOW_PROMPT } from "../prompts/lms/workflow.prompt.js";
-function getPrompt(module) { 
+import { WORKFLOW_PROMPT } from "../agentic_workflows/prompts/workflow.prompt.js";
+function getPrompt(module) {
   const prompts = {
     knowledge: KNOWLEDGE_PROMPT,
 
@@ -107,12 +107,12 @@ function getPrompt(module) {
     webpushtemplate: WEBPUSHTEMPLATE_PROMPT,
     webpushtest: WEBPUSHTEST_PROMPT,
     webpushcampaign: WEBPUSHCAMPAIGN_PROMPT,
-    createorupdatelead: CREATEORUPDATELEAD_PROMPT, 
-    sendsmstolead:SENDSMSTOLEAD_PROMPT,
-    sendwhatsapptolead:SENDWHATSAPPTOLEAD_PROMPT,
-    sendrcstolead:SENDRCSTOLEAD_PROMPT,
+    createorupdatelead: CREATEORUPDATELEAD_PROMPT,
+    sendsmstolead: SENDSMSTOLEAD_PROMPT,
+    sendwhatsapptolead: SENDWHATSAPPTOLEAD_PROMPT,
+    sendrcstolead: SENDRCSTOLEAD_PROMPT,
     leadtransition: LEAD_TRANSITION_PROMPT,
-    workflow: WORKFLOW_PROMPT 
+    workflow: WORKFLOW_PROMPT,
   };
 
   return prompts[module];

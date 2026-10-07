@@ -193,7 +193,11 @@ export async function executeWorkflow(payload) {
   handlePagination(recentHistory, session, intent.module);
 
   if (isagentworkflow) {
+<<<<<<< HEAD
     response = await executeWorkFlowAgent({
+=======
+    response = await executeWorkflowAgent({
+>>>>>>> f85d570468dfc975191086fd32b19fa834004ad2
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,

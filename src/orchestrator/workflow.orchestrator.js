@@ -192,44 +192,15 @@ export async function executeWorkflow(payload) {
 
   handlePagination(recentHistory, session, intent.module);
 
-  // if (isagentworkflow) {
-  //   response = await executeWorkflowAgent({
-  //     model: llmModel,
-  //     tools: filteredTools,
-  //     history: recentHistory,
-  //     accountId: accountid,
-  //     session,
-  //   });
-
-  //   console.log("Workflow response:", response);
-
-  //   let response_msg = response?.content ?? "No response generated";
-
-  //   let workflowCompleted = false;
-  //   let recommendedActions = [];
-
-  //   const match = response_msg.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])/);
-
-  //   if (match) {
-  //     try {
-  //       recommendedActions = JSON.parse(match[1]);
-  //     } catch (error) {
-  //       console.error("Failed to parse recommended actions:", error);
-  //     }
-  //   }
-
-  //   const final_cleanMessage = response_msg
-  //     .replace(/(WORKFLOW_COMPLETED:(true|false)|RECOMMENDED_ACTIONS:.*)/g, "")
-  //     .trim();
-
-  //   return {
-  //     module: intent.module,
-  //     message: final_cleanMessage,
-  //     toolmessage: recommendedActions,
-  //     workflowcompleted: workflowCompleted,
-  //     actions: [],
-  //   };
-  // }
+  if (isagentworkflow) {
+    response = await executeWorkFlowAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
 
   if (!modulecheck.includes(intent.module.toLowerCase())) {
     const priorTurns = recentHistory.slice(-10);
@@ -623,15 +594,7 @@ ${currentMessage}`;
       session,
     });
   }
-  if (isagentworkflow) {
-    response = await executeWorkflowAgent({
-      model: llmModel,
-      tools: filteredTools,
-      history: recentHistory,
-      accountId: accountid,
-      session,
-    });
-  }
+
   console.log("Final response from agent:", response);
 
   await mcpClient.close();

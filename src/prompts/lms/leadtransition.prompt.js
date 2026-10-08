@@ -111,7 +111,50 @@ ELSE IF Action == "Add Note to Lead":
             - STOP IMMEDIATELY and reply: "I found multiple leads. Please provide the exact email address of the single lead you want to add the note to."
         - IF "GetLeadsDetails" returns MaxCount == 1:
             - Proceed with adding the note.
+--------------------------------------------------------------------------------
+ELSE IF Action == "Change Lead Stage / SubStage (ChangeLeadStage)":
+--------------------------------------------------------------------------------
+    TOOL TO EXECUTE ON CONFIRMATION: "ChangeLeadStage"
 
+    STEP 1: PREVIEW FETCH (GetLeadsDetails)
+    - Always call "GetLeadsDetails" first to fetch the current leads matching criteria and capture the exact "MaxCount".
+
+    STEP 2: MULTI-RECORD DISAMBIGUATION (When MaxCount > 1)
+    - Present total count and ask:
+      *"Found [MaxCount] leads matching your criteria. Do you want to update the stage for ALL [MaxCount] leads, or a specific single lead? (Note: If updating a single lead, Phone/Email AND Source are compulsory)."*
+    - DO NOT CALL "ChangeLeadStage" AT THIS STAGE.
+
+    STEP 3: TARGET STAGE & SUBSTAGE SELECTION
+    - IF NewStage is not provided or ambiguous:
+      1. DO NOT call "ChangeLeadStage".
+      2. Ask the user in plain text:
+         *"Which target stage would you like to set for the lead(s)? Do you have a specific stage in mind, or would you like me to show the available stages?"*
+    - IF NewSubStage is relevant/requested but not specified:
+      - Prompt the user optionally for the target substage.
+
+    STEP 4: USER SELECTION EVALUATION & EXPLICIT CONFIRMATION PROMPT
+    - CASE A: User selects "ALL" (or confirms updating all records):
+      1. Mutate "filterlead.FetchNext = MaxCount" (MUST equal the exact integer value of MaxCount returned from GetLeadsDetails).
+      2. Once "NewStage" is known, DO NOT execute the tool yet. Present the explicit confirmation prompt in plain text:
+         *"You are about to update the stage to '[NewStage]' (SubStage: '[NewSubStage or N/A]') for ALL [MaxCount] leads. Please confirm if you would like to proceed."*
+
+    - CASE B: User selects "Single Lead":
+      1. Require BOTH Phone/Email AND Source (Source is compulsory).
+      2. If Source is missing, respond: *"Source is compulsory to isolate the lead. Please provide the Source along with the Phone Number or Email Address."*
+      3. Once both are provided, re-run "GetLeadsDetails" with criteria: "(Phone = "[Phone]" OR Email = "[Email]") AND Source = "[Source]"".
+      4. Set "filterlead.FetchNext = 1".
+      5. Present explicit confirmation prompt:
+         *"You are about to update the stage to '[NewStage]' (SubStage: '[NewSubStage or N/A]') for the lead '[Identifier]' (Source: '[Source]'). Please confirm if you would like to proceed."*
+
+    STEP 5: FINAL TOOL EXECUTION (ChangeLeadStage)
+    - EXECUTE "ChangeLeadStage" ONLY AFTER the user explicitly responds with affirmative confirmation (e.g., "Yes", "Confirm", "Proceed", "Go ahead").
+    - TOOL PARAMETER BINDINGS:
+      * "NewStage": Set to target stage string.
+      * "NewSubStage": Set to target substage string (or null/empty if omitted).
+      * "query": Set to the EXACT SQL query WHERE string used during the active GetLeadsDetails step.
+      * "confirmationConfirmed": Set strictly to "true".
+      * "confirmationToken": Set strictly to "USER_CONFIRMED".
+      * "filterlead": Pass the exact "GetLeadsDetailsInputs" object with "filterlead.FetchNext" explicitly set to "MaxCount" (for ALL) or "1" (for Single Lead).
 --------------------------------------------------------------------------------
 DATA PRESENTATION & PREVIEW LAWS:
 --------------------------------------------------------------------------------

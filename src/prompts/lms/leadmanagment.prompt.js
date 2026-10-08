@@ -103,7 +103,7 @@ IF AND ONLY IF THE USER REQUEST IS AN ENTIRELY NEW TOPIC / NEW SEARCH FILTER:
     "CompanyDetails": { 
       "CompanyName": ["company", "organization", "firm", "business"], 
       "Revenue": ["revenue", "deal value", "amount", "budget"] 
-    }  
+    } 
   }, 
   "GetLeadsDetailsInputs": { 
     "fromdate": "Start date string ('YYYY-MM-DD HH:mm:ss'). Set when user specifies date ranges or registration dates.", 
@@ -138,7 +138,7 @@ IF AND ONLY IF THE USER REQUEST IS AN ENTIRELY NEW TOPIC / NEW SEARCH FILTER:
   * "7" -> non follow up, no follow up, without follow-up, unassigned follow-up, zero follow-up. 
   * "8" -> non reminder, no reminder, without reminder, zero reminder. 
   * "9" -> stage update, status updated, stage changed, phase change, status modified. 
-  * "10" -> closure report, closed leads, closure date, closed out, business closed all =clouserdate. 
+  * "10" -> closure report, closed leads, closure date, closed out, business closed. 
   * "11" -> substage, sub stage, sub-status, secondary stage. 
  
 - STRICT RULE:  

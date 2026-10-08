@@ -1333,4 +1333,13 @@ User: "show me the available campaigns"
       {
         "module": "workflow"
       }
+30. Route to leadtransition when the user says:
+
+      * wants to create change the stage
+      * wants to create change the source or move the source
+
+      Examples:
+      {
+        "module": "workflow"
+      }
   `;

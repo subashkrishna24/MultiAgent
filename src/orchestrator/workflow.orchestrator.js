@@ -192,15 +192,7 @@ export async function executeWorkflow(payload) {
 
   handlePagination(recentHistory, session, intent.module);
 
-  if (isagentworkflow) {
-    response = await executeWorkFlowAgent({
-      model: llmModel,
-      tools: filteredTools,
-      history: recentHistory,
-      accountId: accountid,
-      session,
-    });
-  }
+  
 
   if (!modulecheck.includes(intent.module.toLowerCase())) {
     const priorTurns = recentHistory.slice(-10);
@@ -302,7 +294,15 @@ ${currentMessage}`;
       dbdata: result.success ? result.dbdata : JSON.stringify([]),
     };
   }
-
+if (isagentworkflow && intent.module === "workflow") {
+    response = await executeWorkFlowAgent({
+      model: llmModel,
+      tools: filteredTools,
+      history: recentHistory,
+      accountId: accountid,
+      session,
+    });
+  }
   if (intent.module === "contact") {
     response = await executeContactAgent({
       model: llmModel,

@@ -1336,10 +1336,19 @@ User: "show me the available campaigns"
 30. Route to leadtransition when the user says:
 
       * wants to create change the stage
-      * wants to create change the source or move the source
-
+      * wants to create change the source or move the source 
+      * change or update lead label
       Examples:
       {
-        "module": "workflow"
+        "module": "leadtransition"
+      }
+  31. Route to createorupdatelead when the user says:
+
+      * wants to create or update lead
+      * wants to create or update lead details
+      * wants to create or update lead information
+      Examples:
+      {
+        "module": "createorupdatelead"
       }
   `;

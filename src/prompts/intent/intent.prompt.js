@@ -816,8 +816,7 @@ Do NOT switch modules while an A/B Test workflow is in progress.
    - lmsleads with stage X
    - get stages
    - get sources
-   - create or update source  
-   - send or schedule mail to lead 
+   - create or update source 
    - Bind History
    - field list
 
@@ -1337,16 +1336,21 @@ User: "show me the available campaigns"
 
       * wants to create change the stage
       * wants to create change the source or move the source 
-      * change or update lead label
+      * change leadlabel
+      * update leadlabel
       Examples:
       {
         "module": "leadtransition"
       }
   31. Route to createorupdatelead when the user says:
 
-      * wants to create or update lead
-      * wants to create or update lead details
-      * wants to create or update lead information
+      * i want to create or update lead
+      * i want to create new lead
+      * i want to update existing lead
+      * i want to update lead
+      * i want to create lead
+      * i want to create or update lead details
+      * i want to create or update lead information
       Examples:
       {
         "module": "createorupdatelead"

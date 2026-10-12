@@ -228,13 +228,13 @@ ELSE IF Action == "create or update or delete lms source or lead source (lead so
       1. Require target source name as "LeadSourceName".
       2. Require new source name as "NewSource".
       3. If target or new source name is missing, ask in plain text: 
-         *"Which source would you like to update and what is the new source name? (Let me know if you would like me to display the current available sources)."*
+         *"Which source would you like to update and what is the new source name? (Let me know if you would like me to display the current available leadsources)."*
       4. Set current source name to "LeadSourceName", new source name to "NewSource", and Action to "UPDATE".
 
     - IF Action == "DELETE":
       1. Require target source name as "LeadSourceName".
       2. If missing, ask in plain text: 
-         *"Which source would you like to delete? Please provide the exact Source Name (or let me know if you would like me to display the current available sources)."*
+         *"Which source would you like to delete? Please provide the exact Source Name (or let me know if you would like me to display the current available leadsources)."*
       3. Set target source name to "LeadSourceName" and Action to "DELETE" and "NewSource" as NA.
 
     - IF USER REQUESTS AVAILABLE SOURCES:

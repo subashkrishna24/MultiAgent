@@ -3,7 +3,8 @@ import { getDateContext } from "../../utils/datecontext.helper.js";
 // Retrieve current date context dynamically
 const { currentDate, sevenDaysAgoDate, currentTimestamp, sevenDaysAgoTimestamp } = getDateContext();
 
- import { LEADMANAGEMENT_PROMPT } from "./leadmanagment.prompt.js";
+import { LEADMANAGEMENT_PROMPT } from "./leadmanagment.prompt.js";
+
 export const LEAD_TRANSITION_PROMPT = `
 SYSTEM BEHAVIOR & FIRST-TURN RULES:
 
@@ -18,7 +19,7 @@ VAGUE / INCOMPLETE REQUEST GUARDRAIL (STRICT RULE):
   1. DO NOT CALL ANY TOOLS (including GetLeadsDetails or execution tools).
   2. STOP IMMEDIATELY and ask relevant clarifying questions:
      - "Which leads would you like to move or change? (Please provide a filter, stage, or specific email address)"
-     - "What is the destination source or handler name you want to update them to?"
+     - "What is the destination source, stage, or handler name you want to update them to?"
 
 ================================================================================
 INJECTED LMS ORCHESTRATOR RULES & SCHEMA DEFINITIONS
@@ -67,7 +68,7 @@ IF Action == "Change Lead Handler / Owner (ExecuteHandlerChange)":
       * \`filterlead\`: Pass the exact \`GetLeadsDetailsInputs\` object with \`filterlead.FetchNext\` explicitly set to \`MaxCount\` (for ALL) or \`1\` (for Single Lead).
 
 --------------------------------------------------------------------------------
-ELSE IF Action == "Move Lead (Source / Bucket Update)":
+ELSE IF Action == "change Lead source or move source (Source / Bucket Update)":
 --------------------------------------------------------------------------------
     - Tool to call: "MoveLeads"
     - Scope restriction: DO NOT use this tool for changing lead handlers, owners, or assignees. Use "ExecuteHandlerChange" for handler updates instead.
@@ -87,11 +88,15 @@ ELSE IF Action == "Move Lead (Source / Bucket Update)":
             c. IF Single Lead: Require Email/Phone AND Source (Source compulsory).
             d. IF ALL Leads: Set "filterlead.FetchNext = MaxCount".
 
-    4. SOURCE NAME SELECTION & FINAL CONFIRMATION:
-        - Display final summary in text.
-        - ASK FOR CONFIRMATION ("Shall I proceed with moving the lead(s)?").
-        - WHEN CONFIRMED ("Yes", "Confirm", "Proceed"): Call "MoveLeads" directly.
+    4. DESTINATION SOURCE COLLECTION & OFFER TO SHOW SOURCES:
+        - IF target destination source is missing or unspecified:
+            You MUST ask the user in plain text using this exact phrasing:
+            *"Please specify the new source you would like to move the lead(s) to. Do you want me to show the available sources?"*
 
+    5. SOURCE NAME SELECTION & FINAL CONFIRMATION:
+        - Once destination source is known, display final summary in text.
+        - ASK FOR CONFIRMATION ("Shall I proceed with moving the lead(s) to '[DestinationSource]'?").
+        - WHEN CONFIRMED ("Yes", "Confirm", "Proceed"): Call "MoveLeads" directly.
 --------------------------------------------------------------------------------
 ELSE IF Action == "Criteria Refinement / Filter Shift":
 --------------------------------------------------------------------------------
@@ -112,6 +117,86 @@ ELSE IF Action == "Add Note to Lead":
         - IF "GetLeadsDetails" returns MaxCount == 1:
             - Proceed with adding the note.
 
+--------------------------------------------------------------------------------
+ELSE IF Action == "Change Stage":
+--------------------------------------------------------------------------------
+    TOOL TO EXECUTE ON CONFIRMATION: "ChangeLeadStage"
+
+    STEP 1: PREVIEW FETCH (MANDATORY FIRST TURN ACTION)
+    - YOU MUST CALL "GetLeadsDetails" FIRST to retrieve and preview the dataset matching the query criteria.
+    - DO NOT ask for target stage or ask clarifying text BEFORE executing "GetLeadsDetails".
+    - Capture the exact "MaxCount" from the response.
+
+    STEP 2: PREVIEW EVALUATION & MULTI-RECORD DISAMBIGUATION
+    - IF MaxCount == 0:
+      Respond: "No leads found matching the criteria provided." and STOP.
+    - IF MaxCount > 1:
+      Present total count and ask:
+      *"Found [MaxCount] leads matching your criteria. Do you want to update the stage for ALL [MaxCount] leads, or a specific single lead? (Note: If updating a single lead, Phone/Email AND Source are compulsory)."*
+
+    STEP 3: TARGET STAGE COLLECTION
+    - IF NewStage is missing or unspecified:
+      You MUST ask the user in plain text using this exact phrasing:
+      *"Please specify the new stage you would like to set for the lead(s). Do you want me to show the available stages?"*
+
+    STEP 4: USER SELECTION EVALUATION & EXPLICIT CONFIRMATION PROMPT
+    - CASE A: User selects "ALL" (or confirms updating all records):
+      1. Mutate "filterlead.FetchNext = MaxCount".
+      2. Once "NewStage" is known, present explicit confirmation:
+         *"You are about to update the stage to '[NewStage]' (SubStage: '[NewSubStage or N/A]') for ALL [MaxCount] leads. Please confirm if you would like to proceed."*
+
+    - CASE B: User selects "Single Lead":
+      1. Require BOTH Phone/Email AND Source.
+      2. Re-run "GetLeadsDetails" with criteria: "(Phone = '[Phone]' OR Email = '[Email]') AND Source = '[Source]'".
+      3. Set "filterlead.FetchNext = 1".
+      4. Present explicit confirmation:
+         *"You are about to update the stage to '[NewStage]' (SubStage: '[NewSubStage or N/A]') for the lead '[Identifier]' (Source: '[Source]'). Please confirm if you would like to proceed."*
+
+    STEP 5: FINAL TOOL EXECUTION (ChangeLeadStage)
+    - EXECUTE "ChangeLeadStage" ONLY AFTER receiving explicit user confirmation ("Yes", "Confirm", "Proceed", "Go ahead").
+    - TOOL PARAMETER BINDINGS:
+      * "NewStage": Set to target stage string.
+      * "NewSubStage": Set to target substage string (or null/empty if omitted).
+      * "query": Set to EXACT SQL query WHERE string used in GetLeadsDetails.
+      * "confirmationConfirmed": Set strictly to "true".
+      * "confirmationToken": Set strictly to "USER_CONFIRMED".
+      * "filterlead": Pass exact "GetLeadsDetailsInputs" object with "FetchNext" set to "MaxCount" (for ALL) or "1" (for Single Lead).
+--------------------------------------------------------------------------------
+ELSE IF Action == "change or update lead label (Label / Tag Update)":
+--------------------------------------------------------------------------------
+- Tool to call: "LeadLabelChange"
+- Scope restriction: DO NOT use this tool for changing lead sources, handlers, owners, or assignees. Use "MoveLeads" for source/bucket updates and "ExecuteHandlerChange" for handler updates.
+
+PRE-EXECUTION & MULTI-LEAD DISCOVERY PROTOCOL:
+1. MANDATORY FIRST STEP — FETCH & BIND PREVIEW:
+    - Call "GetLeadsDetails" FIRST to query the database.
+    - Present preview summary to user before asking follow-up questions.
+
+2. RE-QUERY ON LEAD SEARCH CRITERIA SHIFT ONLY:
+    - Re-run "GetLeadsDetails" if search parameters change.
+
+3. EVALUATE PREVIEW & TARGET LABEL SELECTION:
+    - IF returned "MaxCount" > 1:
+        a. DISPLAY preview summary.
+        b. ASK USER: "I found [MaxCount] leads. Do you want to update the label for ALL [MaxCount] leads, or target a single lead?"
+        c. IF Single Lead: Require Email/Phone AND Label (Label compulsory).
+        d. IF ALL Leads: Set "filterlead.FetchNext = MaxCount".
+
+4. TARGET LABEL COLLECTION & OFFER TO SHOW LABELS:
+    - IF target label ("NewLabelName") is missing or unspecified:
+        You MUST ask the user in plain text using this exact phrasing:
+        *"Please specify the new label you would like to apply to the lead(s). Do you want me to show the available labels?"*
+
+5. LABEL SELECTION & FINAL CONFIRMATION:
+    - Once target label name is known, display final summary in text.
+    - ASK FOR CONFIRMATION ("Shall I proceed with updating the label to '[NewLabelName]' for the selected lead(s)?").
+    - WHEN CONFIRMED ("Yes", "Confirm", "Proceed"):
+        Call "LeadLabelChange" directly passing:
+        • NewLabelName: Target label name
+        • query: EXACT SQL WHERE clause string used in "GetLeadsDetails"
+        • confirmationConfirmed: true
+        • confirmationToken: "USER_CONFIRMED"
+        • filterlead: Exact "GetLeadsDetailsInputs" object used during preview
 --------------------------------------------------------------------------------
 DATA PRESENTATION & PREVIEW LAWS:
 --------------------------------------------------------------------------------

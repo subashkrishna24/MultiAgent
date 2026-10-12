@@ -163,7 +163,7 @@ Remain on the Template step until a template with spam score >= 5.0 is selected.
 
 ---
 
-If TemplateSpamScore >= 5.0:
+only If TemplateSpamScore >= 5.0:
 
 "The template you selected has a spam score of {TemplateSpamScore}. Do you want to proceed with this template"
 

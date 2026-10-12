@@ -77,18 +77,18 @@ If the user's query refers to entities other than Campaign or Template (e.g., "g
 -> Set needsClarification = false, message = ""
 
 ==================================================
-STEP 4: CLARIFICATION TRIGGERS (needsClarification = true)
+STEP 4: CLARIFICATION TRIGGERS (COLD START ONLY — History has NO prior channel & NO assistant question)
 ==================================================
-Trigger clarification ONLY when the interaction is a COLD START / STANDALONE request, the Channel is 100% UNKNOWN, and the intent is specifically Campaign/Template CRUD/Listing (NO channel keyword appears in the query, NO active channel exists in conversation history, and it is NOT an analytics/metric request):
+Trigger clarification ONLY when the interaction is a COLD START / STANDALONE request (History is empty OR contains zero channel context and no assistant prompt), the Channel is 100% UNKNOWN, and the intent is specifically Campaign/Template CRUD/Listing:
 
-A. GENERIC TEMPLATE / CAMPAIGN FETCH:
+A. GENERIC TEMPLATE / CAMPAIGN FETCH (COLD START ONLY):
    - "show me the available templates", "show me templates", "list campaigns", "get templates"
    -> If Template:
       {"needsClarification": true, "message": "Which template are you looking for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
    -> If Campaign:
       {"needsClarification": true, "message": "Which campaign are you looking for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
 
-B. CREATION OR ACTION ON A BLANK / UNKNOWN CONTEXT:
+B. CREATION OR ACTION ON A BLANK / UNKNOWN CONTEXT (COLD START ONLY):
    Keywords: "create", "add", "new", "build", "schedule", "duplicate" targeting campaign or template WITHOUT a channel keyword:
    - "create template", "create campaign", "add new template"
    -> If Template:
@@ -96,7 +96,7 @@ B. CREATION OR ACTION ON A BLANK / UNKNOWN CONTEXT:
    -> If Campaign:
       {"needsClarification": true, "message": "Sure — which campaign is this campaign for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
 
-C. SPECIFIC UNKNOWN NAMED ENTITY WITHOUT A CHANNEL (COLD START):
+C. SPECIFIC UNKNOWN NAMED ENTITY WITHOUT A CHANNEL (COLD START ONLY):
    Asking for details/view of a specific campaign or template name/ID ONLY where NO channel keyword appears anywhere in history or query:
    - "show me details of template Test_Promo_01" -> true
    (If any channel keyword like "web push", "sms", "email" appears anywhere in the sentence, Step 1 applies and this step is completely ignored).
@@ -122,61 +122,70 @@ Latest Query: "yes please"
 Output:
 {"needsClarification": false, "message": ""}
 
-Example 3:
-History: []
-Latest Query: "show me last 7 days total WhatsApp sent count"
+Example 3 (Dynamic context continuation with active channel in history):
+History: [
+  { "role": "user", "content": "I want To Test Web Push Template" },
+  { "role": "assistant", "content": "To proceed with testing the Web Push template, do you have a specific Template Name in mind, or would you like to see the list of available Web Push templates?" }
+]
+Latest Query: "show the available templates"
 Output:
 {"needsClarification": false, "message": ""}
 
 Example 4:
 History: []
-Latest Query: "show me last 30 days total mail sent count"
+Latest Query: "show me last 7 days total WhatsApp sent count"
 Output:
 {"needsClarification": false, "message": ""}
 
 Example 5:
 History: []
-Latest Query: "yesterday total sms delivered"
+Latest Query: "show me last 30 days total mail sent count"
 Output:
 {"needsClarification": false, "message": ""}
 
 Example 6:
 History: []
-Latest Query: "web push clicks and sent stats past 2 weeks"
+Latest Query: "yesterday total sms delivered"
 Output:
 {"needsClarification": false, "message": ""}
 
 Example 7:
 History: []
-Latest Query: "show me last 7 days sent count"
+Latest Query: "web push clicks and sent stats past 2 weeks"
 Output:
 {"needsClarification": false, "message": ""}
 
 Example 8:
 History: []
+Latest Query: "show me last 7 days sent count"
+Output:
+{"needsClarification": false, "message": ""}
+
+Example 9:
+History: []
 Latest Query: "create whatsapp template"
 Output:
 {"needsClarification": false, "message": ""}
 
-Example 9 (Cold start generic fetch):
+Example 10 (Cold start generic fetch):
 History: []
 Latest Query: "show me the available templates"
 Output:
 {"needsClarification": true, "message": "Which template are you looking for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
 
-Example 10 (Cold start generic creation):
+Example 11 (Cold start generic creation):
 History: []
 Latest Query: "create campaign"
 Output:
 {"needsClarification": true, "message": "Sure — which campaign is this campaign for: Mail, SMS, WhatsApp, RCS, or Web Push?"}
 
-Example 11:
+Example 12:
 History: []
 Latest Query: "create group"
 Output:
 {"needsClarification": false, "message": ""}
 
-Example 12:
+Example 13:
 History: []
 Latest Query: "Show me the details of the web push template name is - surekha_web_23_sptt"
 Output:

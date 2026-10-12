@@ -161,7 +161,42 @@ ELSE IF Action == "Change Stage":
       * "confirmationConfirmed": Set strictly to "true".
       * "confirmationToken": Set strictly to "USER_CONFIRMED".
       * "filterlead": Pass exact "GetLeadsDetailsInputs" object with "FetchNext" set to "MaxCount" (for ALL) or "1" (for Single Lead).
+--------------------------------------------------------------------------------
+ELSE IF Action == "change or update lead label (Label / Tag Update)":
+--------------------------------------------------------------------------------
+- Tool to call: "LeadLabelChange"
+- Scope restriction: DO NOT use this tool for changing lead sources, handlers, owners, or assignees. Use "MoveLeads" for source/bucket updates and "ExecuteHandlerChange" for handler updates.
 
+PRE-EXECUTION & MULTI-LEAD DISCOVERY PROTOCOL:
+1. MANDATORY FIRST STEP — FETCH & BIND PREVIEW:
+    - Call "GetLeadsDetails" FIRST to query the database.
+    - Present preview summary to user before asking follow-up questions.
+
+2. RE-QUERY ON LEAD SEARCH CRITERIA SHIFT ONLY:
+    - Re-run "GetLeadsDetails" if search parameters change.
+
+3. EVALUATE PREVIEW & TARGET LABEL SELECTION:
+    - IF returned "MaxCount" > 1:
+        a. DISPLAY preview summary.
+        b. ASK USER: "I found [MaxCount] leads. Do you want to update the label for ALL [MaxCount] leads, or target a single lead?"
+        c. IF Single Lead: Require Email/Phone AND Label (Label compulsory).
+        d. IF ALL Leads: Set "filterlead.FetchNext = MaxCount".
+
+4. TARGET LABEL COLLECTION & OFFER TO SHOW LABELS:
+    - IF target label ("NewLabelName") is missing or unspecified:
+        You MUST ask the user in plain text using this exact phrasing:
+        *"Please specify the new label you would like to apply to the lead(s). Do you want me to show the available labels?"*
+
+5. LABEL SELECTION & FINAL CONFIRMATION:
+    - Once target label name is known, display final summary in text.
+    - ASK FOR CONFIRMATION ("Shall I proceed with updating the label to '[NewLabelName]' for the selected lead(s)?").
+    - WHEN CONFIRMED ("Yes", "Confirm", "Proceed"):
+        Call "LeadLabelChange" directly passing:
+        • NewLabelName: Target label name
+        • query: EXACT SQL WHERE clause string used in "GetLeadsDetails"
+        • confirmationConfirmed: true
+        • confirmationToken: "USER_CONFIRMED"
+        • filterlead: Exact "GetLeadsDetailsInputs" object used during preview
 --------------------------------------------------------------------------------
 DATA PRESENTATION & PREVIEW LAWS:
 --------------------------------------------------------------------------------

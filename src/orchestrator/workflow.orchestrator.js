@@ -100,6 +100,8 @@ export async function executeWorkflow(payload) {
     userdetails,
     machineid,
     isagentworkflow,
+    pid,
+    actiontype,
   } = payload;
   setTimeZone(userdetails?.timeZone);
   if (history.length === 1) {
@@ -191,8 +193,6 @@ export async function executeWorkflow(payload) {
   ];
 
   handlePagination(recentHistory, session, intent.module);
-
-  
 
   if (!modulecheck.includes(intent.module.toLowerCase())) {
     const priorTurns = recentHistory.slice(-10);
@@ -294,13 +294,15 @@ ${currentMessage}`;
       dbdata: result.success ? result.dbdata : JSON.stringify([]),
     };
   }
-if (isagentworkflow && intent.module === "workflow") {
+  if (isagentworkflow && intent.module === "workflow") {
     response = await executeWorkFlowAgent({
       model: llmModel,
       tools: filteredTools,
       history: recentHistory,
       accountId: accountid,
       session,
+      pid,
+      actiontype,
     });
   }
   if (intent.module === "contact") {

@@ -118,7 +118,15 @@ function getPrompt(module) {
   return prompts[module];
 }
 
-export function createAgent({ module, model, tools, accountId, session }) {
+export function createAgent({
+  module,
+  model,
+  tools,
+  accountId,
+  session,
+  pid,
+  actiontype,
+}) {
   var common_prompt = "";
   if (module != "reporting") {
     common_prompt = SHARED_PROMPT;
@@ -131,6 +139,10 @@ ${getPrompt(module)}
 
 ACCOUNT:
 ${accountId}
+
+${pid ? `PID: ${pid}` : ""}
+
+${actiontype ? `Action Type: ${actiontype}` : ""}
 
 SESSION:
 ${JSON.stringify(session || {}, null, 2)}

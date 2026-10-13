@@ -1,24 +1,25 @@
-import {
-  createAgent
-} from "../../utils/agent.factory.js";
+import { createAgent } from "../../utils/agent.factory.js";
 
 export async function executeWorkFlowAgent({
-   model,
+  model,
   tools,
   history,
   accountId,
-  session
+  session,
+  pid,
+  actiontype,
 }) {
   const agent = createAgent({
     module: "workflow",
     model,
     tools,
-    accountId,    
-    session
+    accountId,
+    session,
+    pid,
+    actiontype,
   });
 
-
   return await agent.invoke({
-    messages: history
+    messages: history,
   });
 }

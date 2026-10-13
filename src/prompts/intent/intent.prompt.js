@@ -1289,10 +1289,14 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       }
 30. Route to leadtransition when the user says:
 
-      * wants to create change the stage
-      * wants to create change the source or move the source 
-      * change leadlabel
-      * update leadlabel
+      * wants to change the stage
+      * wants to change the lead's source to different source
+      * wants to move the leads to different source 
+      * wants to change leadlabel
+      * wants to update leadlabel
+      * wants to create new source
+      * wants to update existing source name to new name
+      * wants to delete existing source
       Examples:
       {
         "module": "leadtransition"

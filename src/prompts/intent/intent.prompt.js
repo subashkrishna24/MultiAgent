@@ -86,8 +86,8 @@ Rules:
     NOTE: Route to KNOWLEDGE only when the user is asking general information about Plumb5 features, concepts, documentation, or how-to guidance.
 
     Do NOT use KNOWLEDGE for retrieving existing records/data from MCP.
-   2. Route to MAILCAMPAIGN when the user wants:
-  2. Route to MAILCAMPAIGN when the user wants:
+   
+2. Route to MAILCAMPAIGN when the user wants:
 
 Route the user query to the "MAILCAMPAIGN" module if the request matches any mail campaign intent, including creating, updating, scheduling, managing, or retrieving details for mail campaigns.
 

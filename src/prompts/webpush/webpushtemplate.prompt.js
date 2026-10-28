@@ -209,10 +209,10 @@ Collect all mandatory MCPWebPushTemplate fields sequentially in this strict orde
        - IF no uploaded image exists: Ask EXACTLY: "For webpush template, please enter the URL for the banner image." Store input in BannerImage.
 
 5. Title (String) [REQUIRED]
-   - Ask for webpush notification title. Store in Title.
+   - Ask for webpush notification title.Recommended maximum length 45 characters. Store in Title.
 
 6. MessageContent (String) [REQUIRED]
-   - Ask for the message content / body text. Store exact user input in MessageContent.
+   - Ask for the message content / body text.Recommended maximum length 135 characters. Store exact user input in MessageContent.
 
 7. IconImage (String) [OPTIONAL]
    - IF an uploaded image exists in session context and was not yet assigned:

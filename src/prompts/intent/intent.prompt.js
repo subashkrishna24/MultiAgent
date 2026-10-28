@@ -1280,7 +1280,7 @@ Do NOT switch modules while an A/B Test workflow is in progress.
       }
 
 29. Route to WORKFLOW when the user says:
-
+   * isagentworkflow==true
       * wants to create workflow 
 
       Examples:

@@ -50,6 +50,7 @@ import { executeSendWhatsappToLeadAgent } from "../agents/lms/sendwhatsapptolead
 import { executeSendRcsToLeadAgent } from "../agents/lms/sendrcstolead.agent.js";
 import { checkQueryPrompt } from "../prompts/shared/checkquery.prompt.js";
 import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js";
+import { handleWorkflowEdit, validateWorkflow, primePending, saveWorkflow } from "../agentic_workflows/agent/workflow.edit.js";
 const toText = (c) =>
   typeof c === "string"
     ? c
@@ -103,13 +104,14 @@ export async function executeWorkflow(payload) {
     pid,
     actiontype,
   } = payload;
-  setTimeZone(userdetails?.timeZone);
-  if (history.length === 1) {
-    clearPagingSession(machineid);
-  }
-
+  setTimeZone(userdetails?.timeZone); 
   // Session
   const session = getSession(machineid);
+ if (history.length === 1) {
+    clearPagingSession(machineid);
+     session.lastWorkflowJson = null;
+     session.wfPending = null; session.wfSkipped = [];
+  }
 
   // if (session.IsAgentWorkflow !== isagentworkflow) {
   //   session.agenticWorkflowHandled = false;
@@ -155,14 +157,23 @@ export async function executeWorkflow(payload) {
 
   const lastMessage = history[history.length - 1].content;
 
-  // STEP 1
+  // STEP 1 
+let intent;
+if (isagentworkflow) {
+  // Agent workflow mode: always stay in workflow, skip intent detection
+  intent = { module: "workflow" };
+} else {
   const intentContext = buildIntentContext(history);
+  intent = await detectIntent(llmModel, intentContext);
 
-  let intent = await detectIntent(llmModel, intentContext);
-
-  let wantsOut = false;
-
+  // Safety: the "workflow" module only exists in agent workflow mode
+  if (intent.module === "workflow") {
+    intent = { ...intent, module: "knowledge" }; // or whatever your default fallback is
+  }
+}
+   
   // STEP 2
+  
   const mcpClient = getMcpClient(accountid, p5apikey);
 
   const allTools = await mcpClient.getTools();
@@ -185,12 +196,48 @@ export async function executeWorkflow(payload) {
     "workflow",
   ];
   //Add fromdate and todate in prompt
-  const baseTs =
-    intent.module === "workflow" ? `\nBASE_TS = ${Date.now()}` : "";
-  const recentHistory = [
-    { role: "system", content: getDateContext() + baseTs },
-    ...history,
-  ];
+   
+const currentWf = intent.module === "workflow" ? findLatestWorkflowJson(history, session) : null;
+if (isagentworkflow && currentWf) {
+  const out = await handleWorkflowEdit({ llmModel, session, wf: currentWf, text: toText(lastMessage) });
+
+  if (out && out.save) {
+    let mcp;
+    try {
+      mcp = getMcpClient(accountid, p5apikey);
+      const tools = await mcp.getTools();          // all tools, so the module filter can't hide the save tool
+      console.log("[WF save] save-like tools:", tools.map((t) => t.name).filter((n) => /save/i.test(n)));
+      const message = await saveWorkflow({ tools, wf: out.wf, history, pid, actiontype });
+      session.lastWorkflowJson = out.wf;
+      return { module: "workflow", message, toolmessage: undefined, workflowcompleted: true, actions: [] };
+    } catch (err) {
+      console.error("[WF save] failed:", err);
+      return { module: "workflow", message: "Saving failed: " + (err.message || err), toolmessage: undefined, workflowcompleted: false, actions: [] };
+    } finally {
+      if (mcp) await mcp.close().catch(() => {});
+    }
+  }
+
+  if (out && out.message) {
+    if (out.wf) session.lastWorkflowJson = out.wf;
+    return { module: "workflow", message: out.message, toolmessage: undefined, workflowcompleted: false, actions: [] };
+  }
+}
+const baseTs =
+  intent.module === "workflow"
+    ? `\nBASE_TS = ${Date.now()}\nCURRENT_WORKFLOW_JSON: ${currentWf ? JSON.stringify(currentWf) : "none"}`
+    : "";
+
+const cleanedHistory =
+  intent.module === "workflow"
+    ? history.filter((m) => !(m.role === "assistant" && CANNED.test(toText(m.content)) && !extractWorkflowJson(toText(m.content))))
+    : history;
+
+const recentHistory = [
+  { role: "system", content: getDateContext() + baseTs },
+  ...cleanedHistory,
+];
+  
 
   handlePagination(recentHistory, session, intent.module);
 
@@ -606,30 +653,17 @@ ${currentMessage}`;
     "No response generated";
 
   if (intent.module === "workflow") {
-    const wf = extractWorkflowJson(response_msg);
-    if (wf) {
-      session.activeModule = null; // flow finished, release the sticky routing
-      const hasWf = history.some((m) =>
-        toText(m.content).includes('"flowchartConfig"'),
-      );
-      const looksLikeEdit =
-        /\b(add|remove|delete|change|replace|update|rename|swap)\b/i.test(
-          toText(lastMessage),
-        ) &&
-        /\b(mail|email|sms|whatsapp|rcs|web ?push|template|step|node|audience)\b/i.test(
-          toText(lastMessage),
-        );
-      if (hasWf && looksLikeEdit && !wantsOut) intent.module = "workflow";
-      return {
-        module: "workflow",
-        message: JSON.stringify(wf), // JSON only: prose prefix stripped, whitespace untouched
-        toolmessage: report_response,
-        workflowcompleted: true,
-        actions: [],
-      };
-    }
-    // otherwise it's a conversational question: fall through to the normal path
+  const wf = extractWorkflowJson(response_msg);
+  if (wf && validateWorkflow(wf)) {
+    session.lastWorkflowJson = wf;
+    primePending(wf, session);
+    session.activeModule = isagentworkflow ? "workflow" : null;
+    return { module: "workflow", message: response_msg.trim(), toolmessage: report_response, workflowcompleted: true, actions: [] };
   }
+  if (wf || response_msg.includes('"flowchartConfig"')) {
+    return { module: "workflow", message: "I couldn't build that workflow cleanly. Please say it once more in one sentence.", toolmessage: report_response, workflowcompleted: false, actions: [] };
+  }
+}
   var RemoveRecommendations = [
     "contact",
     "leadmanagement",
@@ -661,3 +695,13 @@ ${currentMessage}`;
     actions: recommendedActions,
   };
 }
+function findLatestWorkflowJson(history, session) {
+  for (let i = history.length - 1; i >= 0; i--) {
+    const wf = extractWorkflowJson(toText(history[i].content));
+    if (wf) return wf; // assistant JSON or a canvas edit sent as a user message
+  }
+  return session.lastWorkflowJson ?? null;
+}
+
+// canned UI sentences must not be imitated by the model
+const CANNED = /(workflow mapping is ready|workflow .{0,60} is ready|would you like to update it)/i;

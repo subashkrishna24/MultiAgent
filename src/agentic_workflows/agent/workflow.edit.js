@@ -1,6 +1,10 @@
 // workflow.edit.js
 // The LLM only CLASSIFIES the user's sentence (small JSON). This file edits the workflow JSON,
-// asks "which mail?", asks for missing templates, and builds the reply. No LLM-written JSON on edits.
+// asks "which mail?", asks for missing templates, checks the configuration, and builds the reply.
+//
+// SESSION FIELDS (set by the controller):
+//   session.wfMode = "create" | "edit" | "reuse"   (default "create")
+//   session.wfPid  = id of the workflow opened with "Edit" (only used in edit mode)
 
 const EVENTS = {
   mail: [["Deliver", "delivered"], ["Open", "opened"], ["Not Open", "notopened"], ["Click", "clicked"], ["Not Click", "notclicked"], ["Bounce", "bounced"]],
@@ -19,9 +23,16 @@ const labelOf = (t) => GROUPS[t] || "Send " + NAME[t];
 const say = (message) => ({ message });
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
+/* ---------- save / update / new version wording ---------- */
 const SAVE = /^\s*(?:skip(?: all)?(?: and| then)?\s+)?(?:yes|y|yeah|ok|okay|save|update|confirm|go ahead|proceed)(?:\s+(?:it|this|the|my|now))*(?:\s+(?:workflow|flow|agent))?\s*[.!]*\s*$/i;
+const UPDATE = /^\s*(?:yes[,\s]*)?(?:please\s+)?(?:update|overwrite|replace)(?:\s+(?:it|this|the|my|existing|workflow|flow|agent|now))*\s*[.!]*\s*$/i;
+const NEWVER = /\b(?:new\s*version|newversion|create\s+(?:a\s+)?new|save\s+as\s+(?:a\s+)?new|as\s+(?:a\s+)?new|new\s+(?:one|copy))\b/i;
 const SKIP_START = /^\s*skip\b/i;
 const COMMAND = /\b(add|remove|delete|send|also|then|change|replace|preview|save|those|who|if|when|after)\b/i;
+
+const stripSkip = (t) => t.replace(/^\s*skip(?: all)?(?: and| then)?\s+/i, "");
+const modeOf = (session) => (session && session.wfMode) || "create";
+const isSaveWord = (t, mode) => SAVE.test(t) || (mode === "edit" && (UPDATE.test(stripSkip(t)) || NEWVER.test(t)));
 
 const INTENT_PROMPT = `You read ONE user message about an existing messaging workflow and output ONE minified JSON object. No prose, no code fences.
 Shape:
@@ -68,6 +79,76 @@ function resolveEvent(pt, key) {
   const i = key ? list.findIndex((e) => e[1] === key) : list.findIndex((e) => e[1] === "delivered" || e[1] === "pushed");
   if (i < 0) return { error: `${NAME[pt]} has no "${key}" event. Its events are: ${list.map((e) => e[0]).join(", ")}. Which one do you mean?` };
   return { idx: i, label: list[i][0], key: list[i][1] };
+}
+
+/* ---------- configuration check (mirrors the validation of the preview popups) ---------- */
+const lowerKeys = (o) => {
+  const r = {};
+  Object.keys(o || {}).forEach((k) => (r[k.toLowerCase()] = o[k]));
+  return r;
+};
+const blank = (v) => v === undefined || v === null || v === "" || v === 0 || v === "0";
+// which channels need a configuration name / the mail fields
+const CHAN_NEEDS = {
+  mail: { cfg: true, mail: true },
+  sms: { cfg: true },
+  whatsapp: { cfg: true },
+  rcs: { cfg: true },
+  webpush: {},
+};
+
+// returns [{ step, name, missing: [...] }]  (step 0 = the Audience)
+export function findIncomplete(wf) {
+  const out = [];
+  const nodes = (wf && wf.flowchartConfig && wf.flowchartConfig.nodes) || [];
+  if (!nodes.length) return out;
+
+  const aud = cfgOf(wf, nodes[0].blockId);
+  const audQuery = aud && String(aud.Value || "").trim();
+  if (!audQuery) out.push({ step: 0, name: "Audience", missing: ["audience"] });
+
+  (wf.steps || []).forEach((s, i) => {
+    const node = nodes[i + 1];
+    if (!node) return;
+    const t = typeOf(node.blockId);
+    const a = lowerKeys(s.action && s.action.args);
+    const m = [];
+
+    if (isChannel(t)) {
+      const need = CHAN_NEEDS[t] || {};
+      if (blank(a.templateid)) m.push("template");
+      if (need.cfg && blank(a.configurationnameid)) m.push("configuration name");
+      if (need.mail) {
+        if (!String(a.subject || "").trim()) m.push("subject");
+        if (!String(a.fromname || "").trim()) m.push("from name");
+        if (!String(a.fromemailid || "").trim()) m.push("from email");
+        if (!String(a.replytoemailid || "").trim()) m.push("reply-to email");
+      }
+    } else if (GROUPS[t]) {
+      if (!String(a.groupname || "").trim()) m.push("group name");
+    } else if (t === "addrules") {
+      if (blank(a.ruleid)) m.push("rule");
+    } else if (t === "dateandtime") {
+      if (a.datecondition === undefined || a.datecondition === null) m.push("date and time");
+    }
+
+    if (m.length) out.push({ step: i + 1, name: s.name || labelOf(t), missing: m });
+  });
+  return out;
+}
+
+const missingLines = (list) =>
+  list.map((x) => (x.step === 0 ? `- Audience: ${x.missing.join(", ")}` : `- Step ${x.step} (${x.name}): ${x.missing.join(", ")}`)).join("\n");
+
+// text placed in front of the final question while something is missing
+export function incompleteNote(wf) {
+  const list = findIncomplete(wf);
+  if (!list.length) return "";
+  return (
+    `Some settings are still missing:\n${missingLines(list)}\n` +
+    `If you continue now, the workflow is saved with status OFF and will not start. ` +
+    `Click "Preview workflow" and set these configurations to activate it.`
+  );
 }
 
 /* ---------- edits ---------- */
@@ -125,7 +206,7 @@ function heal(wf) {
   const steps = [];
   for (let i = 1; i < nodes.length; i++) {
     const t = typeOf(nodes[i].blockId), s = byNo[i], a = s && s.action && s.action.args;
-    if (a && (a.channel === t || a.actiontype === t)) { steps.push(s); continue; }
+    if (a && (a.channel === t || a.actiontype === t || a.controltype === t)) { steps.push(s); continue; }
     let c = f.connections.find((x) => x.TargetId === nodes[i].blockId);
     if (!c) { c = { connectionId: "", SourceId: nodes[0].blockId, TargetId: nodes[i].blockId, anchor: "Bottom3", RelationWithParent: "Satisfy" }; f.connections.push(c); }
     const pid = c.SourceId;
@@ -174,8 +255,22 @@ function rebuild(wf) {
 }
 
 /* ---------- reply building ---------- */
-export const saveQuestion = (wf) =>
-  `Would you like me to save this workflow '${wf.name}'? Reply "yes" to save, or tell me what to change.`;
+// create / reuse: "save". edit: "update or create a new version".
+// When settings are missing, a note is placed in front of the question.
+export const saveQuestion = (wf, session) => {
+  const q =
+    modeOf(session) === "edit"
+      ? `Would you like to update '${wf.name}' or create a new version? Reply "update" or "new version", or tell me what to change.`
+      : `Would you like me to save this workflow '${wf.name}'? Reply "yes" to save, or tell me what to change.`;
+  const note = incompleteNote(wf);
+  return note ? note + "\n" + q : q;
+};
+
+// LLM-written replies end with the plain save / update sentence: swap it for the app's version
+// (mode wording + missing-settings note). Works for create, edit and reuse.
+export function fixSaveQuestion(message, wf, session) {
+  return String(message).replace(/(?:Would you like me to save this workflow|Would you like to update ).*$/m, () => saveQuestion(wf, session));
+}
 
 function summary(wf) {
   const lines = wf.steps.map((s, i) => {
@@ -196,13 +291,30 @@ function nextQuestion(wf, session) {
     }
   }
   session.wfPending = null;
-  return saveQuestion(wf);
+  return saveQuestion(wf, session);
 }
 
 function done(wf, session, withSummary) {
   rebuild(wf);
   const q = nextQuestion(wf, session);
   return { wf, message: JSON.stringify(wf) + "\n" + (withSummary ? summary(wf) + "\n" : "") + q };
+}
+
+// what to send to SaveAgentWorkFlow, based on the mode and what the user answered
+function saveResult(wf, session, t) {
+  const mode = modeOf(session), s = stripSkip(t);
+  if (mode === "edit") {
+    const pid = Number(session.wfPid) || 0;
+    if (NEWVER.test(s)) return { save: true, wf, actiontype: "newversion", pid };
+    if (UPDATE.test(s)) return { save: true, wf, actiontype: pid ? "edit" : "save", pid };
+    // a bare "yes" / "save" is ambiguous when editing
+    return say(`Do you want to update '${wf.name}' or create a new version? Reply "update" or "new version".`);
+  }
+  return {
+    save: true, wf,
+    actiontype: mode === "reuse" ? "reuse" : "save",
+    pid: 0, // pid: only edit / newversion send the id
+  };
 }
 
 // call after the LLM created a workflow, so a template answer is understood next turn
@@ -301,11 +413,13 @@ async function classify(llmModel, wf, text) {
 }
 
 /* ---------- entry point ----------
-   returns { message, wf? }  -> use it as the reply
-   returns null              -> let the normal LLM agent handle the turn (save, questions, new workflow) */
+   returns { message, wf? }                          -> use it as the reply
+   returns { save: true, wf, actiontype, pid }       -> call saveWorkflow(...) with those values
+   returns null                                      -> let the normal LLM agent handle the turn (questions, new workflow) */
 export async function handleWorkflowEdit({ llmModel, session, wf, text }) {
   wf = heal(clone(wf));
   session.wfSkipped = session.wfSkipped || [];
+  const mode = modeOf(session);
   const t = String(text || "").trim();
   const p = session.wfPending;
   session.wfPending = null;
@@ -320,22 +434,22 @@ export async function handleWorkflowEdit({ llmModel, session, wf, text }) {
     if (hit) return apply(wf, session, { ...p.edit, event: hit[1] });
   } else if (p && p.kind === "dup" && /\b(add|another|yes|again)\b/i.test(t)) {
     return apply(wf, session, { ...p.edit, force: true });
-  } else if (p && p.kind === "template" && (SKIP_START.test(t) || (!SAVE.test(t) && !COMMAND.test(t) && t.split(/\s+/).length <= 4))) {
+  } else if (p && p.kind === "template" && (SKIP_START.test(t) || (!isSaveWord(t, mode) && !COMMAND.test(t) && t.split(/\s+/).length <= 4))) {
     if (SKIP_START.test(t)) {
       wf.flowchartConfig.nodes.forEach((n, i) => {
         const ty = typeOf(n.blockId), c = cfgOf(wf, n.blockId);
         if (i > 0 && isChannel(ty) && c && (!c.Value || c.Value === ty + "_template") && !session.wfSkipped.includes(n.blockId)) session.wfSkipped.push(n.blockId);
       });
       session.wfPending = null;
-      return SAVE.test(t) ? { save: true, wf } : say(saveQuestion(wf));   // "skip and update the flow"
+      return isSaveWord(t, mode) ? saveResult(wf, session, t) : say(saveQuestion(wf, session));
     }
     setTemplate(wf, p.blockId, t.replace(/^["']|["']$/g, ""));
     return done(wf, session, false);
   }
 
-  if (SAVE.test(t)) {                                 // yes / save / update this workflow
+  if (isSaveWord(t, mode)) {                          // yes / save / update / new version
     const q = nextQuestion(wf, session);
-    return session.wfPending ? say(q) : { save: true, wf };   // a template is still missing: ask first
+    return session.wfPending ? say(q) : saveResult(wf, session, t);   // a template is still missing: ask first
   }
   const e = await classify(llmModel, wf, t);
   if (!e || !["add", "remove", "set_template"].includes(e.intent)) return null;
@@ -345,20 +459,26 @@ export async function handleWorkflowEdit({ llmModel, session, wf, text }) {
 }
 
 /* ---------- save: the app calls the MCP tool itself (no LLM tool call) ----------
-   C# tool: SaveAgentWorkFlow(ExecutionJson, flowchartConfig, configarray, name, agenthistory, status, pid, actiontype, tasktrigger) */
+   C# tool: SaveAgentWorkFlow(ExecutionJson, flowchartConfig, configarray, name, agenthistory, status, pid, actiontype, tasktrigger)
+   actiontype: "save" (create) | "reuse" | "edit" (update, needs pid) | "newversion" (needs pid)
+   status: true only when every step is fully configured, otherwise false (saved, but it will not start) */
 const txt = (c) => (typeof c === "string" ? c : Array.isArray(c) ? c.map((b) => (typeof b === "string" ? b : (b && b.text) || "")).join("") : String(c || ""));
 
 export async function saveWorkflow({ tools, wf, history, pid, actiontype }) {
   const tool = (tools || []).find((x) => String(x.name).toLowerCase().replace(/_/g, "") === "saveagentworkflow");
   if (!tool) return "Saving failed: the save tool was not found. Please try again later.";
   const act = ["edit", "reuse", "newversion"].includes(String(actiontype || "").toLowerCase()) ? String(actiontype).toLowerCase() : "save";
+
+  const missing = findIncomplete(wf);
+  const status = missing.length === 0;
+
   const args = {
     ExecutionJson: JSON.stringify(wf.steps),
     flowchartConfig: JSON.stringify(wf.flowchartConfig),
     configarray: JSON.stringify(wf.configarray),
     name: wf.name || "Workflow",
     agenthistory: (history || []).filter((m) => m.role === "user").map((m) => txt(m.content)).join("\n"),
-    status: true,
+    status,
     pid: Number(pid) || 0,
     actiontype: act,
     tasktrigger: false,
@@ -368,7 +488,17 @@ export async function saveWorkflow({ tools, wf, history, pid, actiontype }) {
     let ok = true, msg = "";
     try { const r = typeof raw === "string" ? JSON.parse(raw) : raw; ok = r.success !== false && !r.error; msg = r.Message || r.message || r.error || ""; }
     catch { msg = txt(raw).slice(0, 200); ok = !/error|fail|exception/i.test(msg); }
-    return ok ? `Workflow '${wf.name}' is saved.` : `Saving failed${msg ? ": " + msg : ""}. Reply "yes" to try again.`;
+    if (!ok) return `Saving failed${msg ? ": " + msg : ""}. Reply "yes" to try again.`;
+
+    const base =
+      act === "edit" ? `Workflow '${wf.name}' is updated`
+        : act === "newversion" ? `Workflow '${wf.name}' is saved as a new version`
+          : `Workflow '${wf.name}' is saved`;
+    if (status) return base + ".";
+    return (
+      `${base}, but its status is OFF so it will not start yet. Still missing:\n${missingLines(missing)}\n` +
+      `Click "Preview workflow", set these configurations, then confirm again to activate it.`
+    );
   } catch (err) {
     return `Saving failed: ${String(err.message || err).slice(0, 200)}. Reply "yes" to try again.`;
   }

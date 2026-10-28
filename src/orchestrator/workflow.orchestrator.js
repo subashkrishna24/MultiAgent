@@ -50,7 +50,7 @@ import { executeSendWhatsappToLeadAgent } from "../agents/lms/sendwhatsapptolead
 import { executeSendRcsToLeadAgent } from "../agents/lms/sendrcstolead.agent.js";
 import { checkQueryPrompt } from "../prompts/shared/checkquery.prompt.js";
 import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js";
-import { handleWorkflowEdit, validateWorkflow, primePending, saveWorkflow } from "../agentic_workflows/agent/workflow.edit.js";
+import { handleWorkflowEdit, validateWorkflow, primePending, saveWorkflow, fixSaveQuestion } from "../agentic_workflows/agent/workflow.edit.js";
 const toText = (c) =>
   typeof c === "string"
     ? c
@@ -112,7 +112,18 @@ export async function executeWorkflow(payload) {
      session.lastWorkflowJson = null;
      session.wfPending = null; session.wfSkipped = [];
   }
-
+    if (isagentworkflow) {
+    const m = String(actiontype ?? payload.actionType ?? payload.ActionType ?? "").toLowerCase();
+    const p = Number(pid ?? payload.PId ?? payload.Pid ?? 0) || 0;
+    if (m === "edit" || m === "reuse" || m === "create") {
+      session.wfMode = m;
+      session.wfPid = m === "edit" ? p : 0;
+    } else if (!session.wfMode) {
+      session.wfMode = "create";
+      session.wfPid = 0;
+    }
+    console.log("[WF mode]", { raw: actiontype, mode: session.wfMode, pid: session.wfPid });
+  }
   // if (session.IsAgentWorkflow !== isagentworkflow) {
   //   session.agenticWorkflowHandled = false;
   // }
@@ -207,8 +218,7 @@ if (isagentworkflow && currentWf) {
       mcp = getMcpClient(accountid, p5apikey);
       const tools = await mcp.getTools();          // all tools, so the module filter can't hide the save tool
       console.log("[WF save] save-like tools:", tools.map((t) => t.name).filter((n) => /save/i.test(n)));
-      const message = await saveWorkflow({ tools, wf: out.wf, history, pid, actiontype });
-      session.lastWorkflowJson = out.wf;
+          const message = await saveWorkflow({ tools, wf: out.wf, history, pid: out.pid, actiontype: out.actiontype });      session.lastWorkflowJson = out.wf;
       return { module: "workflow", message, toolmessage: undefined, workflowcompleted: true, actions: [] };
     } catch (err) {
       console.error("[WF save] failed:", err);
@@ -225,7 +235,7 @@ if (isagentworkflow && currentWf) {
 }
 const baseTs =
   intent.module === "workflow"
-    ? `\nBASE_TS = ${Date.now()}\nCURRENT_WORKFLOW_JSON: ${currentWf ? JSON.stringify(currentWf) : "none"}`
+    ? `\nBASE_TS = ${Date.now()}\nWORKFLOW_MODE: ${session.wfMode || "create"}\nCURRENT_WORKFLOW_JSON: ${currentWf ? JSON.stringify(currentWf) : "none"}`
     : "";
 
 const cleanedHistory =
@@ -654,11 +664,11 @@ ${currentMessage}`;
 
   if (intent.module === "workflow") {
   const wf = extractWorkflowJson(response_msg);
-  if (wf && validateWorkflow(wf)) {
+    if (wf && validateWorkflow(wf)) {
     session.lastWorkflowJson = wf;
     primePending(wf, session);
     session.activeModule = isagentworkflow ? "workflow" : null;
-    return { module: "workflow", message: response_msg.trim(), toolmessage: report_response, workflowcompleted: true, actions: [] };
+    return { module: "workflow", message: fixSaveQuestion(response_msg.trim(), wf, session), toolmessage: report_response, workflowcompleted: true, actions: [] };
   }
   if (wf || response_msg.includes('"flowchartConfig"')) {
     return { module: "workflow", message: "I couldn't build that workflow cleanly. Please say it once more in one sentence.", toolmessage: report_response, workflowcompleted: false, actions: [] };

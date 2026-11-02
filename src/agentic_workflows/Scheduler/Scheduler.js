@@ -1,747 +1,509 @@
 import "dotenv/config";
 import { getMcpClient } from "../../services/mcp.service.js";
-import { executeAutomationSchedulerAgent } from "../SchedulerAgent/SchedulerAgent.js";
-import { getllmModel } from "../../services/llm.service.js";
-import { filterToolsByModule } from "../../services/tool-filter.service.js";
-import { executeConditionalWorkflow } from "./conditionalWorkflow.js";
-import { extractJSON } from "../../utils/json.utils.js";
+import {
+  buildConditionInput,
+  buildToolInput,
+  buildWorkflow,
+  getWorkflowId,
+  nextStepIdsOf,
+  isWorkflowActive,
+  parseConditionReply,
+  parseScheduleTime,
+  parseToolReply,
+  parseWorkflowList,
+  validateStepArgs,
+} from "./workflowSteps.js";
+import { computeGate } from "./gates.js";
+import { getStepState, updateStepState } from "./stateStore.js";
 
-var defaultTask = null;
-var CurrentTaskId = 0;
+/*
+ * HOW A WORKFLOW RUNS (full write-up: WORKFLOW_SCHEDULER_ARCHITECTURE.md)
+ *
+ * Two schedulers, never running at the same time (shared lock):
+ *
+ *   CONDITION scheduler (every 1 min)   ReleaseDueAgentWorkFlowConditions (DB: waiting -> released / expired)
+ *                                       then trigger the next step(s) stored on each released condition,
+ *                                       in that condition's own workflow (TaskData) - nothing else.
+ *   WORKFLOW scheduler  (every 5 min)   the same release, then walk every step of every active workflow.
+ *
+ * Step kinds
+ *   channel      Getcampaignresponsesandsentcontacts -> contacts saved, message sent
+ *   addrules     Getcampaignresponsesandsentcontacts -> each contact saved as satisfy / notsatisfy
+ *   dateandtime  SaveAgentWorkFlowCondition -> ONE row in the condition table, no contacts.
+ *                The steps after it wait until the DB releases that row, then read their
+ *                contacts from the date step's own source (query or parent event).
+ *
+ * Step status (data/scheduler-state.json)
+ *   pending -> active -> done      channel / rule steps   (failed after N errors)
+ *   waiting -> done                date steps: done = released (or expired) by the DB
+ *
+ *   one-shot      a root step, or a step right after a STATIC-group date step: runs once
+ *   polling       everything else: runs every walk while its parent can still give contacts
+ *   activeUntil   the last moment a step can still give contacts to its children
+ */
 
-function parseTaskData(taskData) {
-  if (!taskData) return null;
-  if (typeof taskData === "object") return taskData;
-  if (typeof taskData !== "string") return taskData;
+/* ------------------------------------------------------------------ */
+/* Config (all overridable from .env)                                  */
+/* ------------------------------------------------------------------ */
+const CFG = {
+  accountId: Number(process.env.SCHEDULER_ACCOUNT_ID ?? 4),
+  intervalMinutes: Number(process.env.SCHEDULER_INTERVAL_MINUTES ?? 5),
+  conditionCheckMinutes: Number(process.env.SCHEDULER_CONDITION_CHECK_MINUTES ?? 1),
+  maxRetries: Number(process.env.SCHEDULER_MAX_RETRIES ?? 3),
+  childWindowMs: Number(process.env.SCHEDULER_CHILD_WINDOW_HOURS ?? 72) * 3_600_000,
+  gateGraceMs: Number(process.env.SCHEDULER_GATE_GRACE_MINUTES ?? 60) * 60_000,
+  repeatMs: Number(process.env.SCHEDULER_REPEAT_INTERVAL_MINUTES ?? 1440) * 60_000,
+  timezone: process.env.SCHEDULER_TIMEZONE || "Asia/Kolkata",
+};
 
-  try {
-    return JSON.parse(taskData);
-  } catch (firstErr) {
-    try {
-      const lines = taskData.split(/\r?\n/);
-      const fixedLines = lines.map((line) => {
-        const match = line.match(/^(\s*"[^"]+"\s*:\s*")([\s\S]*)("\s*,?\s*)$/);
-        if (match) {
-          const [, start, val, end] = match;
-          let cleanVal = val.replace(/"/g, "'");
-          const singleQuoteCount = (cleanVal.match(/'/g) || []).length;
-          if (singleQuoteCount % 2 !== 0) {
-            cleanVal = cleanVal + "'";
-          }
-          return start + cleanVal + end;
-        }
-        return line;
-      });
+const TOOL_WORKFLOWS = "GetAgentWorkFlowDetails";
+const TOOL_CONTACTS = "Getcampaignresponsesandsentcontacts";
+const TOOL_SAVE_CONDITION = "SaveAgentWorkFlowCondition";
+const TOOL_RELEASE_CONDITIONS = "ReleaseDueAgentWorkFlowConditions";
 
-      const reassembled = fixedLines.join("\n");
-      return JSON.parse(reassembled);
-    } catch (secondErr) {
-      return null;
-    }
+const log = (...a) => console.log("[scheduler]", ...a);
+const iso = (ms) => (ms ? new Date(ms).toISOString() : "-");
+
+const truthy = (v) => v === true || v === 1 || v === "1" || String(v).toLowerCase() === "true";
+const isRepeat = (step) => truthy(step.args.taskrepeatedvalues);
+const isDynamic = (step) => truthy(step.args.isdynamicgroup);
+const parentOf = (step, wf) =>
+  step.dependsOn.length ? wf.steps.find((s) => s.id === step.dependsOn.at(-1)) : null;
+
+/* ------------------------------------------------------------------ */
+/* Step readiness                                                      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Decide what to do with a step right now. Nothing is written here.
+ * @returns {{action:"run"|"wait"|"skip"|"expire"|"none", reason?:string, gate?:object}}
+ */
+export function evaluateStep(step, wf, now = Date.now()) {
+  const st = getStepState(wf.workflowId, step.id);
+  if (st?.status === "done" || st?.status === "failed") return { action: "none", reason: st.status };
+
+  if (step.kind === "unknown" || step.kind === "group")
+    return { action: "skip", reason: `step type "${step.kind}" is not supported by the scheduler yet` };
+
+  const v = validateStepArgs(step);
+  if (!v.ok) return { action: "skip", reason: `${step.args.channel} step is not configured: missing ${v.missing.join(", ")}` };
+
+  // a date step whose condition is stored: the DB releases it, not this code
+  if (step.kind === "dateandtime" && st?.status === "waiting") {
+    if (now < (st.dueAt ?? 0)) return { action: "wait", reason: `condition waiting until ${iso(st.dueAt)}` };
+    // past due but not released yet: re-save (idempotent) to read the DB status again
+    return { action: "run", gate: { dueAt: st.dueAt, expireAt: st.expireAt } };
   }
+
+  // ---- dependencies --------------------------------------------------------
+  for (const dep of step.dependsOn) {
+    const ds = getStepState(wf.workflowId, dep);
+    if (ds?.status === "failed") return { action: "skip", reason: `parent ${dep} failed` };
+    if (ds?.status === "waiting") return { action: "wait", reason: `${dep} condition waiting until ${iso(ds.dueAt)}` };
+    if (!ds?.completedAt) return { action: "wait", reason: `waiting for ${dep}` };
+  }
+  const parent = parentOf(step, wf);
+  if (parent) {
+    const ps = getStepState(wf.workflowId, parent.id);
+    if (parent.kind === "dateandtime") {
+      if (ps.expired) return { action: "expire", reason: `${parent.id} condition expired before it was released` };
+      if (ps.expireAt && now > ps.expireAt) return { action: "expire", reason: `${parent.id} condition window is over` };
+    }
+    if (ps.status === "done" && now > (ps.activeUntil ?? 0))
+      return { action: "expire", reason: `${parent.id} can no longer give contacts` };
+  }
+
+  // ---- own timing ----------------------------------------------------------
+  const due = parseScheduleTime(step.args.scheduletime);
+  if (due && now < due) return { action: "wait", reason: `scheduled for ${step.args.scheduletime}` };
+
+  if (!parent && isRepeat(step) && st?.lastRunAt && now - st.lastRunAt < CFG.repeatMs)
+    return { action: "wait", reason: "repeat interval not reached" };
+
+  // ---- date step: compute its release window now ---------------------------
+  if (step.kind === "dateandtime") {
+    const gate = computeGate(step.args, now, CFG.timezone);
+    if (gate.error) return { action: "skip", reason: gate.error };
+    return { action: "run", gate }; // gate.closed -> stored as expired
+  }
+
+  return { action: "run" };
 }
 
-function extractTaskObject(item) {
-  if (!item) return null;
-  let data = item;
+/* ------------------------------------------------------------------ */
+/* Date & time condition                                               */
+/* ------------------------------------------------------------------ */
 
-  // Handle strings (single or multi-encoded JSON)
-  for (let i = 0; i < 3 && typeof data === "string"; i++) {
-    const trimmed = data.trim();
-    if (!trimmed) return null;
-    try {
-      data = JSON.parse(trimmed);
-    } catch {
-      data = parseTaskData(trimmed);
-      break;
-    }
-  }
-
-  if (!data || typeof data !== "object") return null;
-
-  // Drill down if wrapped in standard response envelopes
-  if (data.TaskData) return extractTaskObject(data.TaskData);
-  if (data.task) return extractTaskObject(data.task);
-  if (data.Message) return extractTaskObject(data.Message);
-  if (Array.isArray(data.Table) && data.Table.length > 0)
-    return extractTaskObject(data.Table[0]);
-  if (
-    data.data &&
-    typeof data.data === "object" &&
-    (data.data.action || data.data.parameters)
-  ) {
-    return extractTaskObject(data.data);
-  }
-
-  return data;
+// After release: how long the steps after this date step may keep reading contacts.
+function gateActiveUntil(step, releasedAt, expireAt) {
+  if (isDynamic(step)) return expireAt ?? releasedAt + CFG.childWindowMs; // keep reading new contacts
+  return releasedAt + CFG.gateGraceMs; // static: the next step runs once, grace covers its retries
 }
 
-function parseWorkflowTasks(result) {
-  if (!result) return [];
-  try {
-    let parsed = result;
-    if (typeof parsed === "string") {
-      try {
-        parsed = JSON.parse(parsed);
-      } catch {
-        parsed = parseTaskData(parsed);
-      }
-    }
-    if (parsed && typeof parsed === "object") {
-      if (parsed.Message) {
-        const msg =
-          typeof parsed.Message === "string"
-            ? parseTaskData(parsed.Message)
-            : parsed.Message;
-        if (Array.isArray(msg)) return msg;
-        if (msg) return [msg];
-      }
-      if (Array.isArray(parsed.Table)) {
-        return parsed.Table;
-      }
-      if (Array.isArray(parsed)) return parsed;
-      return [parsed];
-    }
-  } catch (err) {
-    // Fail silently on invalid workflow tasks
+/** Mirror one DB condition row into the step state. Returns true when it was released. */
+function syncCondition(wf, step, row, now = Date.now()) {
+  const prev = getStepState(wf.workflowId, step.id) ?? {};
+  const common = { conditionId: row.id, dueAt: row.dueAt, expireAt: row.expireAt, failures: 0 };
+
+  if (row.status === 0) {
+    updateStepState(wf.workflowId, step.id, { ...common, status: "waiting", lastMessage: `waiting until ${iso(row.dueAt)}` });
+    return false;
   }
-  return [];
-}
-
-function parseAgentResult(agentResult) {
-  try {
-    const lastMessage = agentResult?.messages?.at(-1);
-    const content = lastMessage?.content ?? "no response from agent";
-    if (typeof content === "object" && content !== null) return content;
-    return extractJSON(content);
-  } catch (err) {
-    return null;
+  if (row.status === 1) {
+    const releasedAt = row.releasedAt ?? now;
+    updateStepState(wf.workflowId, step.id, {
+      ...common,
+      status: "done",
+      completedAt: prev.completedAt ?? releasedAt,
+      releasedAt,
+      activeUntil: gateActiveUntil(step, releasedAt, row.expireAt),
+      lastMessage: `released at ${iso(releasedAt)}`,
+    });
+    log(`wf ${wf.workflowId} ${step.id} condition RELEASED`);
+    return true;
   }
-}
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-function isWaitDelayStep(step) {
-  const type = step?.action?.type || step?.type;
-  return type === "wait_delay" || type === "delay" || type === "wait";
-}
-
-function extractDirectDelayMs(step) {
-  const params =
-    step?.action?.parameters?.args ||
-    step?.action?.parameters ||
-    step?.parameters?.args ||
-    step?.parameters ||
-    {};
-  if (params.delayMs != null) return Number(params.delayMs);
-  if (params.delaySeconds != null || params.delay_seconds != null)
-    return Number(params.delaySeconds ?? params.delay_seconds) * 1000;
-  if (params.delayMinutes != null || params.delay_minutes != null)
-    return Number(params.delayMinutes ?? params.delay_minutes) * 60 * 1000;
-  if (params.delayHours != null || params.delay_hours != null)
-    return Number(params.delayHours ?? params.delay_hours) * 3600 * 1000;
-  if (params.delay != null) {
-    if (typeof params.delay === "number") return params.delay * 60 * 1000;
-    const match = String(params.delay)
-      .trim()
-      .toLowerCase()
-      .match(
-        /^(\d+(?:\.\d+)?)\s*(s|sec|second|seconds|m|min|minute|minutes|h|hr|hour|hours|d|day|days)?$/,
-      );
-    if (match) {
-      const num = parseFloat(match[1]);
-      const unit = match[2] || "m";
-      if (unit.startsWith("s")) return num * 1000;
-      if (unit.startsWith("m")) return num * 60 * 1000;
-      if (unit.startsWith("h")) return num * 3600 * 1000;
-      if (unit.startsWith("d")) return num * 86400 * 1000;
-    }
-  }
-  if (step.delay != null) {
-    if (typeof step.delay === "number") return step.delay * 60 * 1000;
-    const match = String(step.delay)
-      .trim()
-      .toLowerCase()
-      .match(
-        /^(\d+(?:\.\d+)?)\s*(s|sec|second|seconds|m|min|minute|minutes|h|hr|hour|hours|d|day|days)?$/,
-      );
-    if (match) {
-      const num = parseFloat(match[1]);
-      const unit = match[2] || "m";
-      if (unit.startsWith("s")) return num * 1000;
-      if (unit.startsWith("m")) return num * 60 * 1000;
-      if (unit.startsWith("h")) return num * 3600 * 1000;
-      if (unit.startsWith("d")) return num * 86400 * 1000;
-    }
-  }
-  return 0;
-}
-
-function resolveTemplateString(str, context) {
-  if (typeof str !== "string") return str;
-  return str.replace(/\{\{([\w.]+)\}\}/g, (match, path) => {
-    // 1. Check direct context path
-    if (context[path] !== undefined && context[path] !== null) {
-      return typeof context[path] === "object"
-        ? JSON.stringify(context[path])
-        : String(context[path]);
-    }
-
-    // 2. Check nested context path
-    const parts = path.split(".");
-    let curr = context;
-    for (const part of parts) {
-      if (curr && typeof curr === "object" && part in curr) {
-        curr = curr[part];
-      } else {
-        curr = undefined;
-        break;
-      }
-    }
-    if (curr !== undefined && curr !== null) {
-      return typeof curr === "object" ? JSON.stringify(curr) : String(curr);
-    }
-
-    // 3. Fallback for result properties (e.g. {{result.openedContacts}} or {{result.total}})
-    if (parts[0] === "result" && parts.length > 1) {
-      const prop = parts.slice(1).join(".");
-      const rawRes =
-        context.lastRawToolResult || context.lastResult || context.details;
-      if (rawRes && typeof rawRes === "object") {
-        if (
-          Array.isArray(rawRes) &&
-          rawRes.length > 0 &&
-          rawRes[0][prop] !== undefined
-        ) {
-          return typeof rawRes[0][prop] === "object"
-            ? JSON.stringify(rawRes[0][prop])
-            : String(rawRes[0][prop]);
-        }
-        if (rawRes[prop] !== undefined) {
-          return typeof rawRes[prop] === "object"
-            ? JSON.stringify(rawRes[prop])
-            : String(rawRes[prop]);
-        }
-      }
-    }
-
-    return match;
+  updateStepState(wf.workflowId, step.id, {
+    ...common,
+    status: "done",
+    expired: true,
+    completedAt: prev.completedAt ?? now,
+    activeUntil: now,
+    lastMessage: "condition expired (window over)",
   });
+  log(`wf ${wf.workflowId} ${step.id} condition EXPIRED`);
+  return false;
 }
 
-function resolvePlaceholders(val, context) {
-  if (val == null) return val;
-  if (typeof val === "string") return resolveTemplateString(val, context);
-  if (Array.isArray(val))
-    return val.map((item) => resolvePlaceholders(item, context));
-  if (typeof val === "object") {
-    const res = {};
-    for (const [k, v] of Object.entries(val)) {
-      res[k] = resolvePlaceholders(v, context);
-    }
-    return res;
-  }
-  return val;
-}
-
-function buildStepTask(step, context, currentTask) {
-  const conditions = currentTask.action?.parameters?.conditions ?? [];
-  const stepCondition = conditions.find(
-    (c) => c.id === step.condition_id || c.id === step.id,
-  );
-  const resolvedParameters = resolvePlaceholders(
-    step.action?.parameters || {},
-    context,
-  );
-
-  return {
-    ...currentTask,
-    action: {
-      type: step.action?.type,
-      parameters: {
-        ...resolvedParameters,
-        ...(stepCondition ? { condition: stepCondition } : {}),
-        workflow_context: {
-          lastSummary: context.lastSummary,
-          lastRawToolResult: context.lastRawToolResult,
-          lastExecutedTasks: context.lastExecutedTasks,
-        },
-      },
-    },
-  };
-}
-
-function extractTimingContext(context) {
-  const timingContext = {};
-  if (!context || typeof context !== "object") return timingContext;
-
-  for (const [k, v] of Object.entries(context)) {
-    if (
-      k === "workflowStartedAt" ||
-      k === "startTime" ||
-      k.endsWith("_completedAt") ||
-      k.endsWith(".completedAt") ||
-      k.endsWith("_delayMs") ||
-      k.endsWith(".delayMs") ||
-      k.endsWith("_status") ||
-      k.endsWith(".status") ||
-      k.endsWith("_success") ||
-      k.endsWith(".success") ||
-      k.endsWith("_scheduledTime") ||
-      k.endsWith(".scheduledTime")
-    ) {
-      timingContext[k] = v;
-    }
-  }
-  return timingContext;
-}
-
-const taskExecutionStateStore = new Map();
-
-function restoreTaskState(taskKey, taskItem, currentTask, context, state) {
-  let savedState = taskExecutionStateStore.get(taskKey);
-
-  const possiblePayloads = [
-    taskItem?.ExecutionData,
-    taskItem?.execution_data,
-    taskItem?.ExecutionDetails,
-    taskItem?.savedWorkflowState,
-    taskItem?.context,
-    currentTask?.savedWorkflowState,
-    currentTask?.context,
-    currentTask?.ExecutionData,
-  ];
-
-  for (const payload of possiblePayloads) {
-    if (!payload) continue;
-    try {
-      const parsed =
-        typeof payload === "string" ? JSON.parse(payload) : payload;
-      if (parsed?.savedWorkflowState) {
-        savedState = parsed.savedWorkflowState;
-        break;
-      } else if (Array.isArray(parsed?.executedStepIds)) {
-        savedState = parsed;
-        break;
-      }
-    } catch (e) {
-      // Ignore parse error
-    }
-  }
-
-  if (savedState) {
-    if (Array.isArray(savedState.executedStepIds)) {
-      state.executedStepIds = [
-        ...new Set([...state.executedStepIds, ...savedState.executedStepIds]),
-      ];
-    }
-    if (savedState.context && typeof savedState.context === "object") {
-      Object.assign(context, savedState.context);
-    }
-    if (savedState.timing && typeof savedState.timing === "object") {
-      if (savedState.timing.workflowStartedAt)
-        context.workflowStartedAt = savedState.timing.workflowStartedAt;
-      if (savedState.timing.startTime)
-        context.startTime = savedState.timing.startTime;
-      if (Array.isArray(savedState.timing.stepTimings)) {
-        for (const st of savedState.timing.stepTimings) {
-          if (st.stepId && st.completedAt) {
-            context[`${st.stepId}.completedAt`] = st.completedAt;
-            context[`${st.stepId}_completedAt`] = st.completedAt;
-          }
-          if (st.stepId && st.status) {
-            context[`${st.stepId}.status`] = st.status;
-            context[`${st.stepId}_status`] = st.status;
-          }
-        }
-      }
-    }
-  }
-}
-
-function persistTaskState(taskKey, context, state) {
-  taskExecutionStateStore.set(taskKey, {
-    executedStepIds: [...state.executedStepIds],
-    timing: {
-      workflowStartedAt: context.workflowStartedAt,
-      startTime: context.startTime,
-      stepTimings: state.executedStepIds.map((id) => ({
-        stepId: id,
-        completedAt:
-          context[`${id}.completedAt`] || context[`${id}_completedAt`],
-        delayMs: context[`${id}.delayMs`] || context[`${id}_delayMs`] || 0,
-        status:
-          context[`${id}.status`] || context[`${id}_status`] || "completed",
-      })),
-    },
-    context: extractTimingContext(context),
+async function executeCondition(step, wf, tools, gate) {
+  const tool = tools.save;
+  if (!tool) return { ok: false, message: `${TOOL_SAVE_CONDITION} tool missing` };
+  const input = buildConditionInput(step, wf, gate);
+  log(`wf ${wf.workflowId} ${step.id} "${step.name}" -> ${TOOL_SAVE_CONDITION}`, {
+    dueat: input.dueatutc, expireat: input.expireatutc || "-", status: input.status, condition: input.conditionArgs,
   });
+
+  let reply;
+  try {
+    reply = parseConditionReply(await tool.invoke(input));
+  } catch (err) {
+    reply = { ok: false, message: err?.message ?? String(err), rows: [] };
+  }
+  if (!reply.ok || !reply.rows[0]) return recordFailure(step, wf, reply.message || "no condition row returned");
+
+  syncCondition(wf, step, reply.rows[0]);
+  return { ok: true, message: reply.message, total: 0, saved: 0 };
 }
 
-function normalizeExecutedTasks(executedTasks, stepActionType) {
-  return executedTasks.map((task, index) => {
-    if (typeof task === "string") {
-      return {
-        taskId: `task-${index + 1}`,
-        taskType: stepActionType,
-        taskName: task,
-        result: "Success",
-      };
-    }
-    return {
-      taskId: task.taskId ?? task.id ?? `task-${index + 1}`,
-      taskType: task.taskType ?? stepActionType,
-      taskName: task.taskName ?? task.name ?? "Unnamed Task",
-      result: task.result ?? "Success",
-    };
+/* ------------------------------------------------------------------ */
+/* Channel / rule step                                                 */
+/* ------------------------------------------------------------------ */
+
+// runs once: a root step (not repeating), or a step right after a STATIC-group date step
+function finishesAfterRun(step, wf) {
+  const parent = parentOf(step, wf);
+  if (!parent) return !isRepeat(step);
+  return parent.kind === "dateandtime" && !isDynamic(parent);
+}
+
+function nextActiveUntil(step, now) {
+  if (step.kind === "addrules") return now + CFG.gateGraceMs; // outcome is immediate
+  return now + CFG.childWindowMs; // channel: opens / clicks still to come
+}
+
+function recordFailure(step, wf, message) {
+  const prev = getStepState(wf.workflowId, step.id) ?? {};
+  const failures = (prev.failures ?? 0) + 1;
+  updateStepState(wf.workflowId, step.id, {
+    runs: (prev.runs ?? 0) + 1,
+    lastRunAt: Date.now(),
+    lastMessage: message,
+    failures,
+    status: failures >= CFG.maxRetries ? "failed" : prev.status ?? "pending",
   });
+  log(`wf ${wf.workflowId} ${step.id} FAILED (${failures}/${CFG.maxRetries}): ${message}`);
+  return { ok: false, message };
 }
 
-function updateContext(
-  context,
-  stepId,
-  finalResult,
-  stepActionType,
-  step = null,
-) {
-  context.lastSummary = finalResult?.summary;
-  context.lastRawToolResult =
-    finalResult?.rawToolResult ?? finalResult?.details ?? null;
-  context.lastExecutedTasks = normalizeExecutedTasks(
-    finalResult?.executedTasks ?? [],
-    stepActionType,
-  );
+async function executeStep(step, wf, tools) {
+  const input = buildToolInput(step, wf);
+  log(`wf ${wf.workflowId} ${step.id} "${step.name}" -> ${TOOL_CONTACTS}`, {
+    channel: input.channel,
+    stepid: input.stepid,
+    source: input.getreposechannel ? `${input.agenttaskid} ${input.getreposechannel}:${input.eventName}` : input.getquery ? `query "${input.getquery}"` : "-",
+    extraArgs: input.extraArgs,
+  });
 
-  const rawStatus = finalResult?.status
-    ? String(finalResult.status).toLowerCase()
-    : "completed";
-  const isSuccess =
-    rawStatus === "success" ||
-    rawStatus === "completed" ||
-    finalResult?.status === true ||
-    finalResult?.status === undefined;
-  const statusStr = isSuccess ? "completed" : rawStatus;
-
-  context[`${stepId}_success`] = isSuccess;
-  context[`${stepId}.success`] = isSuccess;
-  context[`${stepId}_status`] = statusStr;
-  context[`${stepId}.status`] = statusStr;
-
-  const nowMs = Date.now();
-  context[`${stepId}_completedAt`] = nowMs;
-  context[`${stepId}.completedAt`] = nowMs;
-
-  // Store step input arguments (e.g. step1.CampaignName)
-  const stepArgs =
-    step?.action?.parameters?.args ?? step?.action?.parameters ?? {};
-  for (const [k, v] of Object.entries(stepArgs)) {
-    context[`${stepId}.${k}`] = v;
-    context[`${stepId}_${k}`] = v;
-    if (context[k] === undefined) {
-      context[k] = v;
-    }
+  let reply;
+  try {
+    reply = parseToolReply(await tools.contacts.invoke(input));
+  } catch (err) {
+    reply = { ok: false, message: err?.message ?? String(err) };
   }
+  if (!reply.ok) return { ...recordFailure(step, wf, reply.message), needsAccount: reply.needsAccount };
 
-  // Extract details / rawToolResult from result into context
-  const details =
-    finalResult?.details ||
-    (Array.isArray(finalResult?.rawToolResult)
-      ? finalResult?.rawToolResult[0]
-      : finalResult?.rawToolResult);
-  if (details && typeof details === "object") {
-    for (const [k, v] of Object.entries(details)) {
-      context[`${stepId}.${k}`] = v;
-      context[`${stepId}_${k}`] = v;
-      if (context[k] === undefined) {
-        context[k] = v;
-      }
-    }
-    // Aliases
-    if (details.Name) {
-      context[`${stepId}.CampaignName`] = details.Name;
-      context[`${stepId}_CampaignName`] = details.Name;
-      if (context.CampaignName === undefined)
-        context.CampaignName = details.Name;
-    }
-    if (details.CampaignName) {
-      context[`${stepId}.Name`] = details.CampaignName;
-      context[`${stepId}_Name`] = details.CampaignName;
-    }
-    if (details.GroupName) {
-      context[`${stepId}.GroupName`] = details.GroupName;
-      context[`${stepId}_GroupName`] = details.GroupName;
-    }
-    if (details.ScheduledStatus !== undefined) {
-      context[`${stepId}.ScheduledStatus`] = details.ScheduledStatus;
-      context[`${stepId}_ScheduledStatus`] = details.ScheduledStatus;
-    }
-  }
-
-  // Handle explicit outputs mapping if defined on step (e.g. {{result.openedContacts}})
-  if (step?.outputs && typeof step.outputs === "object") {
-    for (const [outKey, outVal] of Object.entries(step.outputs)) {
-      const resolvedVal = resolveTemplateString(outVal, context);
-      context[`${stepId}.${outKey}`] = resolvedVal;
-      context[`${stepId}_${outKey}`] = resolvedVal;
-      context[outKey] = resolvedVal;
-    }
-  }
-
-  context[stepId] = {
-    status: statusStr,
-    success: isSuccess,
-    completedAt: nowMs,
-    result: finalResult,
-    ...(typeof details === "object" ? details : {}),
-    ...stepArgs,
-  };
-
-  const resultData = finalResult?.rawToolResult ?? finalResult?.details;
-  context[`${stepId}_hasData`] = Array.isArray(resultData)
-    ? resultData.length > 0
-    : resultData != null && Object.keys(resultData).length > 0;
-
-  if (
-    resultData &&
-    typeof resultData === "object" &&
-    !Array.isArray(resultData)
-  ) {
-    Object.assign(context, resultData);
-  }
-  if (finalResult && typeof finalResult === "object") {
-    for (const [key, val] of Object.entries(finalResult)) {
-      if (key !== "executedTasks" && key !== "summary" && val !== undefined) {
-        context[key] = val;
-      }
-    }
-  }
+  const prev = getStepState(wf.workflowId, step.id) ?? {};
+  const now = Date.now();
+  updateStepState(wf.workflowId, step.id, {
+    runs: (prev.runs ?? 0) + 1,
+    lastRunAt: now,
+    lastMessage: reply.message,
+    failures: 0,
+    completedAt: prev.completedAt ?? now,
+    activeUntil: nextActiveUntil(step, now),
+    total: reply.total,
+    saved: (prev.saved ?? 0) + reply.saved,
+    status: finishesAfterRun(step, wf) ? "done" : "active",
+  });
+  log(`wf ${wf.workflowId} ${step.id} OK total=${reply.total} saved=${reply.saved} skipped=${reply.skipped}`);
+  return reply;
 }
 
-export async function runDirect() {
-  const accountId = 4;
-  const model = "gpt-4o-mini";
-  const apikey = process.env.MCP_API_KEY ?? "";
-  const llmApiKey = process.env.OPENAI_API_KEY ?? "";
+/* ------------------------------------------------------------------ */
+/* One workflow                                                        */
+/* ------------------------------------------------------------------ */
 
-  const mcpClient = getMcpClient(accountId, apikey);
-  const llmModel = getllmModel(model, llmApiKey);
-  let allTools = [];
-  try {
-    allTools = await mcpClient.getTools();
-  } catch (err) {
-    // Optional tool fetch fallback
+function descendantsOf(wf, ids) {
+  const out = new Set();
+  let frontier = [...ids];
+  while (frontier.length) {
+    const next = [];
+    for (const s of wf.steps)
+      if (!out.has(s.id) && s.dependsOn.some((d) => frontier.includes(d))) { out.add(s.id); next.push(s.id); }
+    frontier = next;
   }
+  return out;
+}
 
-  let taskList = [];
+/**
+ * Walk the steps of one workflow.
+ * @param only  optional Set of step ids: run just these (the minute check passes the
+ *              steps under a just-released condition, so nothing else is repeated)
+ */
+async function runWorkflow(wf, tools, only = null) {
+  const summary = { workflowId: wf.workflowId, name: wf.name, executed: [], waiting: [], skipped: [] };
+  if (!wf.workflowId) return { ...summary, error: "workflow row has no Id" };
+  if (wf.steps.length === 0) return { ...summary, error: "TaskData has no steps" };
 
-  try {
-    const workflowTool = allTools.find(
-      (t) => t.name === "GetAgentWorkFlowDetails",
-    );
-    if (workflowTool) {
-      const result = await workflowTool.invoke({
-        Id: 0,
-      });
-      taskList = parseWorkflowTasks(result);
-    }
-  } catch (err) {
-    // Ignore workflow tool fetch error
-  }
+  const handled = new Set();
+  let progressed = true;
+  let failed = false;
 
-  if (!taskList || taskList.length === 0) {
-    return { status: "no_task" };
-  }
+  // a child may become ready right after its parent in the same walk
+  while (progressed && !failed) {
+    progressed = false;
+    summary.waiting.length = 0;
+    summary.skipped.length = 0;
 
-  const results = [];
+    for (const step of wf.steps) {
+      if (handled.has(step.id) || (only && !only.has(step.id))) continue;
+      const now = Date.now();
+      const d = evaluateStep(step, wf, now);
 
-  for (const taskItem of taskList) {
-    const taskId = taskItem?.Id ?? taskItem?.task_id ?? taskItem?.id ?? 0;
-    const currentTask = extractTaskObject(taskItem);
-    console.log(currentTask);
-    if (!currentTask) {
-      continue;
-    }
-
-    if (!currentTask.action) {
-      if (
-        currentTask.type ||
-        currentTask.parameters ||
-        currentTask.conditions ||
-        currentTask.steps
-      ) {
-        currentTask.action = {
-          type: currentTask.type || "workflow",
-          parameters: currentTask.parameters || {
-            conditions: currentTask.conditions || currentTask.steps || [],
-          },
-        };
-      } else {
+      if (d.action === "expire") {
+        const prev = getStepState(wf.workflowId, step.id) ?? {};
+        updateStepState(wf.workflowId, step.id, {
+          status: "done",
+          completedAt: prev.completedAt ?? now,
+          activeUntil: prev.activeUntil ?? now,
+          lastMessage: d.reason,
+        });
+        log(`wf ${wf.workflowId} ${step.id} done: ${d.reason}`);
+        handled.add(step.id);
+        progressed = true;
         continue;
       }
+      if (d.action === "none") continue;
+      if (d.action === "skip") { summary.skipped.push({ step: step.id, reason: d.reason }); continue; }
+      if (d.action === "wait") { summary.waiting.push({ step: step.id, reason: d.reason }); continue; }
+
+      handled.add(step.id);
+      progressed = true;
+      const r = step.kind === "dateandtime"
+        ? await executeCondition(step, wf, tools, d.gate)
+        : await executeStep(step, wf, tools);
+      summary.executed.push({ step: step.id, ok: r.ok, total: r.total, saved: r.saved, message: r.message });
+
+      if (r.needsAccount) return { ...summary, error: "account selection required (check MCP headers)" };
+      if (!r.ok) { failed = true; break; } // retried next walk
     }
-
-    const taskKey = taskId
-      ? `task_${taskId}`
-      : currentTask.name
-        ? `task_${currentTask.name}`
-        : "task_default";
-    const state = { executedStepIds: [] };
-    const nowMs = Date.now();
-    const context = {
-      now: new Date(nowMs),
-      workflowStartedAt: nowMs,
-      startTime: nowMs,
-    };
-
-    restoreTaskState(taskKey, taskItem, currentTask, context, state);
-
-    let workflowRunStatus = "completed";
-    let pendingReason = null;
-
-    try {
-      while (true) {
-        const result = executeConditionalWorkflow(currentTask, context, state);
-
-        console.log(result);
-        if (result.status === "completed") {
-          workflowRunStatus = "completed";
-          break;
-        }
-
-        if (result.status === "pending") {
-          workflowRunStatus = "pending";
-          pendingReason = result.reason;
-          break;
-        }
-
-        const { nextStep } = result;
-
-        let finalResult = null;
-        let agentResult = null;
-
-        if (isWaitDelayStep(nextStep)) {
-          const delayMs = extractDirectDelayMs(nextStep);
-          // If delay is <= 2 minutes (120000ms), wait in-process
-          if (delayMs > 0 && delayMs <= 120000) {
-            await sleep(delayMs);
-          }
-          finalResult = {
-            status: "success",
-            summary: `Wait delay completed (${delayMs > 0 ? `${delayMs / 1000}s` : "instant"})`,
-            executedTasks: [
-              {
-                taskId: `task-${state.executedStepIds.length + 1}`,
-                taskType: "wait_delay",
-                taskName: nextStep.name || "Wait Delay",
-                result: "Success",
-              },
-            ],
-            delayMs,
-          };
-        } else {
-          const stepTask = buildStepTask(nextStep, context, currentTask);
-          const stepModule =
-            nextStep?.action?.parameters?.module ||
-            nextStep?.action?.module ||
-            currentTask?.action?.parameters?.module ||
-            currentTask?.action?.module ||
-            "mailcampaign";
-
-          const stepFilteredTools = filterToolsByModule(allTools, stepModule);
-
-          agentResult = await executeAutomationSchedulerAgent({
-            filteredTools: stepFilteredTools,
-            llmModel,
-            accountId,
-            taskJson: stepTask,
-            module: stepModule,
-          });
-          finalResult = parseAgentResult(agentResult);
-        }
-
-        state.executedStepIds.push(nextStep.id);
-        updateContext(
-          context,
-          nextStep.id,
-          finalResult,
-          nextStep.action?.type || "action",
-          nextStep,
-        );
-        persistTaskState(taskKey, context, state);
-
-        const saveTool = allTools.find(
-          (t) => t.name === "SaveAgentWorkFlowDetails",
-        );
-
-        if (saveTool && taskId) {
-          try {
-            await saveTool.invoke({
-              GenerativeAIAgentsId: taskId,
-              ExecutionData: JSON.stringify({
-                savedWorkflowState: {
-                  executedStepIds: state.executedStepIds,
-                  timing: {
-                    workflowStartedAt: context.workflowStartedAt,
-                    startTime: context.startTime,
-                    stepTimings: state.executedStepIds.map((id) => ({
-                      stepId: id,
-                      completedAt:
-                        context[`${id}.completedAt`] ||
-                        context[`${id}_completedAt`],
-                      delayMs:
-                        context[`${id}.delayMs`] ||
-                        context[`${id}_delayMs`] ||
-                        0,
-                      status:
-                        context[`${id}.status`] ||
-                        context[`${id}_status`] ||
-                        "completed",
-                    })),
-                  },
-                  context: extractTimingContext(context),
-                },
-              }),
-              status: true,
-            });
-          } catch (saveErr) {
-            // Ignore optional tool save failure
-          }
-        }
-
-        if (
-          !finalResult ||
-          (finalResult.status &&
-            finalResult.status.toLowerCase() !== "success" &&
-            finalResult.status.toLowerCase() !== "error")
-        ) {
-          break;
-        }
-
-        if (
-          finalResult?.nextStep &&
-          finalResult.nextStep.shouldTriggerNext === false
-        ) {
-          break;
-        }
-      }
-    } catch (err) {
-      // Error in task execution
-    }
-
-    results.push({
-      taskId,
-      status: workflowRunStatus,
-      ...(pendingReason ? { pendingReason } : {}),
-      executedStepIds: state.executedStepIds,
-      context,
-    });
   }
 
+  for (const w of summary.waiting) log(`wf ${wf.workflowId} ${w.step} waiting: ${w.reason}`);
+  for (const s of summary.skipped) log(`wf ${wf.workflowId} ${s.step} skipped: ${s.reason}`);
+  return summary;
+}
+
+/* ------------------------------------------------------------------ */
+/* MCP plumbing                                                        */
+/* ------------------------------------------------------------------ */
+
+const clients = new Map();
+async function getTools(accountId) {
+  let client = clients.get(accountId);
+  if (!client) {
+    client = getMcpClient(accountId, process.env.MCP_API_KEY ?? "");
+    clients.set(accountId, client);
+  }
+  const all = await client.getTools();
+  const find = (name) => all.find((t) => t.name.toLowerCase() === name.toLowerCase());
   return {
-    status: "completed",
-    processedTaskCount: taskList.length,
-    results,
+    workflows: find(TOOL_WORKFLOWS),
+    contacts: find(TOOL_CONTACTS),
+    save: find(TOOL_SAVE_CONDITION),
+    release: find(TOOL_RELEASE_CONDITIONS),
   };
 }
 
-await runDirect();
+async function loadWorkflows(tools) {
+  const rows = parseWorkflowList(await tools.workflows.invoke({ Id: 0 }));
+  return rows.filter((r) => getWorkflowId(r) && isWorkflowActive(r)).map(buildWorkflow);
+}
+
+/**
+ * DB: every waiting condition whose time has come -> released (or expired).
+ * @returns Map workflowId -> Set of step ids to trigger now (the next steps stored on each
+ *          released condition; for a row saved before nextstepids existed, read from TaskData)
+ */
+async function releaseDueConditions(tools, workflows) {
+  const trigger = new Map();
+  if (!tools.release) return trigger;
+  let reply;
+  try {
+    reply = parseConditionReply(await tools.release.invoke({}));
+  } catch (err) {
+    log(`${TOOL_RELEASE_CONDITIONS} failed:`, err.message);
+    return trigger;
+  }
+  if (!reply.ok) { log(`${TOOL_RELEASE_CONDITIONS} failed: ${reply.message}`); return trigger; }
+
+  for (const row of reply.rows) {
+    const wf = workflows.find((w) => w.workflowId === row.workflowId);
+    const step = wf?.steps.find((s) => s.id === row.stepId);
+    if (!step) {
+      log(`condition ${row.workflowId}/${row.stepId} released but the workflow is off or the step was removed`);
+      continue;
+    }
+    if (!syncCondition(wf, step, row)) continue; // expired: nothing to trigger
+
+    const next = (row.nextStepIds.length ? row.nextStepIds : nextStepIdsOf(step, wf))
+      .filter((id) => wf.steps.some((s) => s.id === id));
+    log(`wf ${wf.workflowId} ${step.id} -> trigger next: ${next.join(", ") || "(none)"}`);
+    if (!trigger.has(wf.workflowId)) trigger.set(wf.workflowId, new Set());
+    for (const id of next) trigger.get(wf.workflowId).add(id);
+  }
+  return trigger;
+}
+
+/* ------------------------------------------------------------------ */
+/* Public: one run                                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * @param full  true = walk every step of every workflow (the 5-minute run)
+ *              false = only release conditions and run the steps right after them
+ */
+export async function runDirect({ full = true } = {}) {
+  const startedAt = Date.now();
+  let tools;
+  try {
+    tools = await getTools(CFG.accountId);
+  } catch (err) {
+    log("MCP not reachable:", err.message);
+    clients.delete(CFG.accountId); // rebuild the connection next time
+    return { status: "mcp_unavailable", error: err.message };
+  }
+  if (!tools.workflows || !tools.contacts) {
+    log(`MCP tools missing: ${!tools.workflows ? TOOL_WORKFLOWS : ""} ${!tools.contacts ? TOOL_CONTACTS : ""}`);
+    return { status: "error", error: "MCP tools missing" };
+  }
+  if (!tools.save || !tools.release)
+    log(`warning: ${TOOL_SAVE_CONDITION} / ${TOOL_RELEASE_CONDITIONS} not found - date & time steps cannot run`);
+
+  let workflows;
+  try {
+    workflows = await loadWorkflows(tools);
+  } catch (err) {
+    log("could not load workflows:", err.message);
+    return { status: "error", error: err.message };
+  }
+
+  const triggered = await releaseDueConditions(tools, workflows);
+  if (!full && triggered.size === 0) return { status: "nothing_released" };
+
+  const results = [];
+  // sequential on purpose: workflows are triggered one by one
+  for (const wf of workflows) {
+    let only = null; // full run: every step
+    if (!full) {
+      const next = triggered.get(wf.workflowId);
+      if (!next) continue; // condition check: nothing released in this workflow
+      only = new Set([...next, ...descendantsOf(wf, next)]); // the next steps (+ what they unlock this run)
+    }
+    try {
+      results.push(await runWorkflow(wf, tools, only));
+    } catch (err) {
+      // one broken workflow must never stop the others
+      log(`workflow ${wf.workflowId} crashed:`, err);
+      results.push({ workflowId: wf.workflowId, error: err.message });
+    }
+  }
+
+  if (full || results.length) log(`${full ? "full run" : "condition check"} done in ${Date.now() - startedAt}ms, workflows=${results.length}`);
+  return { status: "completed", full, triggered: [...triggered].map(([w, s]) => ({ workflowId: w, steps: [...s] })), processedTaskCount: results.length, results };
+}
+
+/* ------------------------------------------------------------------ */
+/* Public: the two schedulers                                          */
+/* ------------------------------------------------------------------ */
+
+// Both schedulers share this lock: a run waits for the other to finish, so two runs
+// never work on the same workflow at the same time.
+let lock = Promise.resolve();
+function exclusive(fn) {
+  const run = lock.then(fn, fn);
+  lock = run.catch(() => {});
+  return run;
+}
+
+function makeScheduler(name, minutes, full) {
+  let timer = null;
+  let stopped = true;
+  let busy = false;
+  const tick = async () => {
+    if (busy) return; // its previous run is still waiting / running
+    busy = true;
+    try {
+      await exclusive(() => runDirect({ full }));
+    } catch (err) {
+      log(`${name} run crashed:`, err);
+    } finally {
+      busy = false;
+      if (!stopped) timer = setTimeout(tick, minutes * 60_000);
+    }
+  };
+  return {
+    start() { if (!stopped) return; stopped = false; log(`${name} scheduler started, every ${minutes} min`); tick(); },
+    stop() { stopped = true; if (timer) clearTimeout(timer); timer = null; },
+  };
+}
+
+const conditionScheduler = makeScheduler("condition", CFG.conditionCheckMinutes, false);
+const workflowScheduler = makeScheduler("workflow", CFG.intervalMinutes, true);
+
+const disabled = () => String(process.env.SCHEDULER_ENABLED ?? "true").toLowerCase() === "false";
+
+/** Every SCHEDULER_CONDITION_CHECK_MINUTES (1): release due date & time conditions, trigger their next steps. */
+export function startConditionScheduler() {
+  if (disabled()) return log("disabled (SCHEDULER_ENABLED=false)");
+  conditionScheduler.start();
+}
+
+/** Every SCHEDULER_INTERVAL_MINUTES (5): walk every step of every active workflow. */
+export function startWorkflowScheduler() {
+  if (disabled()) return log("disabled (SCHEDULER_ENABLED=false)");
+  log(`time zone ${CFG.timezone}`);
+  workflowScheduler.start();
+}
+
+export function stopWorkflowScheduler() { workflowScheduler.stop(); }
+export function stopConditionScheduler() { conditionScheduler.stop(); }

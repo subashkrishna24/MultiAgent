@@ -5,6 +5,11 @@
 // SESSION FIELDS (set by the controller):
 //   session.wfMode = "create" | "edit" | "reuse"   (default "create")
 //   session.wfPid  = id of the workflow opened with "Edit" (only used in edit mode)
+//
+// SAVE AS DRAFT:
+//   - incomplete workflow  -> saved as a draft, status = false
+//   - user says "save as draft" (even when complete) -> saved as a draft, status = false
+//   - complete workflow and user says "yes"/"save"/"update" -> status = true
 
 const EVENTS = {
   mail: [["Deliver", "delivered"], ["Open", "opened"], ["Not Open", "notopened"], ["Click", "clicked"], ["Not Click", "notclicked"], ["Bounce", "bounced"]],
@@ -14,8 +19,13 @@ const EVENTS = {
   webpush: [["Push", "pushed"], ["View", "viewed"], ["Click", "clicked"], ["Not Click", "notclicked"], ["Dismiss", "dismissed"], ["Bounce", "bounced"]],
 };
 const NAME = { mail: "Mail", sms: "SMS", whatsapp: "WhatsApp", rcs: "RCS", webpush: "Web Push" };
-const GROUPS = { movetogroup: "Move to Group", addtogroup: "Add to Group", removefromgroup: "Remove from Group" };
-
+const GROUPS = { addtogroup: "Add to Group" };
+// every other group wording means the same thing
+const TYPE_ALIAS = {
+  movetogroup: "addtogroup", removefromgroup: "addtogroup",
+  addgroup: "addtogroup", movegroup: "addtogroup", removegroup: "addtogroup",
+  addtogroups: "addtogroup", movetogroups: "addtogroup",
+};
 // Date and Time has ONE outlet (Satisfy = Bottom3)
 const SATISFY = { idx: 2, label: "Satisfy", key: "satisfy" };
 
@@ -26,30 +36,169 @@ const nm = (t) => NAME[t] || GROUPS[t] || (isControl(t) ? "Date and Time" : t);
 const labelOf = (t) => GROUPS[t] || (isControl(t) ? "Date and Time" : "Send " + NAME[t]);
 const say = (message) => ({ message });
 const clone = (o) => JSON.parse(JSON.stringify(o));
+/* ---------- timing helpers (clock time, wait, slot, day, between dates) ---------- */
+// Time zone of your users, minutes from UTC. India = 330. A controller can override it per user: session.utcOffsetMin = 330
+const DEFAULT_UTC_OFFSET_MIN = 330;
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const p2 = (n) => String(n).padStart(2, "0");
+const offsetOf = (session) => (session && typeof session.utcOffsetMin === "number" ? session.utcOffsetMin : DEFAULT_UTC_OFFSET_MIN);
+const ymd = (d) => `${d.getUTCFullYear()}-${p2(d.getUTCMonth() + 1)}-${p2(d.getUTCDate())}`;
 
-/* ---------- save / update / new version wording ---------- */
+function localNow(session) {
+  const d = new Date(Date.now() + offsetOf(session) * 60000);
+  return { date: ymd(d), time: `${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}` };
+}
+const addDays = (s, n) => {
+  const [y, m, d] = s.split("-").map(Number);
+  return ymd(new Date(Date.UTC(y, m - 1, d + n)));
+};
+
+// "TODAY: 2026-11-04 18:10 (user's local time, UTC+05:30)"  -> append this to the system prompt next to BASE_TS
+export function dateContext(session) {
+  const n = localNow(session), o = offsetOf(session), a = Math.abs(o);
+  return `TODAY: ${n.date} ${n.time} (user's local time, UTC${o < 0 ? "-" : "+"}${p2(Math.floor(a / 60))}:${p2(a % 60)})`;
+}
+
+// "5:30pm" | "5 30 pm" | "17:30" | "6pm"  ->  "17:30" (or null)
+function parseClock(v) {
+  const m = /^\s*(\d{1,2})(?:\s*[:.\s]\s*(\d{2}))?\s*([ap]\.?m\.?)?\s*$/i.exec(String(v || ""));
+  if (!m) return null;
+  let h = +m[1];
+  const mi = m[2] ? +m[2] : 0, ap = m[3] && m[3][0].toLowerCase();
+  if (ap === "p" && h < 12) h += 12;
+  if (ap === "a" && h === 12) h = 0;
+  if (h > 23 || mi > 59) return null;
+  return `${p2(h)}:${p2(mi)}`;
+}
+
+// clock time of ONE action -> "YYYY-MM-DD HH:mm"   (null = no schedule / now, undefined = could not read it)
+function scheduleOf(session, e) {
+  if (!e.scheduleTime || e.scheduleTime === "now") return null;
+  const t = parseClock(e.scheduleTime);
+  if (!t) return undefined;
+  const now = localNow(session);
+  let d = /^\d{4}-\d{2}-\d{2}$/.test(String(e.scheduleDate || "")) ? e.scheduleDate : null;
+  if (!d && e.scheduleDay === "tomorrow") d = addDays(now.date, 1);
+  else if (!d && e.scheduleDay === "today") d = now.date;
+  if (!d) d = t > now.time ? now.date : addDays(now.date, 1);     // time already passed today -> tomorrow
+  return `${d} ${t}`;
+}
+
+function setSchedule(wf, id, value) {
+  const c = cfgOf(wf, id), s = stepOfNode(wf, id);
+  if (value) {
+    if (c) c.Schedule = value;
+    if (s) s.action.args.scheduletime = value;
+  } else {
+    if (c) delete c.Schedule;
+    if (s) delete s.action.args.scheduletime;
+  }
+}
+
+// local "YYYY-MM-DD HH:mm" -> utc milliseconds
+function toUtcMs(s, session) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2}):(\d{2})/.exec(String(s || ""));
+  return m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) - offsetOf(session) * 60000 : null;
+}
+const utcStr = (ms) => { const d = new Date(ms); return `${ymd(d)} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}:00`; };
+const dayMon = (s) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s)); return m ? `${+m[3]} ${MONTHS[+m[2] - 1]}` : ""; };
+
+function putTiming(wf, id, cond, value, title, days) {
+  const c = cfgOf(wf, id), s = stepOfNode(wf, id);
+  if (c) Object.assign(c, { Value: value, Title: title, Datecondition: cond, DaysOfWeek: days, IsDynamicGroup: "0", IgnoreWeekend: false });
+  if (s) Object.assign(s.action.args, { datecondition: cond, datevalue: value, daysofweek: days, isdynamicgroup: false, ignoreweekend: false });
+}
+
+// sets the timing of a Date and Time node. returns false when the words could not be used
+function setTiming(wf, id, e, session) {
+  const kind = e.timing || (e.waitN && e.waitUnit ? "wait" : null);
+  if (kind === "wait") {
+    if (!(parseInt(e.waitN, 10) >= 1)) return false;
+    setWait(wf, id, e.waitN, e.waitUnit);
+    return true;
+  }
+  if (kind === "slot") {
+    const f = parseClock(e.slotFrom), t = parseClock(e.slotTo);
+    if (!f || !t || t <= f) return false;
+    const day = String(e.day || "anyday").toLowerCase();
+    putTiming(wf, id, 8, `${f}~${t}`, `Slot B/w ${f} to ${t}`, day === "anyday" || WEEKDAYS.includes(day) ? day : "anyday");
+    return true;
+  }
+  if (kind === "day") {
+    const day = String(e.day || "").toLowerCase();
+    if (!WEEKDAYS.includes(day)) return false;
+    putTiming(wf, id, 9, "", "Preferred: " + day[0].toUpperCase() + day.slice(1), day);
+    return true;
+  }
+  if (kind === "between") {
+    const a = toUtcMs(e.fromDt, session), b = toUtcMs(e.toDt, session);
+    if (a === null || b === null || a <= Date.now() || (b - a) / 60000 < 60) return false;
+    putTiming(wf, id, 4, `${utcStr(a)}~${utcStr(b)}`, `B/w ${dayMon(e.fromDt)} to ${dayMon(e.toDt)}`, "");
+    return true;
+  }
+  return false;
+}
+
+// the small model often misses timing words: read them from the sentence as well
+const NUMW = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, fifteen: 15, twenty: 20, thirty: 30, forty: 40, sixty: 60 };
+const numOf = (w) => (/^\d+$/.test(String(w)) ? +w : NUMW[String(w).toLowerCase()]);
+const unitOf = (u) => (/^min/i.test(u) ? "Minutes" : /^(hour|hr)/i.test(u) ? "Hours" : "Days");
+
+function timingFromText(t) {
+  const out = {};
+  // "after one hour", "wait 30 minutes", "delay 2 days", "after a day"
+  let m = /\b(?:after|wait(?:\s+for)?|delay(?:ed)?(?:\s+by)?)\s+(\d+|an?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|sixty)\s*(minute|min|hour|hr|day)s?\b/i.exec(t);
+  if (m) {
+    out.timing = "wait";
+    out.waitN = numOf(m[1]);
+    out.waitUnit = unitOf(m[2]);
+  } else if (/\b(?:after|wait(?:\s+for)?|delay(?:ed)?(?:\s+by)?)\s+half\s+an?\s+hour\b/i.test(t)) {
+    out.timing = "wait";
+    out.waitN = 30;
+    out.waitUnit = "Minutes";
+  }
+  // clock time: "at 5:30 pm", "at 5 30 pm", "at 17:30"
+  m = /\bat\s+(\d{1,2})(?:\s*[:.\s]\s*(\d{2}))?\s*(am|pm)\b/i.exec(t) || /\bat\s+(\d{1,2})\s*[:.]\s*(\d{2})\b/i.exec(t);
+  if (m) out.scheduleTime = parseClock(m[1] + ":" + (m[2] || "00") + (m[3] || ""));
+  if (/\btomorrow\b/i.test(t)) out.scheduleDay = "tomorrow";
+  else if (/\btoday\b/i.test(t)) out.scheduleDay = "today";
+  return out;
+}
+/* ---------- save / update / new version / draft wording ---------- */
 const SAVE = /^\s*(?:skip(?: all)?(?: and| then)?\s+)?(?:yes|y|yeah|ok|okay|save|update|confirm|go ahead|proceed)(?:\s+(?:it|this|the|my|now))*(?:\s+(?:workflow|flow|agent))?\s*[.!]*\s*$/i;
 const UPDATE = /^\s*(?:yes[,\s]*)?(?:please\s+)?(?:update|overwrite|replace)(?:\s+(?:it|this|the|my|existing|workflow|flow|agent|now))*\s*[.!]*\s*$/i;
 const NEWVER = /\b(?:new\s*version|newversion|create\s+(?:a\s+)?new|save\s+as\s+(?:a\s+)?new|as\s+(?:a\s+)?new|new\s+(?:one|copy))\b/i;
+// "save as draft", "keep it as a draft", "update as draft", "new version as draft", "draft"
+// (a group or template that merely has the word "draft" in its name is NOT matched)
+const DRAFT = /\b(?:save|keep|store|update|make|as)\b[^.]*\bdraft\b|^\s*(?:a\s+)?draft\s*[.!]*\s*$/i;
 const SKIP_START = /^\s*skip\b/i;
-const COMMAND = /\b(add|remove|delete|send|also|then|change|replace|preview|save|those|who|if|when|after)\b/i;
-
-const stripSkip = (t) => t.replace(/^\s*skip(?: all)?(?: and| then)?\s+/i, "");
+const COMMAND = /\b(add|remove|delete|send|also|then|change|replace|preview|save|those|who|if|when|after|schedule|wait|delay)\b|\bat\s+\d|\b(?:\d+|an?|one|two|three|four|five|six|ten|half)\s*(?:minutes?|hours?|days?|an\s+hour)\b/i;const stripSkip = (t) => t.replace(/^\s*skip(?: all)?(?: and| then)?\s+/i, "");
 const modeOf = (session) => (session && session.wfMode) || "create";
-const isSaveWord = (t, mode) => SAVE.test(t) || (mode === "edit" && (UPDATE.test(stripSkip(t)) || NEWVER.test(t)));
+const isSaveWord = (t, mode) =>
+  SAVE.test(t) || DRAFT.test(t) || (mode === "edit" && (UPDATE.test(stripSkip(t)) || NEWVER.test(t)));
 
 const INTENT_PROMPT = `You read ONE user message about an existing messaging workflow and output ONE minified JSON object. No prose, no code fences.
 Shape:
-{"intent":"add|remove|set_template|question|new|other","channel":"mail|sms|whatsapp|rcs|webpush|movetogroup|addtogroup|removefromgroup|dateandtime|null","parentChannel":"mail|sms|whatsapp|rcs|webpush|dateandtime|null","parentStep":null,"event":null,"sequence":false,"step":null,"template":null,"group":null,"beforeChannel":null,"beforeStep":null,"waitN":null,"waitUnit":null}
+{"intent":"add|remove|set_template|set_schedule|set_timing|question|new|other","channel":"mail|sms|whatsapp|rcs|webpush|addtogroup|dateandtime|null","parentChannel":"mail|sms|whatsapp|rcs|webpush|dateandtime|null","parentStep":null,"event":null,"sequence":false,"step":null,"template":null,"group":null,"beforeChannel":null,"beforeStep":null,"scheduleTime":null,"scheduleDate":null,"scheduleDay":null,"timing":null,"waitN":null,"waitUnit":null,"slotFrom":null,"slotTo":null,"day":null,"fromDt":null,"toDt":null}
 Rules:
 - add: the user wants a new action ("also send...", "add...", "then..."). channel = the NEW action.
+- Any wording about putting contacts into a group (add, move, put, include, copy, shift "to/into group X") -> channel = "addtogroup", group = the group name only (drop "this", "the", "group").
 - dateandtime: a Date and Time / wait / delay step. channel = "dateandtime".
 - parentChannel = channel of the message whose event triggers the new action ("those who open the mail" -> mail). null when the new action does not depend on any message.
 - parentStep = a number only when the user said one ("step 3", "second mail" = the step number of the 2nd mail in the list below). Otherwise null.
 - event (one of delivered, sent, opened, notopened, clicked, notclicked, bounced, read, notread, failed, unreachable, pushed, viewed, dismissed): received/delivered -> delivered; sent/has been sent -> sent; open/opens/opened -> opened; did not open -> notopened; click -> clicked; did not click -> notclicked; bounce -> bounced; read/seen -> read; unread -> notread. Otherwise null.
 - sequence = true when the user only says "then"/"after that" with no event and no parent channel.
 - beforeChannel = channel of the step that must come right AFTER a new Date and Time ("add date time in between audience and the mail" -> mail; "before the sms" -> sms). beforeStep = a number only when the user said one. Otherwise null.
-- waitN / waitUnit only for "wait 2 hours" (waitN 2, waitUnit Hours; units Minutes|Hours|Days). Otherwise null.
+TIMING (the TRIGGER and the TIMING are different things):
+- scheduleTime = the CLOCK time at which the new (or target) action runs: "at 5:30 pm", "at 5 30 pm", "at 6pm" -> 24-hour "HH:mm" ("17:30"). "now" / "immediately" / "send now" -> "now". It is NOT part of the trigger: in "send a mail to those who click the link at 5 30 pm" the trigger is the click and 5:30 pm is the schedule of the new mail.
+- scheduleDate = "YYYY-MM-DD" only when the user said a date. scheduleDay = "today" or "tomorrow" only when the user said it. Use the TODAY line below.
+- timing = "wait" for "after 2 hours", "after one hour", "wait 30 minutes", "delay a day", "after half an hour" (waitN = the number even when written as a word: one -> 1, two -> 2; half an hour -> 30 Minutes; waitUnit = Minutes|Hours|Days). "after the mail is opened" has NO time unit: that is an event, not a wait.- timing = "slot" for "between 10 am and 12 pm" (slotFrom, slotTo as 24-hour HH:mm; day = a weekday in lower case or "anyday").
+- timing = "day" for "on Mondays" / "preferred day Friday" (day = weekday in lower case).
+- timing = "between" for a date range "between 5 Oct 10:00 and 7 Oct 18:00" (fromDt, toDt as "YYYY-MM-DD HH:mm").
+- A timing together with a new message or group action: keep channel = the new action; the application puts the Date and Time step in front of it.
+- set_schedule: the user changes / sets / removes the clock time of an EXISTING step ("change the mail time to 6 pm", "schedule the sms at 9 am", "send the mail now"). channel or step + scheduleTime.
+- set_timing: the user changes the wait / slot / day of an EXISTING Date and Time step. channel = "dateandtime" (+ step when said) + the timing fields.
 - remove: channel + step. set_template: channel or step + template (only text the user wrote).
 - group = destination group name for group actions, only if the user wrote it.
 - new = wants a different/new workflow. question = asks about the workflow. other = anything else.`;
@@ -165,13 +314,13 @@ export function incompleteNote(wf) {
   if (!list.length) return "";
   return (
     `Some settings are still missing:\n${missingLines(list)}\n` +
-    `If you continue now, the workflow is saved with status OFF and will not start. ` +
+    `If you continue now, the workflow is saved as a draft and will not start. ` +
     `Click "Preview workflow" and set these configurations to activate it.`
   );
 }
 
 /* ---------- edits ---------- */
-function addNode(wf, e, parentId, ev) {
+function addNode(wf, e, parentId, ev, session) {
   const f = wf.flowchartConfig, nodes = f.nodes, type = e.channel, group = !!GROUPS[type], ctl = isControl(type);
   const root = nodes[0].blockId, isRoot = parentId === root;
   const maxTs = Math.max(...nodes.map((n) => Number(String(n.blockId).split("_").pop()) || 0));
@@ -189,9 +338,9 @@ function addNode(wf, e, parentId, ev) {
   wf.configarray.push({ Channel: id, Value: val, Title: val });
 
   wf.steps.push(makeStep(wf, type, parentId, ev, val));
-  if (ctl && e.waitN && e.waitUnit) setWait(wf, id, e.waitN, e.waitUnit);
+  if (ctl) setTiming(wf, id, e, session);
+  return id;
 }
-
 // one step object for a node (used when adding AND when healing a broken workflow)
 function makeStep(wf, type, parentId, ev, val) {
   const root = wf.flowchartConfig.nodes[0].blockId, isRoot = parentId === root;
@@ -237,7 +386,7 @@ function setWait(wf, id, n, unit) {
 }
 
 // put a new Date and Time node between a step and its parent
-function insertBefore(wf, e, targetId) {
+function insertBefore(wf, e, targetId,session) {
   const f = wf.flowchartConfig, nodes = f.nodes, root = nodes[0].blockId;
   const tConn = f.connections.find((c) => c.TargetId === targetId);
   const parentId = tConn ? tConn.SourceId : root;
@@ -272,11 +421,68 @@ function insertBefore(wf, e, targetId) {
   delete tArgs.getquery;
   tArgs.getreposechannel = "dateandtime";
   tArgs.eventName = "satisfy";
-  if (e.waitN && e.waitUnit) setWait(wf, id, e.waitN, e.waitUnit);
+setTiming(wf, id, e, session);
 }
+/* ---------- repair group actions in the JSON the LLM wrote ----------
+   - move / remove / wrong ids -> addtogroup
+   - a group is never a parent: its children move up to the group's parent
+   - group step = actiontype + groupname only; name kept in step and configarray */
+function fixGroups(wf) {
+  const f = wf && wf.flowchartConfig;
+  if (!f || !Array.isArray(f.nodes) || !f.nodes.length) return wf;
+  wf.steps = wf.steps || [];
+  wf.configarray = wf.configarray || [];
 
+  // 1. rename ids
+  const fix = (id) => {
+    const m = String(id || "").match(/^state_([A-Za-z]+)_(.+)$/);
+    const t = m && TYPE_ALIAS[m[1].toLowerCase()];
+    return t ? `state_${t}_${m[2]}` : id;
+  };
+  f.nodes.forEach((n) => { n.blockId = fix(n.blockId); });
+  f.connections.forEach((c) => { c.SourceId = fix(c.SourceId); c.TargetId = fix(c.TargetId); });
+  wf.configarray.forEach((c) => { c.Channel = fix(c.Channel); });
+  wf.steps.forEach((s) => {
+    const a = s.action && s.action.args;
+    if (a && a.actiontype && TYPE_ALIAS[String(a.actiontype).toLowerCase()]) a.actiontype = "addtogroup";
+  });
+
+  // 2. a group is never a parent: hang its children on the group's parent
+  const root = f.nodes[0].blockId, rebuild = new Set();
+  for (let guard = 0; guard < 20; guard++) {
+    const bad = f.connections.find((c) => GROUPS[typeOf(c.SourceId)]);
+    if (!bad) break;
+    const pc = f.connections.find((x) => x.TargetId === bad.SourceId);
+    bad.SourceId = pc ? pc.SourceId : root;
+    bad.anchor = pc ? pc.anchor : "Bottom3";
+    bad.RelationWithParent = pc ? pc.RelationWithParent : "Satisfy";
+    rebuild.add(bad.TargetId);                       // its step is rebuilt by heal()
+  }
+  if (rebuild.size) {
+    wf.steps = wf.steps.filter((s, k) => {
+      const num = parseInt(String(s.id || "").replace("step", ""), 10) || k + 1;
+      const node = f.nodes[num];
+      return !(node && rebuild.has(node.blockId));
+    });
+  }
+
+  // 3. group steps: clean args, group name in step and configarray
+  wf.steps.forEach((s, k) => {
+    const num = parseInt(String(s.id || "").replace("step", ""), 10) || k + 1;
+    const node = f.nodes[num];
+    if (!node || !GROUPS[typeOf(node.blockId)]) return;
+    const a = (s.action.args = (s.action && s.action.args) || {});
+    const c = cfgOf(wf, node.blockId);
+    const name = String(a.groupname || (c && c.Value) || "").replace(/_template$/, "").trim();
+    delete a.channel; delete a.templatename; delete a.templateid;
+    a.actiontype = "addtogroup";
+    if (name) { a.groupname = name; if (c) { c.Value = name; c.Title = name; } }
+  });
+  return wf;
+}
 // make nodes, steps and configarray line up (step N <-> node N); rebuild missing steps from the node + connection
 function heal(wf) {
+   fixGroups(wf); 
   const f = wf.flowchartConfig, nodes = f.nodes, old = wf.steps || [];
   wf.configarray = wf.configarray || [];
   nodes.forEach((n, i) => {
@@ -299,6 +505,8 @@ function heal(wf) {
       : row >= 0 ? { idx: row, label: EVENTS[pt][row][0], key: EVENTS[pt][row][1] }
         : { idx: 0, label: "Deliver", key: "delivered" };
     steps.push(makeStep({ ...wf, steps }, t, pid, ev, cfgOf(wf, nodes[i].blockId).Value));
+        const cs = cfgOf(wf, nodes[i].blockId);
+    if (cs && cs.Schedule) steps[steps.length - 1].action.args.scheduletime = cs.Schedule;
   }
   wf.steps = steps;
   return rebuild(wf);
@@ -342,12 +550,12 @@ function rebuild(wf) {
 
 /* ---------- reply building ---------- */
 // create / reuse: "save". edit: "update or create a new version".
-// When settings are missing, a note is placed in front of the question.
+// The user can always answer "save as draft". When settings are missing, a note is placed in front of the question.
 export const saveQuestion = (wf, session) => {
   const q =
     modeOf(session) === "edit"
-      ? `Would you like to update '${wf.name}' or create a new version? Reply "update" or "new version", or tell me what to change.`
-      : `Would you like me to save this workflow '${wf.name}'? Reply "yes" to save, or tell me what to change.`;
+      ? `Would you like to update '${wf.name}' or create a new version? Reply "update", "new version" or "save as draft", or tell me what to change.`
+      : `Would you like me to save this workflow '${wf.name}'? Reply "yes" to save, "save as draft" to keep it as a draft, or tell me what to change.`;
   const note = incompleteNote(wf);
   return note ? note + "\n" + q : q;
 };
@@ -364,7 +572,8 @@ function summary(wf) {
     const v = !c ? ""
       : isControl(t) ? (c.Datecondition != null ? c.Title : "timing not set yet - click Preview workflow to set it")
         : isChannel(t) && (!c.Value || c.Value === t + "_template") ? "template not set yet" : c.Value;
-    return `${stepLabel(wf, i + 1)} - ${v}`;
+    const sch = c && c.Schedule ? ` - scheduled at ${c.Schedule}` : "";
+    return `${stepLabel(wf, i + 1)} - ${v}${sch}`;
   });
   return `Summary of '${wf.name}':\n` + lines.join("\n");
 }
@@ -375,7 +584,7 @@ function nextQuestion(wf, session) {
     const t = typeOf(nodes[i].blockId), c = cfgOf(wf, nodes[i].blockId);
     if (isChannel(t) && c && (!c.Value || c.Value === t + "_template") && !skipped.includes(nodes[i].blockId)) {
       session.wfPending = { kind: "template", blockId: nodes[i].blockId };
-      return `${stepLabel(wf, i)} has no template yet in '${wf.name}'. Which template should I use? (Reply "skip" to keep the placeholder.)`;
+      return `${stepLabel(wf, i)} has no template yet in '${wf.name}'. Which template should I use? (Reply "skip" to keep the placeholder, or "save as draft" to save it as a draft now.)`;
     }
   }
   session.wfPending = null;
@@ -389,19 +598,23 @@ function done(wf, session, withSummary) {
 }
 
 // what to send to SaveAgentWorkFlow, based on the mode and what the user answered
+// draft = true -> the app saves with status false, even when every step is configured
 function saveResult(wf, session, t) {
   const mode = modeOf(session), s = stripSkip(t);
+  const draft = DRAFT.test(s);
   if (mode === "edit") {
     const pid = Number(session.wfPid) || 0;
-    if (NEWVER.test(s)) return { save: true, wf, actiontype: "newversion", pid };
-    if (UPDATE.test(s)) return { save: true, wf, actiontype: pid ? "edit" : "save", pid };
+    if (NEWVER.test(s)) return { save: true, wf, actiontype: "newversion", pid, draft };
+    // "save as draft" while editing = update the opened workflow as a draft
+    if (UPDATE.test(s) || draft) return { save: true, wf, actiontype: pid ? "edit" : "save", pid, draft };
     // a bare "yes" / "save" is ambiguous when editing
-    return say(`Do you want to update '${wf.name}' or create a new version? Reply "update" or "new version".`);
+    return say(`Do you want to update '${wf.name}' or create a new version? Reply "update", "new version" or "save as draft".`);
   }
   return {
     save: true, wf,
     actiontype: mode === "reuse" ? "reuse" : "save",
     pid: 0, // pid: only edit / newversion send the id
+    draft,
   };
 }
 
@@ -426,11 +639,15 @@ function apply(wf, session, e) {
 
   if (e.intent === "add") {
     const type = e.channel;
-    if (!isChannel(type) && !GROUPS[type] && !isControl(type)) return say("I can add Send Mail, SMS, WhatsApp, RCS, Web Push, Date and Time, or Move / Add / Remove group steps. Which one do you want?");
+    if (!isChannel(type) && !GROUPS[type] && !isControl(type)) return say("I can add Send Mail, SMS, WhatsApp, RCS, Web Push, Date and Time, or Add to Group steps. Which one do you want?");
     if (GROUPS[type] && !e.group) {
       session.wfPending = { kind: "group", edit: e };
-      return say(`Which group should the contacts be ${type === "removefromgroup" ? "removed from" : type === "addtogroup" ? "added to" : "moved to"}?`);
+      return say("Which group should the contacts be added to?");
     }
+
+    // clock time of the new action ("at 5:30 pm")
+    const schedule = isControl(type) ? null : scheduleOf(session, e);
+    if (schedule === undefined) return say('I could not read that time. Please say it like "at 5:30 pm" or "at 17:30".');
 
     // Date and Time "in between": it goes before an existing step
     if (isControl(type)) {
@@ -445,7 +662,7 @@ function apply(wf, session, e) {
         const c0 = wf.flowchartConfig.connections.find((c) => c.SourceId === root);   // first step under the Audience
         if (c0) beforeId = c0.TargetId;
       }
-      if (beforeId) { insertBefore(wf, e, beforeId); return done(wf, session, true); }
+      if (beforeId) { insertBefore(wf, e, beforeId, session); return done(wf, session, true); }
     }
 
     let parent = root, ev = null, pt = e.parentChannel;
@@ -470,7 +687,15 @@ function apply(wf, session, e) {
         return say(`${stepLabel(wf, num)} already does this. Reply "add another" to add a second one, or tell me what to change.`);
       }
     }
-    addNode(wf, e, parent, ev);
+
+    // wait / slot / day / between dates in front of a message or group action:
+    // parent -> Date and Time -> new action
+    if (!isControl(type) && e.timing) {
+      parent = addNode(wf, { ...e, channel: "dateandtime" }, parent, ev, session);
+      ev = SATISFY;
+    }
+    const newId = addNode(wf, e, parent, ev, session);
+    if (schedule) setSchedule(wf, newId, schedule);
     return done(wf, session, true);
   }
 
@@ -493,6 +718,28 @@ function apply(wf, session, e) {
     setTemplate(wf, r.id, e.template);
     return done(wf, session, false);
   }
+
+  // change / remove the clock time of an existing step
+  if (e.intent === "set_schedule") {
+    const type = e.channel || typeOf(nodes[e.step] ? nodes[e.step].blockId : "");
+    if (!type || type === "segment") return say("Which step should I schedule? Tell me the step number (#).");
+    const r = pick(wf, type, e.step);
+    if (r.error) return say(r.error);
+    if (r.ask) { session.wfPending = { kind: "pick", field: "step", cands: r.cands, edit: e }; return say(r.ask); }
+    const schedule = scheduleOf(session, e);
+    if (schedule === undefined) return say('I could not read that time. Please say it like "at 5:30 pm" or "at 17:30".');
+    setSchedule(wf, r.id, schedule);                      // null = send now (schedule removed)
+    return done(wf, session, true);
+  }
+
+  // change the wait / slot / day of an existing Date and Time step
+  if (e.intent === "set_timing") {
+    const r = pick(wf, "dateandtime", e.step);
+    if (r.error) return say(r.error);
+    if (r.ask) { session.wfPending = { kind: "pick", field: "step", cands: r.cands, edit: e }; return say(r.ask); }
+    if (!setTiming(wf, r.id, e, session)) return say('I could not use that timing. Try "wait 2 hours", "between 10 am and 12 pm", "on Mondays", or "between 5 Oct 10:00 and 7 Oct 18:00".');
+    return done(wf, session, true);
+  }
   return null;
 }
 
@@ -507,20 +754,19 @@ function stepNo(t, cands) {
   return undefined;
 }
 
-async function classify(llmModel, wf, text) {
+async function classify(llmModel, wf, text, session) {
   const steps = wf.steps.map((s, i) => `#${i + 1} | ${typeOf(wf.flowchartConfig.nodes[i + 1].blockId)} | ${s.name}`).join("\n");
   const res = await llmModel.invoke([
-    { role: "system", content: INTENT_PROMPT + "\nCURRENT STEPS (number | channel | name):\n" + steps },
+    { role: "system", content: INTENT_PROMPT + "\n" + dateContext(session) + "\nCURRENT STEPS (number | channel | name):\n" + steps },
     { role: "user", content: text },
   ]);
   const raw = typeof res.content === "string" ? res.content : (res.content && res.content[0] && res.content[0].text) || "";
   try { return JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)); } catch { return null; }
 }
-
 /* ---------- entry point ----------
-   returns { message, wf? }                          -> use it as the reply
-   returns { save: true, wf, actiontype, pid }       -> call saveWorkflow(...) with those values
-   returns null                                      -> let the normal LLM agent handle the turn (questions, new workflow) */
+   returns { message, wf? }                                   -> use it as the reply
+   returns { save: true, wf, actiontype, pid, draft }         -> call saveWorkflow(...) with those values
+   returns null                                               -> let the normal LLM agent handle the turn (questions, new workflow) */
 export async function handleWorkflowEdit({ llmModel, session, wf, text }) {
   wf = heal(clone(wf));
   session.wfSkipped = session.wfSkipped || [];
@@ -528,6 +774,9 @@ export async function handleWorkflowEdit({ llmModel, session, wf, text }) {
   const t = String(text || "").trim();
   const p = session.wfPending;
   session.wfPending = null;
+
+  // "save as draft": save right away, even with missing templates or settings (status = false)
+  if (DRAFT.test(t)) return saveResult(wf, session, t);
 
   if (p && p.kind === "pick") {
     const n = stepNo(t, p.cands);
@@ -556,27 +805,38 @@ export async function handleWorkflowEdit({ llmModel, session, wf, text }) {
     const q = nextQuestion(wf, session);
     return session.wfPending ? say(q) : saveResult(wf, session, t);   // a template is still missing: ask first
   }
-  const e = await classify(llmModel, wf, t);
-  if (!e || !["add", "remove", "set_template"].includes(e.intent)) return null;
+   const e = await classify(llmModel, wf, t, session);
+  if (!e || !["add", "remove", "set_template", "set_schedule", "set_timing"].includes(e.intent)) return null;
+  if (TYPE_ALIAS[String(e.channel || "").toLowerCase()]) e.channel = "addtogroup";
   // the small model invents step numbers: trust one only if the user really wrote it ("step 3", "#3", "second mail")
   if (!/(?:\bstep\s*#?\s*\d+|#\s*\d+|\b(?:first|second|third|1st|2nd|3rd|last)\b)/i.test(t)) { e.parentStep = null; e.step = null; e.beforeStep = null; }
-  e.between = /\b(in\s*between|between|before)\b/i.test(t);
+
+  // timing words: fill whatever the small model left empty
+  if (["add", "set_schedule", "set_timing"].includes(e.intent)) {
+    const found = timingFromText(t);
+    Object.keys(found).forEach((k) => { if (e[k] === undefined || e[k] === null) e[k] = found[k]; });
+    if (!e.timing && e.waitN && e.waitUnit) e.timing = "wait";
+    if (e.intent === "set_timing" && !e.channel) e.channel = "dateandtime";
+  }
+
+  e.between = /\b(in\s*between|before|between\s+(?:the\s+)?(?:audience|mail|sms|whatsapp|rcs|web\s*push|step|#))/i.test(t);
   return apply(wf, session, e);
 }
+ 
 
 /* ---------- save: the app calls the MCP tool itself (no LLM tool call) ----------
    C# tool: SaveAgentWorkFlow(ExecutionJson, flowchartConfig, configarray, name, agenthistory, status, pid, actiontype, tasktrigger)
    actiontype: "save" (create) | "reuse" | "edit" (update, needs pid) | "newversion" (needs pid)
-   status: true only when every step is fully configured, otherwise false (saved, but it will not start) */
+   status: true only when every step is fully configured AND the user did not ask for a draft; otherwise false (saved as a draft, will not start) */
 const txt = (c) => (typeof c === "string" ? c : Array.isArray(c) ? c.map((b) => (typeof b === "string" ? b : (b && b.text) || "")).join("") : String(c || ""));
 
-export async function saveWorkflow({ tools, wf, history, pid, actiontype }) {
+export async function saveWorkflow({ tools, wf, history, pid, actiontype, draft }) {
   const tool = (tools || []).find((x) => String(x.name).toLowerCase().replace(/_/g, "") === "saveagentworkflow");
   if (!tool) return "Saving failed: the save tool was not found. Please try again later.";
   const act = ["edit", "reuse", "newversion"].includes(String(actiontype || "").toLowerCase()) ? String(actiontype).toLowerCase() : "save";
 
   const missing = findIncomplete(wf);
-  const status = missing.length === 0;
+  const status = missing.length === 0 && !draft;      // false = draft
 
   const args = {
     ExecutionJson: JSON.stringify(wf.steps),
@@ -596,13 +856,20 @@ export async function saveWorkflow({ tools, wf, history, pid, actiontype }) {
     catch { msg = txt(raw).slice(0, 200); ok = !/error|fail|exception/i.test(msg); }
     if (!ok) return `Saving failed${msg ? ": " + msg : ""}. Reply "yes" to try again.`;
 
+    const asDraft = status ? "" : " as a draft";
     const base =
-      act === "edit" ? `Workflow '${wf.name}' is updated`
-        : act === "newversion" ? `Workflow '${wf.name}' is saved as a new version`
-          : `Workflow '${wf.name}' is saved`;
+      act === "edit" ? `Workflow '${wf.name}' is updated${asDraft}`
+        : act === "newversion" ? `Workflow '${wf.name}' is saved as a new version${status ? "" : " (draft)"}`
+          : `Workflow '${wf.name}' is saved${asDraft}`;
+
     if (status) return base + ".";
+
+    // complete workflow, saved as a draft only because the user asked for it
+    if (missing.length === 0) return `${base}. It will not start until you activate it.`;
+
+    // incomplete workflow
     return (
-      `${base}, but its status is OFF so it will not start yet. Still missing:\n${missingLines(missing)}\n` +
+      `${base}, so it will not start yet. Still missing:\n${missingLines(missing)}\n` +
       `Click "Preview workflow", set these configurations, then confirm again to activate it.`
     );
   } catch (err) {

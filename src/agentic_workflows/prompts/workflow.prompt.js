@@ -211,7 +211,9 @@ Disambiguation:
 4. The audience phrase can come AFTER the destination. Ignore filler words ("this", "those who all", "all") and build a clean query.
 5. Group name = exactly the words the user gave, stripping only the word "group".
 6. A time word and a repeat word can appear together ("daily at 6.30pm"): the time is the SCHEDULE of the first run, the repeat is the REPEAT. Both are kept.
-
+7. THERE IS ONLY ONE GROUP ACTION: Add to Group (prefix "addtogroup", actiontype "addtogroup"). Add, move, put, include, copy, shift, transfer, remove contacts "to / into / from a group" ALL mean Add to Group with that destination. "to this group X", "to the group X", "into X" -> destination = X only (strip "this", "the", "group"). It ALWAYS sits directly under the Audience (connection Bottom3 / "Satisfy"), its step has dependsOn "step0" and a complete getquery (R12). When the destination is already in the sentence, ask NOTHING: output the JSON now, then the summary, then the next question.
+8. TRIGGER vs TIMING. A clock time after the action ("send a mail to those who click the link at 5.30 pm", "send an SMS at 9 am") is the SCHEDULE of the NEW action (R5): it is never part of the trigger and never a reason to ask a question. "after <N> minutes/hours/days", "wait <N> ...", "delay ..." is a Date and Time WAIT node placed between the parent and the new action (R13/R14). "after the mail is opened / clicked / delivered" has no number: it is an EVENT of the parent message (Step B), not a wait. A timing word is never ignored: it ends up as a Schedule or as a Date and Time node.
+A wait written in words counts exactly like digits: "after one hour", "wait two days", "after half an hour" (= 30 Minutes). When the wait comes BEFORE the action and the trigger comes after it ("after one hour send an sms to those who open the mail"), build: parent message --(Open)--> Date and Time (WAIT, datecondition 0, datevalue "1 Hours") --(Satisfy)--> the SMS. The wait node is the child of the message on its event; the new action is the child of the wait node (getreposechannel "dateandtime", eventName "satisfy").
 TIME rules (schedule):
 - Format: "YYYY-MM-DD HH:mm", 24-hour, in the user's time zone. Read today's date, current time and time zone from the date context at the end of this prompt (next to BASE_TS).
 - "6.30pm" / "6:30 pm" -> 18:30. "tomorrow 9 am" -> tomorrow's date + 09:00. "5 Oct at 10" -> that date in the current year (next year if already past) + 10:00. "in 2 hours" -> now + 2 hours.
@@ -279,8 +281,7 @@ Sanity check: a user's "open" on a mail is Bottom2 / "Open" / opened. If you wro
 - Channel actions: {"Channel": blockId, "Value": template name, "Title": template name}. Use the exact template the user gave; if skipped/none use "<channel>_template". Never empty. The same value goes into the step's templatename.
 - Group actions: {"Channel": blockId, "Value": destination group, "Title": destination group}.
 - Date and Time, UNSET: {"Channel": blockId, "Value": "dateandtime_template", "Title": "dateandtime_template"} (no other keys).
-- Date and Time, with timing (R14): {"Channel": blockId, "Value": datevalue, "Title": title, "Datecondition": <0|4|8|9>, "DaysOfWeek": "<days or empty>", "IsDynamicGroup": "0", "IgnoreWeekend": false}.
-- Scheduled nodes ONLY: add "Schedule": "YYYY-MM-DD HH:mm". No schedule = no Schedule key. The Audience never has one.
+- Date and Time,   - WAIT ("wait 2 hours", "after one hour", "after 3 days", "delay 30 minutes", "after half an hour"): datecondition 0, datevalue "<N> <Minutes|Hours|Days>" (capitalised unit, N written as a number, for example "1 Hours", "2 Hours", "1 Days", "30 Minutes"), daysofweek "". Title = the same text.- Scheduled nodes ONLY: add "Schedule": "YYYY-MM-DD HH:mm". No schedule = no Schedule key. The Audience never has one.
 - Length = nodes length.
 
 ### STEP G - steps (one per ACTION node; none for the Audience; steps = nodes - 1)
@@ -352,9 +353,9 @@ The top-level skeleton is: {"flowchartConfig":{"nodes":[{"blockId":"<id>","posit
 // Keep SelfAgent.js (GROUP_ARGS, SCHEDULE_ARG) in sync with the arg names.
 // ---------------------------------------------------------------------------
 export const GROUP_ACTION_CONFIG = {
-  move:   { prefix: "movetogroup",     label: "Move to Group" },
-  add:    { prefix: "addtogroup",      label: "Add to Group" },
-  remove: { prefix: "removefromgroup", label: "Remove from Group" },
+  move:   { prefix: "addtogroup", label: "Add to Group" },
+  add:    { prefix: "addtogroup", label: "Add to Group" },
+  remove: { prefix: "addtogroup", label: "Add to Group" },
   actionTypeKey: "actiontype",  // step arg key that says which group action runs
   groupNameKey: "groupname",    // step arg key that carries the destination group
   scheduleArgKey: "scheduletime", // step arg key that carries the schedule time

@@ -341,15 +341,33 @@ function addNode(wf, e, parentId, ev, session) {
   if (ctl) setTiming(wf, id, e, session);
   return id;
 }
+/* ---------- group audience: configarray Value = "12,15" (group ids) ---------- */
+const IDS = /^\d+(\s*,\s*\d+)*$/;
+function groupAudience(wf) {
+  const root = wf.flowchartConfig.nodes[0].blockId;
+  const v = String((cfgOf(wf, root) || {}).Value || "").trim();
+  return IDS.test(v) ? v : "";
+}
+// text for getquery: the audience text, or for groups the query the existing root steps already carry
+function audienceQuery(wf) {
+  const root = wf.flowchartConfig.nodes[0].blockId, ids = groupAudience(wf);
+  if (!ids) return (cfgOf(wf, root) || {}).Value || "";
+  const s = (wf.steps || []).find((x) => x.action && x.action.args && x.action.args.audiencetype === "group" && x.action.args.getquery);
+  return s ? s.action.args.getquery : "contacts from group " + ids;
+}
 // one step object for a node (used when adding AND when healing a broken workflow)
 function makeStep(wf, type, parentId, ev, val) {
   const root = wf.flowchartConfig.nodes[0].blockId, isRoot = parentId === root;
   const group = !!GROUPS[type], ctl = isControl(type);
   const pStep = isRoot ? null : stepOfNode(wf, parentId);
-  const query = (cfgOf(wf, root) || {}).Value || "";
-  const args = group ? { actiontype: type } : ctl ? { controltype: type } : { channel: type };
-  if (isRoot) args.getquery = query;
-  else { args.getreposechannel = typeOf(parentId); args.eventName = ev.key; }
+   const query = audienceQuery(wf);
+const args = group ? { actiontype: type } : ctl ? { controltype: type } : { channel: type };
+
+   if (isRoot) {
+    args.getquery = query;
+    const gids = groupAudience(wf);
+    if (gids) { args.audiencetype = "group"; args.groupids = gids; }
+  } else { args.getreposechannel = typeOf(parentId); args.eventName = ev.key; }
   if (group) args.groupname = val;
   Object.assign(args, { type: 0, isworkflow: true, agentworkflowid: "{{agentworkflowid}}", agenttaskid: "" });
   if (!group && !ctl) args.templatename = val;
@@ -418,7 +436,9 @@ function insertBefore(wf, e, targetId,session) {
   wf.steps.push(dStep);
 
   // the moved step becomes a child of the Date and Time node
-  delete tArgs.getquery;
+   delete tArgs.getquery;
+  delete tArgs.audiencetype;
+  delete tArgs.groupids; 
   tArgs.getreposechannel = "dateandtime";
   tArgs.eventName = "satisfy";
 setTiming(wf, id, e, session);

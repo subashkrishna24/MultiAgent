@@ -50,7 +50,13 @@ import { executeSendWhatsappToLeadAgent } from "../agents/lms/sendwhatsapptolead
 import { executeSendRcsToLeadAgent } from "../agents/lms/sendrcstolead.agent.js";
 import { checkQueryPrompt } from "../prompts/shared/checkquery.prompt.js";
 import { executeLeadTransitionAgent } from "../agents/lms/leadtransition.agent.js";
-import { handleWorkflowEdit, validateWorkflow, primePending, saveWorkflow, fixSaveQuestion } from "../agentic_workflows/agent/workflow.edit.js";
+import {
+  handleWorkflowEdit,
+  validateWorkflow,
+  primePending,
+  saveWorkflow,
+  fixSaveQuestion,
+} from "../agentic_workflows/agent/workflow.edit.js";
 const toText = (c) =>
   typeof c === "string"
     ? c
@@ -104,16 +110,19 @@ export async function executeWorkflow(payload) {
     pid,
     actiontype,
   } = payload;
-  setTimeZone(userdetails?.timeZone); 
+  setTimeZone(userdetails?.timeZone);
   // Session
   const session = getSession(machineid);
- if (history.length === 1) {
+  if (history.length === 1) {
     clearPagingSession(machineid);
-     session.lastWorkflowJson = null;
-     session.wfPending = null; session.wfSkipped = [];
+    session.lastWorkflowJson = null;
+    session.wfPending = null;
+    session.wfSkipped = [];
   }
-    if (isagentworkflow) {
-    const m = String(actiontype ?? payload.actionType ?? payload.ActionType ?? "").toLowerCase();
+  if (isagentworkflow) {
+    const m = String(
+      actiontype ?? payload.actionType ?? payload.ActionType ?? "",
+    ).toLowerCase();
     const p = Number(pid ?? payload.PId ?? payload.Pid ?? 0) || 0;
     if (m === "edit" || m === "reuse" || m === "create") {
       session.wfMode = m;
@@ -122,7 +131,11 @@ export async function executeWorkflow(payload) {
       session.wfMode = "create";
       session.wfPid = 0;
     }
-    console.log("[WF mode]", { raw: actiontype, mode: session.wfMode, pid: session.wfPid });
+    console.log("[WF mode]", {
+      raw: actiontype,
+      mode: session.wfMode,
+      pid: session.wfPid,
+    });
   }
   // if (session.IsAgentWorkflow !== isagentworkflow) {
   //   session.agenticWorkflowHandled = false;
@@ -168,23 +181,23 @@ export async function executeWorkflow(payload) {
 
   const lastMessage = history[history.length - 1].content;
 
-  // STEP 1 
-let intent;
-if (isagentworkflow) {
-  // Agent workflow mode: always stay in workflow, skip intent detection
-  intent = { module: "workflow" };
-} else {
-  const intentContext = buildIntentContext(history);
-  intent = await detectIntent(llmModel, intentContext);
+  // STEP 1
+  let intent;
+  if (isagentworkflow) {
+    // Agent workflow mode: always stay in workflow, skip intent detection
+    intent = { module: "workflow" };
+  } else {
+    const intentContext = buildIntentContext(history);
+    intent = await detectIntent(llmModel, intentContext);
 
-  // Safety: the "workflow" module only exists in agent workflow mode
-  if (intent.module === "workflow") {
-    intent = { ...intent, module: "knowledge" }; // or whatever your default fallback is
+    // Safety: the "workflow" module only exists in agent workflow mode
+    if (intent.module === "workflow") {
+      intent = { ...intent, module: "knowledge" }; // or whatever your default fallback is
+    }
   }
-}
-   
+
   // STEP 2
-  
+
   const mcpClient = getMcpClient(accountid, p5apikey);
 
   const allTools = await mcpClient.getTools();
@@ -207,47 +220,89 @@ if (isagentworkflow) {
     "workflow",
   ];
   //Add fromdate and todate in prompt
-   
-const currentWf = intent.module === "workflow" ? findLatestWorkflowJson(history, session) : null;
-if (isagentworkflow && currentWf) {
-  const out = await handleWorkflowEdit({ llmModel, session, wf: currentWf, text: toText(lastMessage) });
 
-  if (out && out.save) {
-    let mcp;
-    try {
-      mcp = getMcpClient(accountid, p5apikey);
-      const tools = await mcp.getTools();          // all tools, so the module filter can't hide the save tool
-      console.log("[WF save] save-like tools:", tools.map((t) => t.name).filter((n) => /save/i.test(n)));
-          const message = await saveWorkflow({ tools, wf: out.wf, history, pid: out.pid, actiontype: out.actiontype });      session.lastWorkflowJson = out.wf;
-      return { module: "workflow", message, toolmessage: undefined, workflowcompleted: true, actions: [] };
-    } catch (err) {
-      console.error("[WF save] failed:", err);
-      return { module: "workflow", message: "Saving failed: " + (err.message || err), toolmessage: undefined, workflowcompleted: false, actions: [] };
-    } finally {
-      if (mcp) await mcp.close().catch(() => {});
+  const currentWf =
+    intent.module === "workflow"
+      ? findLatestWorkflowJson(history, session)
+      : null;
+  if (isagentworkflow && currentWf) {
+    const out = await handleWorkflowEdit({
+      llmModel,
+      session,
+      wf: currentWf,
+      text: toText(lastMessage),
+    });
+
+    if (out && out.save) {
+      let mcp;
+      try {
+        mcp = getMcpClient(accountid, p5apikey);
+        const tools = await mcp.getTools(); // all tools, so the module filter can't hide the save tool
+        console.log(
+          "[WF save] save-like tools:",
+          tools.map((t) => t.name).filter((n) => /save/i.test(n)),
+        );
+        const message = await saveWorkflow({
+          tools,
+          wf: out.wf,
+          history,
+          pid: out.pid,
+          actiontype: out.actiontype,
+        });
+        session.lastWorkflowJson = out.wf;
+        return {
+          module: "workflow",
+          message,
+          toolmessage: undefined,
+          workflowcompleted: true,
+          actions: [],
+        };
+      } catch (err) {
+        console.error("[WF save] failed:", err);
+        return {
+          module: "workflow",
+          message: "Saving failed: " + (err.message || err),
+          toolmessage: undefined,
+          workflowcompleted: false,
+          actions: [],
+        };
+      } finally {
+        if (mcp) await mcp.close().catch(() => {});
+      }
+    }
+
+    if (out && out.message) {
+      if (out.wf) session.lastWorkflowJson = out.wf;
+      return {
+        module: "workflow",
+        message: out.message,
+        toolmessage: undefined,
+        workflowcompleted: false,
+        actions: [],
+      };
     }
   }
+  const baseTs =
+    intent.module === "workflow"
+      ? `\nBASE_TS = ${Date.now()}\nWORKFLOW_MODE: ${session.wfMode || "create"}\nCURRENT_WORKFLOW_JSON: ${currentWf ? JSON.stringify(currentWf) : "none"}`
+      : "";
 
-  if (out && out.message) {
-    if (out.wf) session.lastWorkflowJson = out.wf;
-    return { module: "workflow", message: out.message, toolmessage: undefined, workflowcompleted: false, actions: [] };
-  }
-}
-const baseTs =
-  intent.module === "workflow"
-    ? `\nBASE_TS = ${Date.now()}\nWORKFLOW_MODE: ${session.wfMode || "create"}\nCURRENT_WORKFLOW_JSON: ${currentWf ? JSON.stringify(currentWf) : "none"}`
-    : "";
+  const cleanedHistory =
+    intent.module === "workflow"
+      ? history.filter(
+          (m) =>
+            !(
+              m.role === "assistant" &&
+              CANNED.test(toText(m.content)) &&
+              !extractWorkflowJson(toText(m.content))
+            ),
+        )
+      : history;
 
-const cleanedHistory =
-  intent.module === "workflow"
-    ? history.filter((m) => !(m.role === "assistant" && CANNED.test(toText(m.content)) && !extractWorkflowJson(toText(m.content))))
-    : history;
-
-const recentHistory = [
-  { role: "system", content: getDateContext() + baseTs },
-  ...cleanedHistory,
-];
-  
+  const recentHistory = [
+    { role: "system", content: getDateContext() + baseTs },
+    ...cleanedHistory,
+  ];
 
   handlePagination(recentHistory, session, intent.module);
 
@@ -323,34 +378,100 @@ ${currentMessage}`;
   }
 
   if (intent.module === "reporting") {
-    const reportTool = filteredTools.find((t) => t.name === "GetReport");
+    const reportTool =
+      filteredTools.find((t) => t.name === "GetReport") ??
+      allTools.find(
+        (t) => t.name === "GetReport" || t.name.endsWith("__GetReport"),
+      );
 
-    const lastUserMessage = recentHistory
-      .filter((m) => m.role === "user")
-      .slice(-1)
-      .map((m) => m.content)
-      .join("\n");
+    const question = toText(
+      [...history].reverse().find((m) => m.role === "user")?.content,
+    ).trim();
 
-    const toolResponse = await reportTool.invoke({
-      getquery: lastUserMessage ?? "",
-      type: 1,
-    });
+    let message = "";
+    let dbdata = JSON.stringify([]);
+    let query = "";
+    let actions = [];
 
-    const result = JSON.parse(toolResponse);
+    try {
+      if (!reportTool) {
+        throw new Error(
+          "GetReport tool not found. Tools: " +
+            allTools.map((t) => t.name).join(", "),
+        );
+      }
 
-    response = {
-      messages: [
-        {
-          role: "assistant",
-          content: result.Message || "No response generated",
-        },
-      ],
-    };
+      const raw = await reportTool.invoke({ getquery: question, type: 1 });
+      console.log("[reporting] raw GetReport output:", typeof raw, raw);
 
-    report_response = {
-      dbdata: result.success ? result.dbdata : JSON.stringify([]),
+      const result = parseReportResult(raw);
+      const get = (...keys) =>
+        keys.map((k) => result?.[k]).find((v) => v !== undefined && v !== null);
+
+      const success = [true, "true", 1, "1"].includes(
+        get("success", "sucess", "Success", "Sucess", "isSuccess", "IsSuccess"),
+      );
+
+      // Message is sometimes the SQL, sometimes a real message
+      const rawMessage = toText(get("Message", "message")).trim();
+      const messageIsSql = isSqlText(rawMessage);
+      if (messageIsSql) query = rawMessage;
+
+      // dbdata is sometimes rows, sometimes the answer text (escaped several times)
+      const data = decodeDeep(get("dbdata", "dbData", "DbData", "Dbdata"));
+
+      if (success && Array.isArray(data)) {
+        dbdata = JSON.stringify(data);
+        message =
+          messageIsSql || !rawMessage ? "Here is your report." : rawMessage;
+      } else if (success && data && typeof data === "object") {
+        const rows = data.rows ?? data.Rows ?? data.data ?? data.Data;
+        dbdata = JSON.stringify(Array.isArray(rows) ? rows : [data]);
+        message =
+          messageIsSql || !rawMessage ? "Here is your report." : rawMessage;
+      } else if (
+        success &&
+        data !== undefined &&
+        data !== null &&
+        String(data).trim() !== ""
+      ) {
+        message = String(data).trim(); // answer text, e.g. "**Total inactive forms: 10.**"
+      } else if (rawMessage && !messageIsSql) {
+        message = rawMessage;
+      } else {
+        message = success
+          ? "No data found for that request."
+          : "The report could not be generated for that request.";
+      }
+
+      const m = message.match(/RECOMMENDED_ACTIONS:\s*(\[[^\]]*\])\s*$/m);
+      if (m) {
+        try {
+          actions = JSON.parse(m[1]);
+        } catch {
+          actions = [];
+        }
+        message = message
+          .replace(/RECOMMENDED_ACTIONS:\s*\[[^\]]*\]/gi, "")
+          .trim();
+      }
+    } catch (err) {
+      console.error("[reporting] failed:", err);
+      message =
+        "Something went wrong while generating the report. Please try again.";
+    } finally {
+      await mcpClient.close().catch(() => {});
+    }
+
+    return {
+      module: "reporting",
+      message,
+      toolmessage: { dbdata, query },
+      workflowcompleted: false,
+      actions,
     };
   }
+
   if (isagentworkflow && intent.module === "workflow") {
     response = await executeWorkFlowAgent({
       model: llmModel,
@@ -663,17 +784,30 @@ ${currentMessage}`;
     "No response generated";
 
   if (intent.module === "workflow") {
-  const wf = extractWorkflowJson(response_msg);
+    const wf = extractWorkflowJson(response_msg);
     if (wf && validateWorkflow(wf)) {
-    session.lastWorkflowJson = wf;
-    primePending(wf, session);
-    session.activeModule = isagentworkflow ? "workflow" : null;
-    return { module: "workflow", message: fixSaveQuestion(response_msg.trim(), wf, session), toolmessage: report_response, workflowcompleted: true, actions: [] };
+      session.lastWorkflowJson = wf;
+      primePending(wf, session);
+      session.activeModule = isagentworkflow ? "workflow" : null;
+      return {
+        module: "workflow",
+        message: fixSaveQuestion(response_msg.trim(), wf, session),
+        toolmessage: report_response,
+        workflowcompleted: true,
+        actions: [],
+      };
+    }
+    if (wf || response_msg.includes('"flowchartConfig"')) {
+      return {
+        module: "workflow",
+        message:
+          "I couldn't build that workflow cleanly. Please say it once more in one sentence.",
+        toolmessage: report_response,
+        workflowcompleted: false,
+        actions: [],
+      };
+    }
   }
-  if (wf || response_msg.includes('"flowchartConfig"')) {
-    return { module: "workflow", message: "I couldn't build that workflow cleanly. Please say it once more in one sentence.", toolmessage: report_response, workflowcompleted: false, actions: [] };
-  }
-}
   var RemoveRecommendations = [
     "contact",
     "leadmanagement",
@@ -714,4 +848,50 @@ function findLatestWorkflowJson(history, session) {
 }
 
 // canned UI sentences must not be imitated by the model
-const CANNED = /(workflow mapping is ready|workflow .{0,60} is ready|would you like to update it)/i;
+const CANNED =
+  /(workflow mapping is ready|workflow .{0,60} is ready|would you like to update it)/i;
+
+function parseReportResult(raw) {
+  let v = raw;
+  if (Array.isArray(v) && v.length === 2 && !v[0]?.type) v = v[0]; // [content, artifact]
+  if (
+    v &&
+    typeof v === "object" &&
+    !Array.isArray(v) &&
+    !("content" in v) &&
+    !("text" in v)
+  ) {
+    return v;
+  }
+  const parsed = decodeDeep(toText(v?.content ?? v));
+  return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+    ? parsed
+    : { Message: String(parsed ?? "") };
+}
+
+// Unwraps values escaped several times: "\"**text**\"" -> **text**, "[{...}]" -> array
+function decodeDeep(value) {
+  let v = value;
+  for (let i = 0; i < 5 && typeof v === "string"; i++) {
+    const s = v.trim();
+    let next;
+    try {
+      next = JSON.parse(s);
+    } catch {
+      if (!s.startsWith('\\"')) break;
+      try {
+        next = JSON.parse(`"${s}"`);
+      } catch {
+        break;
+      } // \"text\" -> "text"
+    }
+    if (typeof next !== "string" && typeof next !== "object") break; // keep "10" as text
+    if (next === v) break;
+    v = next;
+  }
+  return typeof v === "string" ? v.trim() : v;
+}
+
+function isSqlText(s) {
+  return /^\s*(select|with|insert|update|delete)\b/i.test(s || "");
+}

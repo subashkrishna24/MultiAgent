@@ -7,14 +7,58 @@
 //   session.wfPid  = id of the workflow opened with "Edit" (only used in edit mode)
 
 const EVENTS = {
-  mail: [["Deliver", "delivered"], ["Open", "opened"], ["Not Open", "notopened"], ["Click", "clicked"], ["Not Click", "notclicked"], ["Bounce", "bounced"]],
-  sms: [["Send", "sent"], ["Deliver", "delivered"], ["Click", "clicked"], ["Not Click", "notclicked"], ["Bounce", "bounced"]],
-  whatsapp: [["Deliver", "delivered"], ["Read", "read"], ["Not Read", "notread"], ["Clicked", "clicked"], ["Not Clicked", "notclicked"], ["Failed", "failed"]],
-  rcs: [["Deliver", "delivered"], ["Read", "read"], ["Not Read", "notread"], ["Clicked", "clicked"], ["Not Clicked", "notclicked"], ["Unreachable", "unreachable"]],
-  webpush: [["Push", "pushed"], ["View", "viewed"], ["Click", "clicked"], ["Not Click", "notclicked"], ["Dismiss", "dismissed"], ["Bounce", "bounced"]],
+  mail: [
+    ["Deliver", "delivered"],
+    ["Open", "opened"],
+    ["Not Open", "notopened"],
+    ["Click", "clicked"],
+    ["Not Click", "notclicked"],
+    ["Bounce", "bounced"],
+  ],
+  sms: [
+    ["Send", "sent"],
+    ["Deliver", "delivered"],
+    ["Click", "clicked"],
+    ["Not Click", "notclicked"],
+    ["Bounce", "bounced"],
+  ],
+  whatsapp: [
+    ["Deliver", "delivered"],
+    ["Read", "read"],
+    ["Not Read", "notread"],
+    ["Clicked", "clicked"],
+    ["Not Clicked", "notclicked"],
+    ["Failed", "failed"],
+  ],
+  rcs: [
+    ["Deliver", "delivered"],
+    ["Read", "read"],
+    ["Not Read", "notread"],
+    ["Clicked", "clicked"],
+    ["Not Clicked", "notclicked"],
+    ["Unreachable", "unreachable"],
+  ],
+  webpush: [
+    ["Push", "pushed"],
+    ["View", "viewed"],
+    ["Click", "clicked"],
+    ["Not Click", "notclicked"],
+    ["Dismiss", "dismissed"],
+    ["Bounce", "bounced"],
+  ],
 };
-const NAME = { mail: "Mail", sms: "SMS", whatsapp: "WhatsApp", rcs: "RCS", webpush: "Web Push" };
-const GROUPS = { movetogroup: "Move to Group", addtogroup: "Add to Group", removefromgroup: "Remove from Group" };
+const NAME = {
+  mail: "Mail",
+  sms: "SMS",
+  whatsapp: "WhatsApp",
+  rcs: "RCS",
+  webpush: "Web Push",
+};
+const GROUPS = {
+  movetogroup: "Move to Group",
+  addtogroup: "Add to Group",
+  removefromgroup: "Remove from Group",
+};
 
 // Date and Time has ONE outlet (Satisfy = Bottom3)
 const SATISFY = { idx: 2, label: "Satisfy", key: "satisfy" };
@@ -23,20 +67,27 @@ const typeOf = (id) => String(id).replace("state_", "").split("_")[0];
 const isChannel = (t) => !!EVENTS[t];
 const isControl = (t) => t === "dateandtime";
 const nm = (t) => NAME[t] || GROUPS[t] || (isControl(t) ? "Date and Time" : t);
-const labelOf = (t) => GROUPS[t] || (isControl(t) ? "Date and Time" : "Send " + NAME[t]);
+const labelOf = (t) =>
+  GROUPS[t] || (isControl(t) ? "Date and Time" : "Send " + NAME[t]);
 const say = (message) => ({ message });
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
 /* ---------- save / update / new version wording ---------- */
-const SAVE = /^\s*(?:skip(?: all)?(?: and| then)?\s+)?(?:yes|y|yeah|ok|okay|save|update|confirm|go ahead|proceed)(?:\s+(?:it|this|the|my|now))*(?:\s+(?:workflow|flow|agent))?\s*[.!]*\s*$/i;
-const UPDATE = /^\s*(?:yes[,\s]*)?(?:please\s+)?(?:update|overwrite|replace)(?:\s+(?:it|this|the|my|existing|workflow|flow|agent|now))*\s*[.!]*\s*$/i;
-const NEWVER = /\b(?:new\s*version|newversion|create\s+(?:a\s+)?new|save\s+as\s+(?:a\s+)?new|as\s+(?:a\s+)?new|new\s+(?:one|copy))\b/i;
+const SAVE =
+  /^\s*(?:skip(?: all)?(?: and| then)?\s+)?(?:yes|y|yeah|ok|okay|save|update|confirm|go ahead|proceed)(?:\s+(?:it|this|the|my|now))*(?:\s+(?:workflow|flow|agent))?\s*[.!]*\s*$/i;
+const UPDATE =
+  /^\s*(?:yes[,\s]*)?(?:please\s+)?(?:update|overwrite|replace)(?:\s+(?:it|this|the|my|existing|workflow|flow|agent|now))*\s*[.!]*\s*$/i;
+const NEWVER =
+  /\b(?:new\s*version|newversion|create\s+(?:a\s+)?new|save\s+as\s+(?:a\s+)?new|as\s+(?:a\s+)?new|new\s+(?:one|copy))\b/i;
 const SKIP_START = /^\s*skip\b/i;
-const COMMAND = /\b(add|remove|delete|send|also|then|change|replace|preview|save|those|who|if|when|after)\b/i;
+const COMMAND =
+  /\b(add|remove|delete|send|also|then|change|replace|preview|save|those|who|if|when|after)\b/i;
 
 const stripSkip = (t) => t.replace(/^\s*skip(?: all)?(?: and| then)?\s+/i, "");
 const modeOf = (session) => (session && session.wfMode) || "create";
-const isSaveWord = (t, mode) => SAVE.test(t) || (mode === "edit" && (UPDATE.test(stripSkip(t)) || NEWVER.test(t)));
+const isSaveWord = (t, mode) =>
+  SAVE.test(t) ||
+  (mode === "edit" && (UPDATE.test(stripSkip(t)) || NEWVER.test(t)));
 
 const INTENT_PROMPT = `You read ONE user message about an existing messaging workflow and output ONE minified JSON object. No prose, no code fences.
 Shape:
@@ -71,32 +122,51 @@ function cfgOf(wf, id) {
 
 // "Send SMS after #1 Send WhatsApp (Clicked)"  /  "Send Mail from the Audience"
 function stepDesc(wf, num) {
-  const nodes = wf.flowchartConfig.nodes, node = nodes[num];
+  const nodes = wf.flowchartConfig.nodes,
+    node = nodes[num];
   if (!node) return `step ${num}`;
-  const c = wf.flowchartConfig.connections.find((x) => x.TargetId === node.blockId);
+  const c = wf.flowchartConfig.connections.find(
+    (x) => x.TargetId === node.blockId,
+  );
   const pIdx = c ? nodes.findIndex((n) => n.blockId === c.SourceId) : 0;
-  const where = pIdx <= 0 ? "from the Audience" : `after #${pIdx} ${labelOf(typeOf(c.SourceId))} (${c.RelationWithParent})`;
+  const where =
+    pIdx <= 0
+      ? "from the Audience"
+      : `after #${pIdx} ${labelOf(typeOf(c.SourceId))} (${c.RelationWithParent})`;
   return `${labelOf(typeOf(node.blockId))} ${where}`;
 }
 const stepLabel = (wf, num) => `#${num} ${stepDesc(wf, num)}`;
 
 function pick(wf, type, num) {
   const c = listOf(wf, type);
-  if (!c.length) return { error: `There is no ${nm(type)} step in '${wf.name}'. Add one first, or tell me which step you mean.` };
+  if (!c.length)
+    return {
+      error: `There is no ${nm(type)} step in '${wf.name}'. Add one first, or tell me which step you mean.`,
+    };
   if (num) {
     const hit = c.find((x) => x.num === Number(num));
-    return hit ? { id: hit.blockId } : { error: `Step #${num} is not a ${nm(type)} step.` };
+    return hit
+      ? { id: hit.blockId }
+      : { error: `Step #${num} is not a ${nm(type)} step.` };
   }
   if (c.length === 1) return { id: c[0].blockId };
   return {
     cands: c.map((x) => x.num),
-    ask: `Which ${nm(type)} do you mean? ` + c.map((x) => stepLabel(wf, x.num)).join(", or ") + `. Reply with the step number (the # on the step in the preview).`,
+    ask:
+      `Which ${nm(type)} do you mean? ` +
+      c.map((x) => stepLabel(wf, x.num)).join(", or ") +
+      `. Reply with the step number (the # on the step in the preview).`,
   };
 }
 function resolveEvent(pt, key) {
   const list = EVENTS[pt];
-  const i = key ? list.findIndex((e) => e[1] === key) : list.findIndex((e) => e[1] === "delivered" || e[1] === "pushed");
-  if (i < 0) return { error: `${NAME[pt]} has no "${key}" event. Its events are: ${list.map((e) => e[0]).join(", ")}. Which one do you mean?` };
+  const i = key
+    ? list.findIndex((e) => e[1] === key)
+    : list.findIndex((e) => e[1] === "delivered" || e[1] === "pushed");
+  if (i < 0)
+    return {
+      error: `${NAME[pt]} has no "${key}" event. Its events are: ${list.map((e) => e[0]).join(", ")}. Which one do you mean?`,
+    };
   return { idx: i, label: list[i][0], key: list[i][1] };
 }
 
@@ -106,14 +176,18 @@ const lowerKeys = (o) => {
   Object.keys(o || {}).forEach((k) => (r[k.toLowerCase()] = o[k]));
   return r;
 };
-const blank = (v) => v === undefined || v === null || v === "" || v === 0 || v === "0";
-// which channels need a configuration name / the mail fields
+const blank = (v) =>
+  v === undefined || v === null || v === "" || v === 0 || v === "0";
+// NOTHING is mandatory for a channel step: template, configuration name, subject,
+// from name, from email and reply-to are the user's choice. Whatever is given is passed
+// to C# as it is; whatever is missing, the sender fills with its defaults.
+// Set a flag to true to require that setting again.
 const CHAN_NEEDS = {
-  mail: { cfg: true, mail: true },
-  sms: { cfg: true },
-  whatsapp: { cfg: true },
-  rcs: { cfg: true },
-  webpush: {},
+  mail: { template: false, cfg: false, mail: false },
+  sms: { template: false, cfg: false },
+  whatsapp: { template: false, cfg: false },
+  rcs: { template: false, cfg: false },
+  webpush: { template: false },
 };
 
 // returns [{ step, name, missing: [...] }]  (step 0 = the Audience)
@@ -135,8 +209,10 @@ export function findIncomplete(wf) {
 
     if (isChannel(t)) {
       const need = CHAN_NEEDS[t] || {};
-      if (blank(a.templateid)) m.push("template");
-      if (need.cfg && blank(a.configurationnameid)) m.push("configuration name");
+      if (need.template && blank(a.templateid) && blank(a.templatename))
+        m.push("template");
+      if (need.cfg && blank(a.configurationnameid))
+        m.push("configuration name");
       if (need.mail) {
         if (!String(a.subject || "").trim()) m.push("subject");
         if (!String(a.fromname || "").trim()) m.push("from name");
@@ -148,16 +224,24 @@ export function findIncomplete(wf) {
     } else if (t === "addrules") {
       if (blank(a.ruleid)) m.push("rule");
     } else if (isControl(t)) {
-      if (a.datecondition === undefined || a.datecondition === null) m.push("date and time");
+      if (a.datecondition === undefined || a.datecondition === null)
+        m.push("date and time");
     }
 
-    if (m.length) out.push({ step: i + 1, name: stepDesc(wf, i + 1), missing: m });
+    if (m.length)
+      out.push({ step: i + 1, name: stepDesc(wf, i + 1), missing: m });
   });
   return out;
 }
 
 const missingLines = (list) =>
-  list.map((x) => (x.step === 0 ? `- Audience: ${x.missing.join(", ")}` : `- #${x.step} ${x.name}: ${x.missing.join(", ")}`)).join("\n");
+  list
+    .map((x) =>
+      x.step === 0
+        ? `- Audience: ${x.missing.join(", ")}`
+        : `- #${x.step} ${x.name}: ${x.missing.join(", ")}`,
+    )
+    .join("\n");
 
 // text placed in front of the final question while something is missing
 export function incompleteNote(wf) {
@@ -172,20 +256,42 @@ export function incompleteNote(wf) {
 
 /* ---------- edits ---------- */
 function addNode(wf, e, parentId, ev) {
-  const f = wf.flowchartConfig, nodes = f.nodes, type = e.channel, group = !!GROUPS[type], ctl = isControl(type);
-  const root = nodes[0].blockId, isRoot = parentId === root;
-  const maxTs = Math.max(...nodes.map((n) => Number(String(n.blockId).split("_").pop()) || 0));
+  const f = wf.flowchartConfig,
+    nodes = f.nodes,
+    type = e.channel,
+    group = !!GROUPS[type],
+    ctl = isControl(type);
+  const root = nodes[0].blockId,
+    isRoot = parentId === root;
+  const maxTs = Math.max(
+    ...nodes.map((n) => Number(String(n.blockId).split("_").pop()) || 0),
+  );
   const id = `state_${type}_${maxTs + 1000}`;
   const parent = nodes.find((n) => n.blockId === parentId);
-  const kids = f.connections.filter((c) => c.SourceId === parentId).map((c) => nodes.find((n) => n.blockId === c.TargetId)).filter(Boolean);
+  const kids = f.connections
+    .filter((c) => c.SourceId === parentId)
+    .map((c) => nodes.find((n) => n.blockId === c.TargetId))
+    .filter(Boolean);
   const y = parent.positionY + 130;
-  let x = kids.length ? Math.max(...kids.map((k) => k.positionX)) + 340 : parent.positionX;
+  let x = kids.length
+    ? Math.max(...kids.map((k) => k.positionX)) + 340
+    : parent.positionX;
   while (nodes.some((n) => n.positionX === x && n.positionY === y)) x += 340;
 
   nodes.push({ blockId: id, positionX: x, positionY: y, label: labelOf(type) });
-  f.connections.push({ connectionId: "", SourceId: parentId, TargetId: id, anchor: isRoot ? "Bottom3" : "Bottom" + (ev.idx + 1), RelationWithParent: isRoot ? "Satisfy" : ev.label });
+  f.connections.push({
+    connectionId: "",
+    SourceId: parentId,
+    TargetId: id,
+    anchor: isRoot ? "Bottom3" : "Bottom" + (ev.idx + 1),
+    RelationWithParent: isRoot ? "Satisfy" : ev.label,
+  });
 
-  const val = group ? e.group : ctl ? "dateandtime_template" : e.template || type + "_template";
+  const val = group
+    ? e.group
+    : ctl
+      ? "dateandtime_template"
+      : e.template || type + "_template";
   wf.configarray.push({ Channel: id, Value: val, Title: val });
 
   wf.steps.push(makeStep(wf, type, parentId, ev, val));
@@ -194,21 +300,42 @@ function addNode(wf, e, parentId, ev) {
 
 // one step object for a node (used when adding AND when healing a broken workflow)
 function makeStep(wf, type, parentId, ev, val) {
-  const root = wf.flowchartConfig.nodes[0].blockId, isRoot = parentId === root;
-  const group = !!GROUPS[type], ctl = isControl(type);
+  const root = wf.flowchartConfig.nodes[0].blockId,
+    isRoot = parentId === root;
+  const group = !!GROUPS[type],
+    ctl = isControl(type);
   const pStep = isRoot ? null : stepOfNode(wf, parentId);
   const query = (cfgOf(wf, root) || {}).Value || "";
-  const args = group ? { actiontype: type } : ctl ? { controltype: type } : { channel: type };
+  const args = group
+    ? { actiontype: type }
+    : ctl
+      ? { controltype: type }
+      : { channel: type };
   if (isRoot) args.getquery = query;
-  else { args.getreposechannel = typeOf(parentId); args.eventName = ev.key; }
+  else {
+    args.getreposechannel = typeOf(parentId);
+    args.eventName = ev.key;
+  }
   if (group) args.groupname = val;
-  Object.assign(args, { type: 0, isworkflow: true, agentworkflowid: "{{agentworkflowid}}", agenttaskid: "" });
+  Object.assign(args, {
+    type: 0,
+    isworkflow: true,
+    agentworkflowid: "{{agentworkflowid}}",
+    agenttaskid: "",
+  });
   if (!group && !ctl) args.templatename = val;
-  args.taskrepeatedvalues = !!(pStep && pStep.action.args.taskrepeatedvalues === true);
+  args.taskrepeatedvalues = !!(
+    pStep && pStep.action.args.taskrepeatedvalues === true
+  );
   const what = `${labelOf(type)}${group ? " " + val : ""}`;
   return {
-    id: "", order: 0, type: "action", dependsOn: "",
-    name: isRoot ? `${what} ${ctl ? "for" : "to"} ${query}` : `${what} on ${nm(typeOf(parentId))} ${ev.label}`,
+    id: "",
+    order: 0,
+    type: "action",
+    dependsOn: "",
+    name: isRoot
+      ? `${what} ${ctl ? "for" : "to"} ${query}`
+      : `${what} on ${nm(typeOf(parentId))} ${ev.label}`,
     action: { module: "reporting", args },
   };
 }
@@ -216,7 +343,7 @@ function makeStep(wf, type, parentId, ev, val) {
 // the event row of a connection (parent -> child)
 function connEvent(wf, c) {
   const pt = typeOf(c.SourceId);
-  if (c.SourceId === wf.flowchartConfig.nodes[0].blockId) return null;      // Audience
+  if (c.SourceId === wf.flowchartConfig.nodes[0].blockId) return null; // Audience
   if (isControl(pt)) return SATISFY;
   const list = EVENTS[pt] || [];
   const i = list.findIndex((x) => x[0] === c.RelationWithParent);
@@ -228,43 +355,103 @@ function connEvent(wf, c) {
 function setWait(wf, id, n, unit) {
   const num = parseInt(n, 10);
   if (!(num >= 1)) return;
-  const u = ["Minutes", "Hours", "Days"].find((x) => x.toLowerCase() === String(unit).toLowerCase()) || "Hours";
+  const u =
+    ["Minutes", "Hours", "Days"].find(
+      (x) => x.toLowerCase() === String(unit).toLowerCase(),
+    ) || "Hours";
   const value = `${num} ${u}`;
   const c = cfgOf(wf, id);
-  if (c) Object.assign(c, { Value: value, Title: value, Datecondition: 0, DaysOfWeek: "", IsDynamicGroup: "0", IgnoreWeekend: false });
+  if (c)
+    Object.assign(c, {
+      Value: value,
+      Title: value,
+      Datecondition: 0,
+      DaysOfWeek: "",
+      IsDynamicGroup: "0",
+      IgnoreWeekend: false,
+    });
   const s = stepOfNode(wf, id);
-  if (s) Object.assign(s.action.args, { datecondition: 0, datevalue: value, daysofweek: "", isdynamicgroup: false, ignoreweekend: false });
+  if (s)
+    Object.assign(s.action.args, {
+      datecondition: 0,
+      datevalue: value,
+      daysofweek: "",
+      isdynamicgroup: false,
+      ignoreweekend: false,
+    });
 }
 
 // put a new Date and Time node between a step and its parent
 function insertBefore(wf, e, targetId) {
-  const f = wf.flowchartConfig, nodes = f.nodes, root = nodes[0].blockId;
+  const f = wf.flowchartConfig,
+    nodes = f.nodes,
+    root = nodes[0].blockId;
   const tConn = f.connections.find((c) => c.TargetId === targetId);
   const parentId = tConn ? tConn.SourceId : root;
   const ev = tConn ? connEvent(wf, tConn) : null;
   const tNode = nodes.find((n) => n.blockId === targetId);
   const tArgs = stepOfNode(wf, targetId).action.args;
-  const maxTs = Math.max(...nodes.map((n) => Number(String(n.blockId).split("_").pop()) || 0));
+  const maxTs = Math.max(
+    ...nodes.map((n) => Number(String(n.blockId).split("_").pop()) || 0),
+  );
   const id = `state_dateandtime_${maxTs + 1000}`;
 
   // the moved step and everything under it go one row down
   const sub = new Set([targetId]);
-  for (let grew = true; grew;) {
+  for (let grew = true; grew; ) {
     grew = false;
-    f.connections.forEach((c) => { if (sub.has(c.SourceId) && !sub.has(c.TargetId)) { sub.add(c.TargetId); grew = true; } });
+    f.connections.forEach((c) => {
+      if (sub.has(c.SourceId) && !sub.has(c.TargetId)) {
+        sub.add(c.TargetId);
+        grew = true;
+      }
+    });
   }
-  const x = tNode.positionX, y = tNode.positionY;
-  nodes.forEach((n) => { if (sub.has(n.blockId)) n.positionY += 130; });
+  const x = tNode.positionX,
+    y = tNode.positionY;
+  nodes.forEach((n) => {
+    if (sub.has(n.blockId)) n.positionY += 130;
+  });
 
-  nodes.push({ blockId: id, positionX: x, positionY: y, label: "Date and Time" });
-  if (tConn) tConn.TargetId = id;                                   // parent -> Date and Time (same anchor / event)
-  else f.connections.push({ connectionId: "", SourceId: root, TargetId: id, anchor: "Bottom3", RelationWithParent: "Satisfy" });
-  f.connections.push({ connectionId: "", SourceId: id, TargetId: targetId, anchor: "Bottom3", RelationWithParent: "Satisfy" });
-  wf.configarray.push({ Channel: id, Value: "dateandtime_template", Title: "dateandtime_template" });
+  nodes.push({
+    blockId: id,
+    positionX: x,
+    positionY: y,
+    label: "Date and Time",
+  });
+  if (tConn)
+    tConn.TargetId = id; // parent -> Date and Time (same anchor / event)
+  else
+    f.connections.push({
+      connectionId: "",
+      SourceId: root,
+      TargetId: id,
+      anchor: "Bottom3",
+      RelationWithParent: "Satisfy",
+    });
+  f.connections.push({
+    connectionId: "",
+    SourceId: id,
+    TargetId: targetId,
+    anchor: "Bottom3",
+    RelationWithParent: "Satisfy",
+  });
+  wf.configarray.push({
+    Channel: id,
+    Value: "dateandtime_template",
+    Title: "dateandtime_template",
+  });
 
   // the Date and Time step takes over what the moved step had
-  const dStep = makeStep(wf, "dateandtime", parentId, ev, "dateandtime_template");
-  if (parentId === root && tArgs.getquery) dStep.action.args.getquery = tArgs.getquery;
+  const dStep = makeStep(
+    wf,
+    "dateandtime",
+    parentId,
+    ev,
+    "dateandtime_template",
+  );
+  if (parentId === root && tArgs.getquery)
+    dStep.action.args.getquery = tArgs.getquery;
   dStep.action.args.taskrepeatedvalues = tArgs.taskrepeatedvalues === true;
   wf.steps.push(dStep);
 
@@ -277,63 +464,108 @@ function insertBefore(wf, e, targetId) {
 
 // make nodes, steps and configarray line up (step N <-> node N); rebuild missing steps from the node + connection
 function heal(wf) {
-  const f = wf.flowchartConfig, nodes = f.nodes, old = wf.steps || [];
+  const f = wf.flowchartConfig,
+    nodes = f.nodes,
+    old = wf.steps || [];
   wf.configarray = wf.configarray || [];
   nodes.forEach((n, i) => {
     if (i > 0 && !cfgOf(wf, n.blockId)) {
-      const t = typeOf(n.blockId), v = GROUPS[t] ? "" : t + "_template";
+      const t = typeOf(n.blockId),
+        v = GROUPS[t] ? "" : t + "_template";
       wf.configarray.push({ Channel: n.blockId, Value: v, Title: v });
     }
   });
   const byNo = {};
-  old.forEach((s, k) => { byNo[parseInt(String(s.id || "").replace("step", ""), 10) || k + 1] = s; });
+  old.forEach((s, k) => {
+    byNo[parseInt(String(s.id || "").replace("step", ""), 10) || k + 1] = s;
+  });
   const steps = [];
   for (let i = 1; i < nodes.length; i++) {
-    const t = typeOf(nodes[i].blockId), s = byNo[i], a = s && s.action && s.action.args;
-    if (a && (a.channel === t || a.actiontype === t || a.controltype === t)) { steps.push(s); continue; }
+    const t = typeOf(nodes[i].blockId),
+      s = byNo[i],
+      a = s && s.action && s.action.args;
+    if (a && (a.channel === t || a.actiontype === t || a.controltype === t)) {
+      steps.push(s);
+      continue;
+    }
     let c = f.connections.find((x) => x.TargetId === nodes[i].blockId);
-    if (!c) { c = { connectionId: "", SourceId: nodes[0].blockId, TargetId: nodes[i].blockId, anchor: "Bottom3", RelationWithParent: "Satisfy" }; f.connections.push(c); }
-    const pid = c.SourceId, pt = typeOf(pid);
-    const row = pid !== nodes[0].blockId ? (EVENTS[pt] || []).findIndex((e) => e[0] === c.RelationWithParent) : -1;
-    const ev = isControl(pt) ? SATISFY
-      : row >= 0 ? { idx: row, label: EVENTS[pt][row][0], key: EVENTS[pt][row][1] }
+    if (!c) {
+      c = {
+        connectionId: "",
+        SourceId: nodes[0].blockId,
+        TargetId: nodes[i].blockId,
+        anchor: "Bottom3",
+        RelationWithParent: "Satisfy",
+      };
+      f.connections.push(c);
+    }
+    const pid = c.SourceId,
+      pt = typeOf(pid);
+    const row =
+      pid !== nodes[0].blockId
+        ? (EVENTS[pt] || []).findIndex((e) => e[0] === c.RelationWithParent)
+        : -1;
+    const ev = isControl(pt)
+      ? SATISFY
+      : row >= 0
+        ? { idx: row, label: EVENTS[pt][row][0], key: EVENTS[pt][row][1] }
         : { idx: 0, label: "Deliver", key: "delivered" };
-    steps.push(makeStep({ ...wf, steps }, t, pid, ev, cfgOf(wf, nodes[i].blockId).Value));
+    steps.push(
+      makeStep({ ...wf, steps }, t, pid, ev, cfgOf(wf, nodes[i].blockId).Value),
+    );
   }
   wf.steps = steps;
   return rebuild(wf);
 }
 
 function removeSubtree(wf, blockId) {
-  const f = wf.flowchartConfig, drop = new Set([blockId]);
-  for (let grew = true; grew;) {
+  const f = wf.flowchartConfig,
+    drop = new Set([blockId]);
+  for (let grew = true; grew; ) {
     grew = false;
-    f.connections.forEach((c) => { if (drop.has(c.SourceId) && !drop.has(c.TargetId)) { drop.add(c.TargetId); grew = true; } });
+    f.connections.forEach((c) => {
+      if (drop.has(c.SourceId) && !drop.has(c.TargetId)) {
+        drop.add(c.TargetId);
+        grew = true;
+      }
+    });
   }
   wf.steps = wf.steps.filter((s, k) => !drop.has(f.nodes[k + 1].blockId));
   f.nodes = f.nodes.filter((n) => !drop.has(n.blockId));
-  f.connections = f.connections.filter((c) => !drop.has(c.SourceId) && !drop.has(c.TargetId));
+  f.connections = f.connections.filter(
+    (c) => !drop.has(c.SourceId) && !drop.has(c.TargetId),
+  );
   wf.configarray = wf.configarray.filter((c) => !drop.has(c.Channel));
 }
 
 function setTemplate(wf, id, name) {
   const c = cfgOf(wf, id);
-  if (c) { c.Value = name; c.Title = name; }
+  if (c) {
+    c.Value = name;
+    c.Title = name;
+  }
   const s = stepOfNode(wf, id);
-  if (s) { s.action.args.templatename = name; delete s.action.args.templateid; }
+  if (s) {
+    s.action.args.templatename = name;
+    delete s.action.args.templateid;
+  }
 }
 
 // recompute ids, order, dependsOn, agenttaskid from the tree
 function rebuild(wf) {
-  const f = wf.flowchartConfig, nodes = f.nodes, idx = {};
+  const f = wf.flowchartConfig,
+    nodes = f.nodes,
+    idx = {};
   nodes.forEach((n, i) => (idx[n.blockId] = i));
   f.connections.forEach((c, i) => (c.connectionId = "con_" + (i + 1)));
   f.numberOfElements = nodes.length;
   wf.steps.forEach((s, k) => {
-    const i = k + 1, id = "step" + i;
+    const i = k + 1,
+      id = "step" + i;
     const c = f.connections.find((x) => x.TargetId === nodes[i].blockId);
     const root = !c || c.SourceId === nodes[0].blockId;
-    s.id = id; s.order = i;
+    s.id = id;
+    s.order = i;
     s.dependsOn = root ? "step0" : "step" + idx[c.SourceId];
     s.action.args.agenttaskid = root ? id : s.dependsOn;
   });
@@ -355,25 +587,43 @@ export const saveQuestion = (wf, session) => {
 // LLM-written replies end with the plain save / update sentence: swap it for the app's version
 // (mode wording + missing-settings note). Works for create, edit and reuse.
 export function fixSaveQuestion(message, wf, session) {
-  return String(message).replace(/(?:Would you like me to save this workflow|Would you like to update ).*$/m, () => saveQuestion(wf, session));
+  return String(message).replace(
+    /(?:Would you like me to save this workflow|Would you like to update ).*$/m,
+    () => saveQuestion(wf, session),
+  );
 }
 
 function summary(wf) {
   const lines = wf.steps.map((s, i) => {
-    const node = wf.flowchartConfig.nodes[i + 1], t = typeOf(node.blockId), c = cfgOf(wf, node.blockId);
-    const v = !c ? ""
-      : isControl(t) ? (c.Datecondition != null ? c.Title : "timing not set yet - click Preview workflow to set it")
-        : isChannel(t) && (!c.Value || c.Value === t + "_template") ? "template not set yet" : c.Value;
+    const node = wf.flowchartConfig.nodes[i + 1],
+      t = typeOf(node.blockId),
+      c = cfgOf(wf, node.blockId);
+    const v = !c
+      ? ""
+      : isControl(t)
+        ? c.Datecondition != null
+          ? c.Title
+          : "timing not set yet - click Preview workflow to set it"
+        : isChannel(t) && (!c.Value || c.Value === t + "_template")
+          ? "template not set yet"
+          : c.Value;
     return `${stepLabel(wf, i + 1)} - ${v}`;
   });
   return `Summary of '${wf.name}':\n` + lines.join("\n");
 }
 
 function nextQuestion(wf, session) {
-  const skipped = session.wfSkipped || [], nodes = wf.flowchartConfig.nodes;
+  const skipped = session.wfSkipped || [],
+    nodes = wf.flowchartConfig.nodes;
   for (let i = 1; i < nodes.length; i++) {
-    const t = typeOf(nodes[i].blockId), c = cfgOf(wf, nodes[i].blockId);
-    if (isChannel(t) && c && (!c.Value || c.Value === t + "_template") && !skipped.includes(nodes[i].blockId)) {
+    const t = typeOf(nodes[i].blockId),
+      c = cfgOf(wf, nodes[i].blockId);
+    if (
+      isChannel(t) &&
+      c &&
+      (!c.Value || c.Value === t + "_template") &&
+      !skipped.includes(nodes[i].blockId)
+    ) {
       session.wfPending = { kind: "template", blockId: nodes[i].blockId };
       return `${stepLabel(wf, i)} has no template yet in '${wf.name}'. Which template should I use? (Reply "skip" to keep the placeholder.)`;
     }
@@ -385,21 +635,31 @@ function nextQuestion(wf, session) {
 function done(wf, session, withSummary) {
   rebuild(wf);
   const q = nextQuestion(wf, session);
-  return { wf, message: JSON.stringify(wf) + "\n" + (withSummary ? summary(wf) + "\n" : "") + q };
+  return {
+    wf,
+    message:
+      JSON.stringify(wf) + "\n" + (withSummary ? summary(wf) + "\n" : "") + q,
+  };
 }
 
 // what to send to SaveAgentWorkFlow, based on the mode and what the user answered
 function saveResult(wf, session, t) {
-  const mode = modeOf(session), s = stripSkip(t);
+  const mode = modeOf(session),
+    s = stripSkip(t);
   if (mode === "edit") {
     const pid = Number(session.wfPid) || 0;
-    if (NEWVER.test(s)) return { save: true, wf, actiontype: "newversion", pid };
-    if (UPDATE.test(s)) return { save: true, wf, actiontype: pid ? "edit" : "save", pid };
+    if (NEWVER.test(s))
+      return { save: true, wf, actiontype: "newversion", pid };
+    if (UPDATE.test(s))
+      return { save: true, wf, actiontype: pid ? "edit" : "save", pid };
     // a bare "yes" / "save" is ambiguous when editing
-    return say(`Do you want to update '${wf.name}' or create a new version? Reply "update" or "new version".`);
+    return say(
+      `Do you want to update '${wf.name}' or create a new version? Reply "update" or "new version".`,
+    );
   }
   return {
-    save: true, wf,
+    save: true,
+    wf,
     actiontype: mode === "reuse" ? "reuse" : "save",
     pid: 0, // pid: only edit / newversion send the id
   };
@@ -413,61 +673,123 @@ export function primePending(wf, session) {
 
 export function validateWorkflow(wf) {
   const f = wf && wf.flowchartConfig;
-  if (!f || !Array.isArray(f.nodes) || !Array.isArray(f.connections) || !Array.isArray(wf.steps) || !Array.isArray(wf.configarray)) return false;
-  const n = f.nodes.length, ids = new Set(f.nodes.map((x) => x.blockId));
-  return n > 1 && f.connections.length === n - 1 && wf.steps.length === n - 1 && wf.configarray.length === n &&
+  if (
+    !f ||
+    !Array.isArray(f.nodes) ||
+    !Array.isArray(f.connections) ||
+    !Array.isArray(wf.steps) ||
+    !Array.isArray(wf.configarray)
+  )
+    return false;
+  const n = f.nodes.length,
+    ids = new Set(f.nodes.map((x) => x.blockId));
+  return (
+    n > 1 &&
+    f.connections.length === n - 1 &&
+    wf.steps.length === n - 1 &&
+    wf.configarray.length === n &&
     f.connections.every((c) => ids.has(c.SourceId) && ids.has(c.TargetId)) &&
-    wf.steps.every((s) => s.action && s.action.args);
+    wf.steps.every((s) => s.action && s.action.args)
+  );
 }
 
 /* ---------- apply one classified edit ---------- */
 function apply(wf, session, e) {
-  const nodes = wf.flowchartConfig.nodes, root = nodes[0].blockId;
+  const nodes = wf.flowchartConfig.nodes,
+    root = nodes[0].blockId;
 
   if (e.intent === "add") {
     const type = e.channel;
-    if (!isChannel(type) && !GROUPS[type] && !isControl(type)) return say("I can add Send Mail, SMS, WhatsApp, RCS, Web Push, Date and Time, or Move / Add / Remove group steps. Which one do you want?");
+    if (!isChannel(type) && !GROUPS[type] && !isControl(type))
+      return say(
+        "I can add Send Mail, SMS, WhatsApp, RCS, Web Push, Date and Time, or Move / Add / Remove group steps. Which one do you want?",
+      );
     if (GROUPS[type] && !e.group) {
       session.wfPending = { kind: "group", edit: e };
-      return say(`Which group should the contacts be ${type === "removefromgroup" ? "removed from" : type === "addtogroup" ? "added to" : "moved to"}?`);
+      return say(
+        `Which group should the contacts be ${type === "removefromgroup" ? "removed from" : type === "addtogroup" ? "added to" : "moved to"}?`,
+      );
     }
 
     // Date and Time "in between": it goes before an existing step
     if (isControl(type)) {
       let beforeId = null;
       if (e.beforeChannel || e.beforeStep) {
-        const bt = e.beforeChannel || typeOf(nodes[e.beforeStep] ? nodes[e.beforeStep].blockId : "");
+        const bt =
+          e.beforeChannel ||
+          typeOf(nodes[e.beforeStep] ? nodes[e.beforeStep].blockId : "");
         const r = pick(wf, bt, e.beforeStep);
         if (r.error) return say(r.error);
-        if (r.ask) { session.wfPending = { kind: "pick", field: "beforeStep", cands: r.cands, edit: e }; return say(r.ask); }
+        if (r.ask) {
+          session.wfPending = {
+            kind: "pick",
+            field: "beforeStep",
+            cands: r.cands,
+            edit: e,
+          };
+          return say(r.ask);
+        }
         beforeId = r.id;
       } else if (e.between && !e.parentChannel) {
-        const c0 = wf.flowchartConfig.connections.find((c) => c.SourceId === root);   // first step under the Audience
+        const c0 = wf.flowchartConfig.connections.find(
+          (c) => c.SourceId === root,
+        ); // first step under the Audience
         if (c0) beforeId = c0.TargetId;
       }
-      if (beforeId) { insertBefore(wf, e, beforeId); return done(wf, session, true); }
+      if (beforeId) {
+        insertBefore(wf, e, beforeId);
+        return done(wf, session, true);
+      }
     }
 
-    let parent = root, ev = null, pt = e.parentChannel;
+    let parent = root,
+      ev = null,
+      pt = e.parentChannel;
     if (!pt && e.sequence) {
-      const last = [...nodes].reverse().find((n) => isChannel(typeOf(n.blockId)));
-      if (last) { pt = typeOf(last.blockId); e.parentStep = e.parentStep || nodes.indexOf(last); }
+      const last = [...nodes]
+        .reverse()
+        .find((n) => isChannel(typeOf(n.blockId)));
+      if (last) {
+        pt = typeOf(last.blockId);
+        e.parentStep = e.parentStep || nodes.indexOf(last);
+      }
     }
     if (pt) {
-      if (!isChannel(pt) && !isControl(pt)) return say("A group step cannot have a next step. Which message should this follow?");
+      if (!isChannel(pt) && !isControl(pt))
+        return say(
+          "A group step cannot have a next step. Which message should this follow?",
+        );
       const r = pick(wf, pt, e.parentStep);
       if (r.error) return say(r.error);
-      if (r.ask) { session.wfPending = { kind: "pick", field: "parentStep", cands: r.cands, edit: e }; return say(r.ask); }
+      if (r.ask) {
+        session.wfPending = {
+          kind: "pick",
+          field: "parentStep",
+          cands: r.cands,
+          edit: e,
+        };
+        return say(r.ask);
+      }
       parent = r.id;
       ev = isControl(pt) ? SATISFY : resolveEvent(pt, e.event);
-      if (ev.error) { session.wfPending = { kind: "event", pt, edit: e }; return say(ev.error); }
+      if (ev.error) {
+        session.wfPending = { kind: "event", pt, edit: e };
+        return say(ev.error);
+      }
     }
     if (ev && !e.force) {
-      const hit = wf.flowchartConfig.connections.find((c) => c.SourceId === parent && c.anchor === "Bottom" + (ev.idx + 1) && typeOf(c.TargetId) === type);
+      const hit = wf.flowchartConfig.connections.find(
+        (c) =>
+          c.SourceId === parent &&
+          c.anchor === "Bottom" + (ev.idx + 1) &&
+          typeOf(c.TargetId) === type,
+      );
       if (hit) {
         const num = nodes.findIndex((n) => n.blockId === hit.TargetId);
         session.wfPending = { kind: "dup", edit: e };
-        return say(`${stepLabel(wf, num)} already does this. Reply "add another" to add a second one, or tell me what to change.`);
+        return say(
+          `${stepLabel(wf, num)} already does this. Reply "add another" to add a second one, or tell me what to change.`,
+        );
       }
     }
     addNode(wf, e, parent, ev);
@@ -475,21 +797,43 @@ function apply(wf, session, e) {
   }
 
   if (e.intent === "remove") {
-    if (!e.channel && !e.step) return say("Which step should I remove? Tell me the step number (#).");
-    const type = e.channel || typeOf(nodes[e.step] ? nodes[e.step].blockId : "");
+    if (!e.channel && !e.step)
+      return say("Which step should I remove? Tell me the step number (#).");
+    const type =
+      e.channel || typeOf(nodes[e.step] ? nodes[e.step].blockId : "");
     const r = pick(wf, type, e.step);
     if (r.error) return say(r.error);
-    if (r.ask) { session.wfPending = { kind: "pick", field: "step", cands: r.cands, edit: e }; return say(r.ask); }
+    if (r.ask) {
+      session.wfPending = {
+        kind: "pick",
+        field: "step",
+        cands: r.cands,
+        edit: e,
+      };
+      return say(r.ask);
+    }
     removeSubtree(wf, r.id);
     return done(wf, session, true);
   }
 
   if (e.intent === "set_template") {
-    const type = e.channel || typeOf(nodes[e.step] ? nodes[e.step].blockId : "");
+    const type =
+      e.channel || typeOf(nodes[e.step] ? nodes[e.step].blockId : "");
     const r = pick(wf, type, e.step);
     if (r.error) return say(r.error);
-    if (r.ask) { session.wfPending = { kind: "pick", field: "step", cands: r.cands, edit: e }; return say(r.ask); }
-    if (!e.template) { session.wfPending = { kind: "template", blockId: r.id }; return say("Which template should I use?"); }
+    if (r.ask) {
+      session.wfPending = {
+        kind: "pick",
+        field: "step",
+        cands: r.cands,
+        edit: e,
+      };
+      return say(r.ask);
+    }
+    if (!e.template) {
+      session.wfPending = { kind: "template", blockId: r.id };
+      return say("Which template should I use?");
+    }
     setTemplate(wf, r.id, e.template);
     return done(wf, session, false);
   }
@@ -508,13 +852,29 @@ function stepNo(t, cands) {
 }
 
 async function classify(llmModel, wf, text) {
-  const steps = wf.steps.map((s, i) => `#${i + 1} | ${typeOf(wf.flowchartConfig.nodes[i + 1].blockId)} | ${s.name}`).join("\n");
+  const steps = wf.steps
+    .map(
+      (s, i) =>
+        `#${i + 1} | ${typeOf(wf.flowchartConfig.nodes[i + 1].blockId)} | ${s.name}`,
+    )
+    .join("\n");
   const res = await llmModel.invoke([
-    { role: "system", content: INTENT_PROMPT + "\nCURRENT STEPS (number | channel | name):\n" + steps },
+    {
+      role: "system",
+      content:
+        INTENT_PROMPT + "\nCURRENT STEPS (number | channel | name):\n" + steps,
+    },
     { role: "user", content: text },
   ]);
-  const raw = typeof res.content === "string" ? res.content : (res.content && res.content[0] && res.content[0].text) || "";
-  try { return JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)); } catch { return null; }
+  const raw =
+    typeof res.content === "string"
+      ? res.content
+      : (res.content && res.content[0] && res.content[0].text) || "";
+  try {
+    return JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1));
+  } catch {
+    return null;
+  }
 }
 
 /* ---------- entry point ----------
@@ -533,33 +893,62 @@ export async function handleWorkflowEdit({ llmModel, session, wf, text }) {
     const n = stepNo(t, p.cands);
     if (n) return apply(wf, session, { ...p.edit, [p.field]: n });
   } else if (p && p.kind === "group" && !COMMAND.test(t)) {
-    return apply(wf, session, { ...p.edit, group: t.replace(/^["']|["']$/g, "") });
+    return apply(wf, session, {
+      ...p.edit,
+      group: t.replace(/^["']|["']$/g, ""),
+    });
   } else if (p && p.kind === "event") {
-    const hit = EVENTS[p.pt].find((x) => x[0].toLowerCase() === t.toLowerCase() || x[1] === t.toLowerCase());
+    const hit = EVENTS[p.pt].find(
+      (x) => x[0].toLowerCase() === t.toLowerCase() || x[1] === t.toLowerCase(),
+    );
     if (hit) return apply(wf, session, { ...p.edit, event: hit[1] });
   } else if (p && p.kind === "dup" && /\b(add|another|yes|again)\b/i.test(t)) {
     return apply(wf, session, { ...p.edit, force: true });
-  } else if (p && p.kind === "template" && (SKIP_START.test(t) || (!isSaveWord(t, mode) && !COMMAND.test(t) && t.split(/\s+/).length <= 4))) {
+  } else if (
+    p &&
+    p.kind === "template" &&
+    (SKIP_START.test(t) ||
+      (!isSaveWord(t, mode) && !COMMAND.test(t) && t.split(/\s+/).length <= 4))
+  ) {
     if (SKIP_START.test(t)) {
       wf.flowchartConfig.nodes.forEach((n, i) => {
-        const ty = typeOf(n.blockId), c = cfgOf(wf, n.blockId);
-        if (i > 0 && isChannel(ty) && c && (!c.Value || c.Value === ty + "_template") && !session.wfSkipped.includes(n.blockId)) session.wfSkipped.push(n.blockId);
+        const ty = typeOf(n.blockId),
+          c = cfgOf(wf, n.blockId);
+        if (
+          i > 0 &&
+          isChannel(ty) &&
+          c &&
+          (!c.Value || c.Value === ty + "_template") &&
+          !session.wfSkipped.includes(n.blockId)
+        )
+          session.wfSkipped.push(n.blockId);
       });
       session.wfPending = null;
-      return isSaveWord(t, mode) ? saveResult(wf, session, t) : say(saveQuestion(wf, session));
+      return isSaveWord(t, mode)
+        ? saveResult(wf, session, t)
+        : say(saveQuestion(wf, session));
     }
     setTemplate(wf, p.blockId, t.replace(/^["']|["']$/g, ""));
     return done(wf, session, false);
   }
 
-  if (isSaveWord(t, mode)) {                          // yes / save / update / new version
+  if (isSaveWord(t, mode)) {
+    // yes / save / update / new version
     const q = nextQuestion(wf, session);
-    return session.wfPending ? say(q) : saveResult(wf, session, t);   // a template is still missing: ask first
+    return session.wfPending ? say(q) : saveResult(wf, session, t); // a template is still missing: ask first
   }
   const e = await classify(llmModel, wf, t);
   if (!e || !["add", "remove", "set_template"].includes(e.intent)) return null;
   // the small model invents step numbers: trust one only if the user really wrote it ("step 3", "#3", "second mail")
-  if (!/(?:\bstep\s*#?\s*\d+|#\s*\d+|\b(?:first|second|third|1st|2nd|3rd|last)\b)/i.test(t)) { e.parentStep = null; e.step = null; e.beforeStep = null; }
+  if (
+    !/(?:\bstep\s*#?\s*\d+|#\s*\d+|\b(?:first|second|third|1st|2nd|3rd|last)\b)/i.test(
+      t,
+    )
+  ) {
+    e.parentStep = null;
+    e.step = null;
+    e.beforeStep = null;
+  }
   e.between = /\b(in\s*between|between|before)\b/i.test(t);
   return apply(wf, session, e);
 }
@@ -568,37 +957,79 @@ export async function handleWorkflowEdit({ llmModel, session, wf, text }) {
    C# tool: SaveAgentWorkFlow(ExecutionJson, flowchartConfig, configarray, name, agenthistory, status, pid, actiontype, tasktrigger)
    actiontype: "save" (create) | "reuse" | "edit" (update, needs pid) | "newversion" (needs pid)
    status: true only when every step is fully configured, otherwise false (saved, but it will not start) */
-const txt = (c) => (typeof c === "string" ? c : Array.isArray(c) ? c.map((b) => (typeof b === "string" ? b : (b && b.text) || "")).join("") : String(c || ""));
+const txt = (c) =>
+  typeof c === "string"
+    ? c
+    : Array.isArray(c)
+      ? c.map((b) => (typeof b === "string" ? b : (b && b.text) || "")).join("")
+      : String(c || "");
 
 export async function saveWorkflow({ tools, wf, history, pid, actiontype }) {
-  const tool = (tools || []).find((x) => String(x.name).toLowerCase().replace(/_/g, "") === "saveagentworkflow");
-  if (!tool) return "Saving failed: the save tool was not found. Please try again later.";
-  const act = ["edit", "reuse", "newversion"].includes(String(actiontype || "").toLowerCase()) ? String(actiontype).toLowerCase() : "save";
+  const tool = (tools || []).find(
+    (x) =>
+      String(x.name).toLowerCase().replace(/_/g, "") === "saveagentworkflow",
+  );
+  if (!tool)
+    return "Saving failed: the save tool was not found. Please try again later.";
+  const act = ["edit", "reuse", "newversion"].includes(
+    String(actiontype || "").toLowerCase(),
+  )
+    ? String(actiontype).toLowerCase()
+    : "save";
 
   const missing = findIncomplete(wf);
   const status = missing.length === 0;
 
   const args = {
-    ExecutionJson: JSON.stringify(wf.steps),
-    flowchartConfig: JSON.stringify(wf.flowchartConfig),
-    configarray: JSON.stringify(wf.configarray),
+    ExecutionJson: JSON.stringify(wf.steps ?? []), // never undefined
+    flowchartConfig: JSON.stringify(wf.flowchartConfig ?? {}), // never undefined
+    configarray: JSON.stringify(wf.configarray ?? []), // never undefined
     name: wf.name || "Workflow",
-    agenthistory: (history || []).filter((m) => m.role === "user").map((m) => txt(m.content)).join("\n"),
+    agenthistory: (history || [])
+      .filter((m) => m.role === "user")
+      .map((m) => txt(m.content))
+      .join("\n"),
     status,
     pid: Number(pid) || 0,
     actiontype: act,
     tasktrigger: false,
   };
+
   try {
     const raw = await tool.invoke(args);
-    let ok = true, msg = "";
-    try { const r = typeof raw === "string" ? JSON.parse(raw) : raw; ok = r.success !== false && !r.error; msg = r.Message || r.message || r.error || ""; }
-    catch { msg = txt(raw).slice(0, 200); ok = !/error|fail|exception/i.test(msg); }
-    if (!ok) return `Saving failed${msg ? ": " + msg : ""}. Reply "yes" to try again.`;
+    console.log(
+      "[saveWorkflow] raw result:",
+      typeof raw === "string" ? raw : JSON.stringify(raw),
+    ); // debug
+
+    let ok = true,
+      msg = "";
+    try {
+      const r = typeof raw === "string" ? JSON.parse(raw) : raw;
+      if (typeof r === "number") {
+        ok = r > 0; // old C#: returns the Id
+      } else {
+        ok =
+          r?.Status !== false &&
+          r?.success !== false &&
+          !r?.error &&
+          (r?.Id === undefined || r.Id > 0);
+        msg = [r?.Message || r?.message || r?.error, r?.Inner]
+          .filter(Boolean)
+          .join(" | ");
+      }
+    } catch {
+      msg = txt(raw).slice(0, 200);
+      ok = !/error|fail|exception/i.test(msg);
+    }
+    if (!ok)
+      return `Saving failed${msg ? ": " + msg : ""}. Reply "yes" to try again.`;
 
     const base =
-      act === "edit" ? `Workflow '${wf.name}' is updated`
-        : act === "newversion" ? `Workflow '${wf.name}' is saved as a new version`
+      act === "edit"
+        ? `Workflow '${wf.name}' is updated`
+        : act === "newversion"
+          ? `Workflow '${wf.name}' is saved as a new version`
           : `Workflow '${wf.name}' is saved`;
     if (status) return base + ".";
     return (
@@ -606,6 +1037,7 @@ export async function saveWorkflow({ tools, wf, history, pid, actiontype }) {
       `Click "Preview workflow", set these configurations, then confirm again to activate it.`
     );
   } catch (err) {
+    console.error("[saveWorkflow] error:", err); // full error in the log
     return `Saving failed: ${String(err.message || err).slice(0, 200)}. Reply "yes" to try again.`;
   }
 }

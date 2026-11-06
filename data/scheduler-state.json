@@ -1,0 +1,138 @@
+{
+  "1": {
+    "startedAt": 1793946787821,
+    "steps": {
+      "step1": {
+        "runs": 3,
+        "failures": 3,
+        "lastRunAt": 1793947734829,
+        "lastMessage": "Reporting API returned 404: ",
+        "status": "failed"
+      }
+    }
+  },
+  "9": {
+    "startedAt": 1793773516315,
+    "steps": {}
+  },
+  "10": {
+    "startedAt": 1793773516316,
+    "steps": {
+      "step1": {
+        "runs": 3,
+        "failures": 3,
+        "lastRunAt": 1793777724955,
+        "lastMessage": "Unknown channel 'dateandtime'. Supported: mail, sms, whatsapp, webpush, rcs, addrules.",
+        "status": "failed"
+      }
+    }
+  },
+  "11": {
+    "startedAt": 1793773516492,
+    "steps": {
+      "step1": {
+        "runs": 3,
+        "failures": 3,
+        "lastRunAt": 1793777724988,
+        "lastMessage": "Unknown channel 'dateandtime'. Supported: mail, sms, whatsapp, webpush, rcs, addrules.",
+        "status": "failed"
+      }
+    }
+  },
+  "12": {
+    "startedAt": 1793773516528,
+    "steps": {
+      "step1": {
+        "runs": 3,
+        "failures": 3,
+        "lastRunAt": 1793777725015,
+        "lastMessage": "Unknown channel 'dateandtime'. Supported: mail, sms, whatsapp, webpush, rcs, addrules.",
+        "status": "failed"
+      }
+    }
+  },
+  "13": {
+    "startedAt": 1793773516554,
+    "steps": {
+      "step1": {
+        "runs": 3,
+        "failures": 3,
+        "lastRunAt": 1793777725130,
+        "lastMessage": "Reporting API returned 404: ",
+        "status": "failed"
+      }
+    }
+  },
+  "14": {
+    "startedAt": 1793773516601,
+    "steps": {
+      "step2": {
+        "runs": 3,
+        "failures": 3,
+        "lastRunAt": 1793777725165,
+        "lastMessage": "Reporting API returned 404: ",
+        "status": "failed"
+      }
+    }
+  },
+  "15": {
+    "startedAt": 1793773516638,
+    "steps": {
+      "step1": {
+        "runs": 3,
+        "failures": 3,
+        "lastRunAt": 1793777725203,
+        "lastMessage": "Reporting API returned 404: ",
+        "status": "failed"
+      }
+    }
+  },
+  "16": {
+    "startedAt": 1793773516666,
+    "steps": {
+      "step1": {
+        "runs": 3,
+        "failures": 3,
+        "lastRunAt": 1793777725237,
+        "lastMessage": "Reporting API returned 404: ",
+        "status": "failed"
+      }
+    }
+  },
+  "17": {
+    "startedAt": 1793773516703,
+    "steps": {
+      "step1": {
+        "runs": 3,
+        "failures": 3,
+        "lastRunAt": 1793777725288,
+        "lastMessage": "Reporting API returned 404: ",
+        "status": "failed"
+      }
+    }
+  },
+  "18": {
+    "startedAt": 1793773516730,
+    "steps": {}
+  },
+  "19": {
+    "startedAt": 1793773516730,
+    "steps": {}
+  },
+  "20": {
+    "startedAt": 1793773516730,
+    "steps": {}
+  },
+  "21": {
+    "startedAt": 1793773516731,
+    "steps": {}
+  },
+  "22": {
+    "startedAt": 1793773516731,
+    "steps": {}
+  },
+  "23": {
+    "startedAt": 1793773516315,
+    "steps": {}
+  }
+}

@@ -65,8 +65,12 @@ export function parseWorkflowList(toolResult) {
 }
 
 const pick = (obj, ...names) => {
+<<<<<<< HEAD
   for (const n of names)
     if (obj?.[n] !== undefined && obj[n] !== null) return obj[n];
+=======
+  for (const n of names) if (obj?.[n] !== undefined && obj[n] !== null) return obj[n];
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
   return undefined;
 };
 
@@ -89,9 +93,13 @@ export function isWorkflowActive(row) {
 /* ------------------------------------------------------------------ */
 
 const lowerKeys = (o) =>
+<<<<<<< HEAD
   Object.fromEntries(
     Object.entries(o ?? {}).map(([k, v]) => [k.toLowerCase(), v]),
   );
+=======
+  Object.fromEntries(Object.entries(o ?? {}).map(([k, v]) => [k.toLowerCase(), v]));
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
 
 function resolvePlaceholders(val, vars) {
   if (typeof val === "string")
@@ -113,9 +121,13 @@ export function parseDelayMs(v) {
   const m = String(v)
     .trim()
     .toLowerCase()
+<<<<<<< HEAD
     .match(
       /^(\d+(?:\.\d+)?)\s*(s|sec\w*|m|min\w*|h|hr\w*|hour\w*|d|day\w*|w|week\w*)?$/,
     );
+=======
+    .match(/^(\d+(?:\.\d+)?)\s*(s|sec\w*|m|min\w*|h|hr\w*|hour\w*|d|day\w*|w|week\w*)?$/);
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
   if (!m) return 0;
   const n = parseFloat(m[1]);
   const u = m[2] || "m";
@@ -136,6 +148,7 @@ export function parseScheduleTime(v) {
 // Returns { workflowId, name, steps[] } ; steps sorted by order.
 export function buildWorkflow(row) {
   const workflowId = getWorkflowId(row);
+<<<<<<< HEAD
   const raw = pick(
     row,
     "TaskData",
@@ -143,6 +156,9 @@ export function buildWorkflow(row) {
     "ExecutionJson",
     "executionJson",
   );
+=======
+  const raw = pick(row, "TaskData", "taskData", "ExecutionJson", "executionJson");
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
   let data = parseJsonLoose(raw);
   if (data && !Array.isArray(data)) data = data.steps ?? data.Steps ?? null;
   if (!Array.isArray(data)) return { workflowId, name: row?.Name, steps: [] };
@@ -153,17 +169,25 @@ export function buildWorkflow(row) {
     .map((s, idx) => {
       const id = s.id ?? `step${s.order ?? idx + 1}`;
       const rawArgs =
+<<<<<<< HEAD
         s.action?.args ??
         s.action?.parameters?.args ??
         s.action?.parameters ??
         {};
+=======
+        s.action?.args ?? s.action?.parameters?.args ?? s.action?.parameters ?? {};
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
       const args = resolvePlaceholders(lowerKeys(rawArgs), vars);
 
       // dependsOn: "step0" (= the audience root) means "no dependency"
       const depRaw = s.dependsOn ?? s.depends_on;
+<<<<<<< HEAD
       const dependsOn = (
         Array.isArray(depRaw) ? depRaw : String(depRaw ?? "").split(",")
       )
+=======
+      const dependsOn = (Array.isArray(depRaw) ? depRaw : String(depRaw ?? "").split(","))
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
         .map((d) => String(d).trim())
         .filter((d) => d && d !== "step0");
 
@@ -202,6 +226,7 @@ export function buildWorkflow(row) {
 //   required : the step cannot be sent without it (the preview popup fills these)
 //   optional : stored when present
 export const CHANNEL_ARGS = {
+<<<<<<< HEAD
   // NOTHING is mandatory for a channel step: the user may give any of these args or none.
   // Whatever is given is passed to C# (Getcampaignresponsesandsentcontacts) and stored in
   // extraargs; whatever is missing, the sender fills with its defaults.
@@ -271,6 +296,35 @@ export const CHANNEL_ARGS = {
     ],
   },
   // a rule step cannot be evaluated without knowing which rule
+=======
+  mail: {
+    required: ["templateid", "configurationnameid", "subject", "fromname", "fromemailid"],
+    optional: ["campaignid", "templatename", "replytoemailid", "istransactional", "istriggereveryactivity", "scheduletime"],
+  },
+  sms: {
+    required: ["templateid", "configurationnameid"],
+    optional: ["campaignid", "templatename", "istransactional", "scheduletime"],
+  },
+  whatsapp: {
+    required: ["templateid", "configurationnameid"],
+    optional: ["campaignid", "templatename", "istransactional", "scheduletime"],
+  },
+  rcs: {
+    required: ["templateid", "configurationnameid"],
+    optional: ["campaignid", "templatename", "istransactional", "scheduletime"],
+  },
+  // webpush needs no configuration name
+  webpush: {
+    required: ["templateid"],
+    optional: ["campaignid", "templatename", "scheduletime"],
+  },
+  // the timing itself is checked by gates.js (computeGate), with a clearer message
+  dateandtime: {
+    required: [],
+    optional: ["datecondition", "datevalue", "daysofweek", "isdynamicgroup", "ignoreweekend", "scheduletime"],
+  },
+  // rule node: satisfy / notsatisfy branches (mirrors findIncomplete in workflow.edit.js)
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
   addrules: {
     required: ["ruleid"],
     optional: ["issplittester"],
@@ -278,11 +332,15 @@ export const CHANNEL_ARGS = {
 };
 
 const isBlank = (v) =>
+<<<<<<< HEAD
   v === undefined ||
   v === null ||
   v === "" ||
   v === 0 ||
   v === "0" ||
+=======
+  v === undefined || v === null || v === "" || v === 0 || v === "0" ||
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
   (typeof v === "string" && (v.trim() === "" || /^\{\{.*\}\}$/.test(v.trim())));
 
 // templateid may be absent when templatename is given: the MCP tool resolves it.
@@ -320,6 +378,7 @@ const CORE_KEYS = [
 ];
 // Canvas / routing / condition bookkeeping - never a send setting, never stored per contact.
 const ROUTING_KEYS = [
+<<<<<<< HEAD
   "type",
   "isworkflow",
   "actiontype",
@@ -329,6 +388,10 @@ const ROUTING_KEYS = [
   "daysofweek",
   "isdynamicgroup",
   "ignoreweekend",
+=======
+  "type", "isworkflow", "actiontype", "controltype",
+  "datecondition", "datevalue", "daysofweek", "isdynamicgroup", "ignoreweekend",
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
 ];
 
 // parameter names exactly as the C# tool exposes them
@@ -337,6 +400,7 @@ const TOOL_PARAM = {
   campaignname: "campaignName",
 };
 
+<<<<<<< HEAD
 const SOURCE_KEYS = [
   "getquery",
   "getreposechannel",
@@ -344,6 +408,9 @@ const SOURCE_KEYS = [
   "agenttaskid",
   "groupname",
 ];
+=======
+const SOURCE_KEYS = ["getquery", "getreposechannel", "eventname", "agenttaskid", "groupname"];
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
 
 /**
  * A date & time step stores NO contacts: it only pauses. So a step that comes after it
@@ -361,8 +428,12 @@ export function resolveSourceArgs(step, wf) {
     gate = wf.steps.find((s) => s.id === parentId);
     if (!gate || gate.kind !== "dateandtime") break;
     for (const k of SOURCE_KEYS) delete a[k];
+<<<<<<< HEAD
     for (const k of SOURCE_KEYS)
       if (gate.args[k] !== undefined) a[k] = gate.args[k];
+=======
+    for (const k of SOURCE_KEYS) if (gate.args[k] !== undefined) a[k] = gate.args[k];
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
     // a root date step reads by query: the child becomes a query step under its own id
     if (!a.getreposechannel) a.agenttaskid = step.id;
   }
@@ -376,14 +447,19 @@ export function buildToolInput(step, wf) {
   for (const k of CORE_KEYS) {
     if (a[k] === undefined || a[k] === null || a[k] === "") continue;
     const p = TOOL_PARAM[k] ?? k;
+<<<<<<< HEAD
     input[p] =
       k === "taskrepeatedvalues"
         ? a[k] === true || a[k] === "true"
         : String(a[k]);
+=======
+    input[p] = k === "taskrepeatedvalues" ? a[k] === true || a[k] === "true" : String(a[k]);
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
   }
   input.agentworkflowid = String(wf.workflowId);
   input.agenttaskid = String(a.agenttaskid || step.id);
 
+<<<<<<< HEAD
   // every other arg the step has goes to C# as it is (nothing required, nothing invented);
   // empty values are left out so they are not stored as "" / null
   const extra = {};
@@ -397,6 +473,11 @@ export function buildToolInput(step, wf) {
       continue;
     extra[k] = v;
   }
+=======
+  const extra = {};
+  for (const [k, v] of Object.entries(a))
+    if (!CORE_KEYS.includes(k) && !ROUTING_KEYS.includes(k)) extra[k] = v;
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
   input.extraArgs = JSON.stringify(extra);
   return input;
 }
@@ -405,6 +486,7 @@ export function buildToolInput(step, wf) {
 /* Date & time condition tool input / reply                            */
 /* ------------------------------------------------------------------ */
 
+<<<<<<< HEAD
 const CONDITION_KEYS = [
   "datecondition",
   "datevalue",
@@ -412,6 +494,9 @@ const CONDITION_KEYS = [
   "isdynamicgroup",
   "ignoreweekend",
 ];
+=======
+const CONDITION_KEYS = ["datecondition", "datevalue", "daysofweek", "isdynamicgroup", "ignoreweekend"];
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
 
 // The step(s) that come right after a step in this workflow's TaskData.
 export function nextStepIdsOf(step, wf) {
@@ -422,8 +507,12 @@ export function nextStepIdsOf(step, wf) {
 // nextstepids = the step(s) the condition scheduler triggers when this condition is released.
 export function buildConditionInput(step, wf, gate) {
   const cond = {};
+<<<<<<< HEAD
   for (const k of CONDITION_KEYS)
     if (step.args[k] !== undefined) cond[k] = step.args[k];
+=======
+  for (const k of CONDITION_KEYS) if (step.args[k] !== undefined) cond[k] = step.args[k];
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
   return {
     nextstepids: nextStepIdsOf(step, wf).join(","),
     agentworkflowid: String(wf.workflowId),
@@ -439,6 +528,7 @@ export function buildConditionInput(step, wf, gate) {
 export function normalizeCondition(row) {
   // field names may arrive as AgentWorkFlowId, agentWorkFlowId or agentworkflowid
   // (the MCP C# SDK serialises camelCase, PostgreSQL returns lowercase)
+<<<<<<< HEAD
   const lower = Object.fromEntries(
     Object.entries(row ?? {}).map(([k, v]) => [k.toLowerCase(), v]),
   );
@@ -448,15 +538,23 @@ export function normalizeCondition(row) {
       if (v !== undefined && v !== null) return v;
     }
   };
+=======
+  const lower = Object.fromEntries(Object.entries(row ?? {}).map(([k, v]) => [k.toLowerCase(), v]));
+  const pickv = (...n) => { for (const k of n) { const v = lower[k.toLowerCase()]; if (v !== undefined && v !== null) return v; } };
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
   // "…Z", "…+05:30", "…+00" are absolute; a value without an offset is UTC (SQL Server DATETIME2)
   const ms = (v) => {
     if (!v) return null;
     const s = String(v).trim().replace(" ", "T");
+<<<<<<< HEAD
     return Date.parse(
       /(Z|[+-]\d\d(:?\d\d)?)$/.test(s)
         ? s.replace(/([+-]\d\d)$/, "$1:00")
         : `${s}Z`,
     );
+=======
+    return Date.parse(/(Z|[+-]\d\d(:?\d\d)?)$/.test(s) ? s.replace(/([+-]\d\d)$/, "$1:00") : `${s}Z`);
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
   };
   return {
     id: Number(pickv("Id", "id") ?? 0),
@@ -466,16 +564,21 @@ export function normalizeCondition(row) {
     dueAt: ms(pickv("DueAt", "dueat")),
     expireAt: ms(pickv("ExpireAt", "expireat")),
     releasedAt: ms(pickv("ReleasedAt", "releasedat")),
+<<<<<<< HEAD
     nextStepIds: String(pickv("NextStepIds", "nextstepids") ?? "")
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean),
+=======
+    nextStepIds: String(pickv("NextStepIds", "nextstepids") ?? "").split(",").map((s) => s.trim()).filter(Boolean),
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
   };
 }
 
 // {Status, Message, Data: row | rows}
 export function parseConditionReply(toolResult) {
   const obj = parseJsonLoose(toText(toolResult));
+<<<<<<< HEAD
   if (!obj || typeof obj !== "object")
     return {
       ok: false,
@@ -488,6 +591,13 @@ export function parseConditionReply(toolResult) {
   const rows = (Array.isArray(data) ? data : data ? [data] : []).map(
     normalizeCondition,
   );
+=======
+  if (!obj || typeof obj !== "object") return { ok: false, message: "empty response from condition tool", rows: [] };
+  const st = obj.Status ?? obj.status;
+  const ok = st === true || String(st).toLowerCase() === "true";
+  const data = parseJsonLoose(obj.Data ?? obj.data) ?? obj.Data ?? obj.data;
+  const rows = (Array.isArray(data) ? data : data ? [data] : []).map(normalizeCondition);
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
   return { ok, message: obj.Message ?? obj.message ?? "", rows };
 }
 
@@ -498,8 +608,12 @@ export function parseToolReply(toolResult) {
   if (!obj || typeof obj !== "object") {
     return { ok: false, message: text || "empty response from tool" };
   }
+<<<<<<< HEAD
   const st =
     obj.Status ?? obj.status ?? obj.Success ?? obj.success ?? obj.sucess;
+=======
+  const st = obj.Status ?? obj.status ?? obj.Success ?? obj.success ?? obj.sucess;
+>>>>>>> 6bd823945e44482af2e6705b51eac15b10560a15
   const ok = st === true || String(st).toLowerCase() === "true";
   return {
     ok,

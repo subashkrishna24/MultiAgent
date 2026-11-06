@@ -52,18 +52,7 @@ const EVENTS = {
     ["Bounce", "bounced"],
   ],
 };
-const NAME = {
-  mail: "Mail",
-  sms: "SMS",
-  whatsapp: "WhatsApp",
-  rcs: "RCS",
-  webpush: "Web Push",
-};
-const GROUPS = {
-  movetogroup: "Move to Group",
-  addtogroup: "Add to Group",
-  removefromgroup: "Remove from Group",
-};
+
 const NAME = {
   mail: "Mail",
   sms: "SMS",

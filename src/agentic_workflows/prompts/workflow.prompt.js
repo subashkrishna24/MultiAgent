@@ -282,7 +282,9 @@ Sanity check: a user's "open" on a mail is Bottom2 / "Open" / opened. If you wro
 - Channel actions: {"Channel": blockId, "Value": template name, "Title": template name}. Use the exact template the user gave; if skipped/none use "<channel>_template". Never empty. The same value goes into the step's templatename.
 - Group actions: {"Channel": blockId, "Value": destination group, "Title": destination group}.
 - Date and Time, UNSET: {"Channel": blockId, "Value": "dateandtime_template", "Title": "dateandtime_template"} (no other keys).
-- Date and Time,   - WAIT ("wait 2 hours", "after one hour", "after 3 days", "delay 30 minutes", "after half an hour"): datecondition 0, datevalue "<N> <Minutes|Hours|Days>" (capitalised unit, N written as a number, for example "1 Hours", "2 Hours", "1 Days", "30 Minutes"), daysofweek "". Title = the same text.- Scheduled nodes ONLY: add "Schedule": "YYYY-MM-DD HH:mm". No schedule = no Schedule key. The Audience never has one.
+- Date and Time, with timing (R14): {"Channel": blockId, "Value": datevalue, "Title": title, "Datecondition": <0|4|8|9>, "DaysOfWeek": "<days or empty>", "IsDynamicGroup": "0", "IgnoreWeekend": false}.
+  - WAIT ("wait 2 hours", "after one hour", "after 3 days", "delay 30 minutes", "after half an hour"): datecondition 0, datevalue "<N> <Minutes|Hours|Days>" (capitalised unit, N written as a number, for example "1 Hours", "2 Hours", "1 Days", "30 Minutes"), daysofweek "". Title = the same text.
+- Scheduled nodes ONLY: add "Schedule": "YYYY-MM-DD HH:mm". No schedule = no Schedule key. The Audience never has one.
 - Length = nodes length.
 
 ### STEP G - steps (one per ACTION node; none for the Audience; steps = nodes - 1)
@@ -293,12 +295,34 @@ Sanity check: a user's "open" on a mail is Bottom2 / "Open" / opened. If you wro
 - Add "scheduletime": "YYYY-MM-DD HH:mm" to the args of a scheduled node (same value as its configarray Schedule). Nodes without a schedule have NO scheduletime arg.
 - BRACES: every step object ends with exactly three closing braces after its last arg (} args, } action, } step), then a comma before the next step, and "]" + "}" after the last step.
 
+### STEP G.1 - CHANNEL ARGS (the send settings of a channel step)
+Every CHANNEL step (mail, sms, whatsapp, rcs, webpush) carries its own send settings in args, right after "channel"
+(and after getquery / getreposechannel + eventName). They are the same keys the Preview popup of that channel shows.
+
+- mail .... "templateid": <int>, "campaignid": <int>, "configurationnameid": <int>, "istransactional": <true|false>,
+            "subject": "<subject>", "fromname": "<from name>", "fromemailid": "<from email>", "replytoemailid": "<reply-to email>"
+- sms ..... "templateid": <int>, "campaignid": <int>, "configurationnameid": <int>, "istransactional": <true|false>
+- whatsapp  same four keys as sms
+- rcs ..... same four keys as sms
+- webpush   "templateid": <int>, "campaignid": <int>   (webpush has NO configurationnameid and NO istransactional)
+- Date and Time and GROUP steps have NONE of these keys.
+
+RULES:
+- Write a key ONLY with a value the user actually gave, or a value already present for that step in CURRENT_WORKFLOW_JSON.
+  NEVER invent a template id, campaign id, configuration id, subject, from name or email address, and never write a
+  placeholder, 0, "" or null for them. A setting the user has not given is simply OMITTED from args. NONE of these keys
+  is required (not even the template id): never ask for them, the sender uses its defaults for whatever is missing.
+- "replytoemailid" defaults to "fromemailid" when the user gave only one address.
+- On an EDIT, keep every one of these keys that the step already has in CURRENT_WORKFLOW_JSON, with the same values,
+  unless the user's message changes that exact setting. Changing the template name clears "templateid" (it is resolved again).
+- These keys never go into a query, a step name or the workflow name.
+
 Step skeletons (angle brackets are placeholders you fill from the user's request; keys never change):
 ROOT CHANNEL step (parent = Audience; there can be several):
-  {"id":"step<N>","name":"<descriptive name>","order":<N>,"type":"action","dependsOn":"step0","action":{"module":"reporting","args":{"channel":"<mail|sms|whatsapp|rcs|webpush>","getquery":"<this action's audience query (R10)>","scheduletime":"<only if scheduled>","type":0,"isworkflow":true,"agentworkflowid":"{{agentworkflowid}}","agenttaskid":"step<N>","templatename":"<template>","taskrepeatedvalues":<true|false>}}}
+  {"id":"step<N>","name":"<descriptive name>","order":<N>,"type":"action","dependsOn":"step0","action":{"module":"reporting","args":{"channel":"<mail|sms|whatsapp|rcs|webpush>","getquery":"<this action's audience query (R10)>",<channel args from STEP G.1, each one the user gave>,"scheduletime":"<only if scheduled>","type":0,"isworkflow":true,"agentworkflowid":"{{agentworkflowid}}","agenttaskid":"step<N>","templatename":"<template>","taskrepeatedvalues":<true|false>}}}
   NO eventName, NO getreposechannel.
 CHILD CHANNEL step (parent = a channel message, or a Date and Time node):
-  {"id":"step<N>","name":"<descriptive name>","order":<N>,"type":"action","dependsOn":"step<P>","action":{"module":"reporting","args":{"channel":"<child channel>","getreposechannel":"<PARENT channel or dateandtime>","eventName":"<event from Step C>","scheduletime":"<only if scheduled>","type":0,"isworkflow":true,"agentworkflowid":"{{agentworkflowid}}","agenttaskid":"step<P>","templatename":"<template>","taskrepeatedvalues":<true|false>}}}
+  {"id":"step<N>","name":"<descriptive name>","order":<N>,"type":"action","dependsOn":"step<P>","action":{"module":"reporting","args":{"channel":"<child channel>","getreposechannel":"<PARENT channel or dateandtime>","eventName":"<event from Step C>",<channel args from STEP G.1, each one the user gave>,"scheduletime":"<only if scheduled>","type":0,"isworkflow":true,"agentworkflowid":"{{agentworkflowid}}","agenttaskid":"step<P>","templatename":"<template>","taskrepeatedvalues":<true|false>}}}
   NO getquery. getreposechannel is MANDATORY: it is the channel of the parent (mail, sms, whatsapp, rcs, webpush, or dateandtime), whichever it is, including "whatsapp". Never omit it, never leave it empty, never put the child's own channel there. P = the parent's step number.
 ROOT GROUP step (parent = Audience):
   {"id":"step<N>","name":"<descriptive name>","order":<N>,"type":"action","dependsOn":"step0","action":{"module":"reporting","args":{"actiontype":"<movetogroup|addtogroup|removefromgroup>","getquery":"<this action's audience query (R10)>","groupname":"<destination group>","scheduletime":"<only if scheduled>","type":0,"isworkflow":true,"agentworkflowid":"{{agentworkflowid}}","agenttaskid":"step<N>","taskrepeatedvalues":<true|false>}}}
@@ -335,10 +359,11 @@ The top-level skeleton is: {"flowchartConfig":{"nodes":[{"blockId":"<id>","posit
 6. The Audience query holds only the SOURCE (plus shared conditions); the destination group, the time, the wait and the repeat words are never in a query.
 7. Every ROOT step (channel, group or Date and Time) has a complete, readable getquery (R12) that keeps every filter the user said for it; it is never empty and never a fragment.
 8. Root steps: dependsOn "step0", agenttaskid = own id, getquery, no eventName, no getreposechannel. Child steps: dependsOn = parent step, agenttaskid = the SAME parent step id, getreposechannel = PARENT channel or "dateandtime" (never missing, never empty), eventName, no getquery.
-9. Channel steps have channel + templatename; group steps have actiontype + groupname and no channel / templatename; Date and Time steps have controltype "dateandtime" and no channel / templatename / groupname.
-10. Schedule and scheduletime appear together or not at all, same value, format YYYY-MM-DD HH:mm.
-11. taskrepeatedvalues is present in every step; true exactly for steps carrying a repeat (R9) and their descendants, false otherwise; the repeat word appears in the step names and generated workflow name.
-12. Step names describe the real contacts / trigger and never use the bare word "audience".
+9. Channel steps carry only the STEP G.1 keys the user actually gave (never invented, never a placeholder, never 0 / "" / null), and an EDIT keeps the ones already in CURRENT_WORKFLOW_JSON.
+10. Channel steps have channel + templatename; group steps have actiontype + groupname and no channel / templatename; Date and Time steps have controltype "dateandtime" and no channel / templatename / groupname.
+11. Schedule and scheduletime appear together or not at all, same value, format YYYY-MM-DD HH:mm.
+12. taskrepeatedvalues is present in every step; true exactly for steps carrying a repeat (R9) and their descendants, false otherwise; the repeat word appears in the step names and generated workflow name.
+13. Step names describe the real contacts / trigger and never use the bare word "audience".
 13. No empty strings in Value, Title or templatename; no node the user did not ask for; nothing the user said is missing from the JSON (a requested "date and time" / wait is a node).
 14. Every step object closes with "}}}"; the steps array and the root object are closed.
 15. Reply shape: JSON first (nothing before it), then the SUMMARY (draft reply or structural change only), then exactly ONE question (next template question from the MAPPING CHECK, or the FINAL QUESTION for the current WORKFLOW_MODE when nothing is missing: "update or create a new version" in edit, "save" in create / reuse). The first reply after the flow description is always this DRAFT REPLY, unless a Step 3 exception applies.
@@ -397,4 +422,4 @@ function applyOptions(text) {
   return text.replace("### TURN ROUTER", NO_TEMPLATE_QUESTIONS + "\n### TURN ROUTER");
 }
 
-export const WORKFLOW_PROMPT = applyOptions(applyGroupConfig(RAW_PROMPT, GROUP_ACTION_CONFIG));
+export const WORKFLOW_PROMPT = applyOptions(applyGroupConfig(RAW_PROMPT, GROUP_ACTION_CONFIG));

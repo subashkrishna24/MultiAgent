@@ -4,6 +4,20 @@ import { detectIntent } from "../agents/intent/intent.agent.js";
 import { filterToolsByModule } from "../services/tool-filter.service.js";
 import { executeKnowledgeAgent } from "../agents/knowledge/knowledge.agent.js";
 import { executeReportingAgent } from "../agents/reporting/reporting.agent.js";
+import {
+  parseReportResult,
+  decodeDeep,
+  isSqlText,
+} from "../utils/report.helper.js";
+import {
+  getWorkflowContacts,
+  getContactsForQuestion,
+  contactsToolMessage,
+  contactsLine,
+  insertLine,
+  isContactCountQuestion,
+  isContactDetailsRequest,
+} from "../agentic_workflows/agent/workflow-contacts.js";
 import { executeReportPlannerAgent } from "../agents/reporting/reportplanner.agent.js";
 import { executeReportingAnalysisAgent } from "../agents/reporting/reportinganalysis.agent.js";
 import { executeContactAgent } from "../agents/contact/contact.agent.js";
@@ -111,10 +125,12 @@ export async function executeWorkflow(payload) {
     actiontype,
   } = payload;
   setTimeZone(userdetails?.timeZone);
-  // Session
+  // Session: a new chat starts clean. Clear FIRST, then read; reading first kept a
+  // reference to the deleted object, so what turn 1 stored was lost on turn 2.
+  if (history.length === 1) clearPagingSession(machineid);
   const session = getSession(machineid);
   if (history.length === 1) {
-    clearPagingSession(machineid);
+    session.wfContacts = null;
     session.lastWorkflowJson = null;
     session.wfPending = null;
     session.wfSkipped = [];
@@ -225,6 +241,41 @@ export async function executeWorkflow(payload) {
     intent.module === "workflow"
       ? findLatestWorkflowJson(history, session)
       : null;
+  const wantsDetails = isagentworkflow && isContactDetailsRequest(lastMessage);
+  const wantsCount =
+    isagentworkflow && !wantsDetails && isContactCountQuestion(lastMessage);
+  if (wantsDetails || wantsCount) {
+    try {
+      const contacts =
+        (currentWf &&
+          (await getWorkflowContacts({
+            wf: currentWf,
+            tools: allTools,
+            session,
+            force: true, // asked directly: always fresh
+          }))) ||
+        (await getContactsForQuestion({
+          question: toText(lastMessage),
+          tools: allTools,
+          llmModel, // makes "the group" etc. concrete from the conversation
+          history,
+        }));
+      return {
+        module: "workflow",
+        message: contacts
+          ? contactsLine(contacts)
+          : "This workflow has no audience set yet.",
+        toolmessage: contactsToolMessage(contacts, {
+          withDetails: wantsDetails,
+        }),
+        workflowcompleted: false,
+        actions: [],
+      };
+    } finally {
+      await mcpClient.close().catch(() => {});
+    }
+  }
+
   if (isagentworkflow && currentWf) {
     const out = await handleWorkflowEdit({
       llmModel,
@@ -250,9 +301,13 @@ export async function executeWorkflow(payload) {
           actiontype: out.actiontype,
         });
         session.lastWorkflowJson = out.wf;
+        const saved = session.wfContacts;
         return {
           module: "workflow",
-          message,
+          message:
+            saved?.ok && saved.contactcount !== null
+              ? `${message}\n${contactsLine(saved)}`
+              : message,
           toolmessage: undefined,
           workflowcompleted: true,
           actions: [],
@@ -268,15 +323,35 @@ export async function executeWorkflow(payload) {
         };
       } finally {
         if (mcp) await mcp.close().catch(() => {});
+        await mcpClient.close().catch(() => {});
       }
     }
 
     if (out && out.message) {
       if (out.wf) session.lastWorkflowJson = out.wf;
+      let message = out.message;
+      let toolmessage;
+      try {
+        // only when the audience changed: the contact list is the same otherwise
+        if (out.wf) {
+          const before = session.wfContacts?.audience;
+          const contacts = await getWorkflowContacts({
+            wf: out.wf,
+            tools: allTools,
+            session,
+          });
+          if (contacts && contacts.audience !== before) {
+            message = insertLine(message, contactsLine(contacts));
+            toolmessage = contactsToolMessage(contacts);
+          }
+        }
+      } finally {
+        await mcpClient.close().catch(() => {});
+      }
       return {
         module: "workflow",
-        message: out.message,
-        toolmessage: undefined,
+        message,
+        toolmessage,
         workflowcompleted: false,
         actions: [],
       };
@@ -357,6 +432,7 @@ ${currentMessage}`;
     }
 
     if (parsedResult.needsClarification) {
+      await mcpClient.close().catch(() => {});
       return {
         module: "",
         message: parsedResult.message || "",
@@ -777,10 +853,9 @@ ${currentMessage}`;
 
   console.log("Final response from agent:", response);
 
-  await mcpClient.close();
-
+  // content can be a string or an array of blocks (Anthropic): always work on text
   let response_msg =
-    response?.messages?.[response.messages.length - 1]?.content ??
+    toText(response?.messages?.[response.messages.length - 1]?.content) ||
     "No response generated";
 
   if (intent.module === "workflow") {
@@ -789,14 +864,29 @@ ${currentMessage}`;
       session.lastWorkflowJson = wf;
       primePending(wf, session);
       session.activeModule = isagentworkflow ? "workflow" : null;
+      // the workflow's contacts, from GetReport with the audience text
+      let contacts = null;
+      try {
+        contacts = await getWorkflowContacts({ wf, tools: allTools, session });
+      } finally {
+        await mcpClient.close().catch(() => {});
+      }
+      let message = fixSaveQuestion(response_msg.trim(), wf, session);
+      if (contacts) message = insertLine(message, contactsLine(contacts));
       return {
         module: "workflow",
-        message: fixSaveQuestion(response_msg.trim(), wf, session),
-        toolmessage: report_response,
+        message,
+        toolmessage: contactsToolMessage(contacts) ?? report_response,
         workflowcompleted: true,
         actions: [],
       };
     }
+  }
+
+  await mcpClient.close().catch(() => {});
+
+  if (intent.module === "workflow") {
+    const wf = extractWorkflowJson(response_msg);
     if (wf || response_msg.includes('"flowchartConfig"')) {
       return {
         module: "workflow",
@@ -850,48 +940,3 @@ function findLatestWorkflowJson(history, session) {
 // canned UI sentences must not be imitated by the model
 const CANNED =
   /(workflow mapping is ready|workflow .{0,60} is ready|would you like to update it)/i;
-
-function parseReportResult(raw) {
-  let v = raw;
-  if (Array.isArray(v) && v.length === 2 && !v[0]?.type) v = v[0]; // [content, artifact]
-  if (
-    v &&
-    typeof v === "object" &&
-    !Array.isArray(v) &&
-    !("content" in v) &&
-    !("text" in v)
-  ) {
-    return v;
-  }
-  const parsed = decodeDeep(toText(v?.content ?? v));
-  return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-    ? parsed
-    : { Message: String(parsed ?? "") };
-}
-
-// Unwraps values escaped several times: "\"**text**\"" -> **text**, "[{...}]" -> array
-function decodeDeep(value) {
-  let v = value;
-  for (let i = 0; i < 5 && typeof v === "string"; i++) {
-    const s = v.trim();
-    let next;
-    try {
-      next = JSON.parse(s);
-    } catch {
-      if (!s.startsWith('\\"')) break;
-      try {
-        next = JSON.parse(`"${s}"`);
-      } catch {
-        break;
-      } // \"text\" -> "text"
-    }
-    if (typeof next !== "string" && typeof next !== "object") break; // keep "10" as text
-    if (next === v) break;
-    v = next;
-  }
-  return typeof v === "string" ? v.trim() : v;
-}
-
-function isSqlText(s) {
-  return /^\s*(select|with|insert|update|delete)\b/i.test(s || "");
-}

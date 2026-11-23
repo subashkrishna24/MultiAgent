@@ -283,6 +283,14 @@ Do not extract "161".
     - verified contact details  route to contact 
     - How many visitors reached certain url for this goal
     - Show me the goals with 0% completion
+        - Event tracking data: event tracking names, tag identifiers, event list, event counts,
+      which events fired, top events, events by page / date
+        * "Show me all Event tracking Names with their Tag Identifiers"
+        * "List all event tracking names"
+        * "How many times did event X fire this week?"
+        * "Which events were triggered today?"
+        * How many events tracking are available
+      MUST be routed to REPORTING (this is the user's data, not a how-to question).
 
 Always choose reporting over knowledge.
 
